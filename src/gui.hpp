@@ -2,7 +2,7 @@
 
 class cart;
 
-extern bool initUi();
-extern bool isUiClosing();
+extern bool initUi(bool fullscreen = false);
+extern bool isWindowClosing();
 extern void doUi(cart*);
 extern void teardownUi();

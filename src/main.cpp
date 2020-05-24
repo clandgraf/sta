@@ -11,11 +11,11 @@ int main(int ac, char ** av) {
 
     cart* _cart = new cart(av[1]);
 
-    if (!initUi()) {
+    if (!initUi(false)) {
         return EXIT_FAILURE;
     }
 
-    while (!isUiClosing()) {
+    while (!isWindowClosing()) {
         doUi(_cart);
     }
 

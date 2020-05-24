@@ -1,9 +1,5 @@
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "gui_opengl.hpp"
 
 #include "gui.hpp"
 #include "rom.hpp"
@@ -13,10 +9,6 @@
 
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <imgui_memory_editor.h>
-
-static const char* glsl_version = "#version 130";
-
-static GLFWwindow* window;
 
 static ImFont* defaultFont;
 static ImFont* sansFont;
@@ -30,26 +22,43 @@ static bool showMemoryView = true;
 static bool showRomInfo = true;
 
 void renderMenuBar() {
+    bool openRom = false;
+
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open", "CTRL+O")) {}
-            ImGui::Separator();
-            if (ImGui::MenuItem("Exit", "CTRL+Q")) {
-                glfwSetWindowShouldClose(window, true);
+            if (ImGui::MenuItem("Open")) {
+                openRom = true;
             }
+            
+            ImGui::Separator();
+            
+            if (ImGui::MenuItem("Exit")) {
+                setWindowClosing(true);
+            }
+            
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
-            if (ImGui::MenuItem("Rom Info", nullptr, nullptr, !showRomInfo)) {
+            if (ImGui::MenuItem("Fullscreen", nullptr, isFullscreen())) {
+                toggleFullscreen();
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Rom Info", nullptr, showRomInfo)) {
                 showRomInfo = !showRomInfo;
             }
 
-            if (ImGui::MenuItem("Memory", nullptr, nullptr, !showMemoryView)) {
+            if (ImGui::MenuItem("Memory", nullptr, showMemoryView)) {
                 showMemoryView = !showMemoryView;
             }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+    }
+
+    if (openRom) {
+        ImGui::OpenPopup("Open ROM");
     }
 }
 
@@ -70,7 +79,7 @@ void renderMemoryView(cart* cart) {
         if (ImGui::Begin("Memory", &showMemoryView)) {
             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
             char title[10];
-            if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+            if (ImGui::BeginTabBar("Memory Tabbar", tab_bar_flags)) {
                 for (uint8_t i = 0; i < cart->prg_size(); i++) {
                     snprintf(title, 10, "PRG %d", i);
                     if (ImGui::BeginTabItem(title)) {
@@ -98,6 +107,16 @@ void renderMemoryView(cart* cart) {
     }
 }
 
+void renderOpenRomDialog() {
+    if (ImGui::BeginPopupModal("Open ROM", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+}
+
 void doUi(cart* cart) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -107,13 +126,13 @@ void doUi(cart* cart) {
     glfwPollEvents();
 
     // Start the Dear ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
+    ImGui_Impl_NewFrame();
     ImGui::NewFrame();
 
     // Render Views
     ImGui::PushFont(sansFont);
     renderMenuBar();
+    renderOpenRomDialog();
     renderRomInfo(cart);
     renderMemoryView(cart);
     ImGui::PopFont();
@@ -125,42 +144,9 @@ void doUi(cart* cart) {
     glViewport(0, 0, display_w, display_h);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_Impl_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(window);
-}
-
-static void glfw_error_callback(int error, const char* description)
-{
-    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-}
-
-GLFWwindow* initGL() {
-    glfwSetErrorCallback(glfw_error_callback);
-
-    if (!glfwInit()) {
-        return nullptr;
-    }
-
-    // Create GL Context
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
-    GLFWwindow* window = glfwCreateWindow(1920, 1200, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
-    if (window == NULL) {
-        return nullptr;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
-
-    // Setup GLAD
-    bool err = gladLoadGL() == 0;
-    if (err) {
-        std::cerr << "Failed to initialize OpenGL loader!\n";
-        return nullptr;
-    }
-
-    return window;
 }
 
 bool initImGUI(GLFWwindow* window) {
@@ -175,8 +161,7 @@ bool initImGUI(GLFWwindow* window) {
     ImGui::StyleColorsDark();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_Impl_Init();
 
     defaultFont = io.Fonts->AddFontDefault();
     sansFont = io.Fonts->AddFontFromFileTTF("assets/SourceSansPro-Regular.ttf", 24.0f);
@@ -189,30 +174,19 @@ bool initImGUI(GLFWwindow* window) {
     return true;
 }
 
-bool initUi() {
-    window = initGL();
-    if (!window) {
+bool initUi(bool fullscreen) {
+    if (!initWindow(fullscreen)) {
         return false;
     }
     return initImGUI(window);
 }
 
-void teardownImGUI() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+void teardownImGui() {
+    ImGui_Impl_Shutdown();
     ImGui::DestroyContext();
 }
 
-void teardownGL() {
-    glfwDestroyWindow(window);
-    glfwTerminate();
-}
-
 void teardownUi() {
-    teardownImGUI();
-    teardownGL();
-}
-
-bool isUiClosing() {
-    return glfwWindowShouldClose(window);
+    teardownImGui();
+    teardownWindow();
 }
