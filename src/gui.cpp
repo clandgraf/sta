@@ -10,6 +10,8 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <imgui_memory_editor.h>
 
+#include "gui_filebrowser.hpp"
+
 static ImFont* defaultFont;
 static ImFont* sansFont;
 static ImFont* monoFont;
@@ -109,6 +111,8 @@ void renderMemoryView(cart* cart) {
 
 void renderOpenRomDialog() {
     if (ImGui::BeginPopupModal("Open ROM", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui_FileBrowser();
+
         if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
@@ -175,9 +179,12 @@ bool initImGUI(GLFWwindow* window) {
 }
 
 bool initUi(bool fullscreen) {
+    ImGui_FileBrowser_Init();
+
     if (!initWindow(fullscreen)) {
         return false;
     }
+
     return initImGUI(window);
 }
 
