@@ -117,7 +117,7 @@ void renderOpenRomDialog(cart** _cart) {
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui_FileBrowser(selectedFile)) {
-            *_cart = new cart(selectedFile);
+            *_cart = cart::fromFile(selectedFile);
             open = false;
         }
         ImGui::EndPopup();

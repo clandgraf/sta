@@ -8,10 +8,18 @@
 #include <filesystem>
 
 #include "defs.hpp"
+#include "util.hpp"
 
-size_t const PRG_BANK_SIZE = 0x4000;
-size_t const CHR_BANK_SIZE = 0x2000;
-size_t const TRAINER_BANK_SIZE = 0x200;
+constexpr uint32_t HEADER_AS_UINT32(uint8_t* h) {
+    return ((h[0]) | ((h[1]) << 8) | ((h[2]) << 16) | ((h[3]) << 24));
+}
+
+uint32_t constexpr ZIP_MAGIC = 0x04034b50;
+uint32_t constexpr INES_MAGIC = 0x1a53454e;
+
+size_t constexpr PRG_BANK_SIZE = 0x4000;
+size_t constexpr CHR_BANK_SIZE = 0x2000;
+size_t constexpr TRAINER_BANK_SIZE = 0x200;
 
 typedef uint8_t prg_bank[PRG_BANK_SIZE];
 typedef uint8_t chr_bank[CHR_BANK_SIZE];
@@ -33,6 +41,22 @@ struct ines_header {
 
 class cart {
 public:
+    template<typename Path>
+    static cart* fromFile(Path p) {
+        uint8_t* data = readFile(p);
+
+        switch (HEADER_AS_UINT32(((ines_header*)data)->magic)) {
+        case INES_MAGIC:
+            break;
+        case ZIP_MAGIC:
+            // TODO unzip otf
+        default:
+            return nullptr;
+        }
+
+        return new cart(data);
+    }
+
     union {
         uint8_t* data;
         ines_header* header;
@@ -46,8 +70,7 @@ public:
     // play choice inst-rom
     // play choice p-rom
 
-    cart(const char* path);
-    cart(const std::filesystem::path& path);
+    cart(uint8_t*);
     ~cart();
 
     inline uint8_t prg_size() const { return this->header->prg_size; }
@@ -57,9 +80,8 @@ public:
     inline chr_bank& chr(uint8_t bank) const { return this->chr_banks[bank]; };
 
     uint8_t readb_cpu(uint16_t addr);
-private:
-    void _init();
 
+private:
     uint8_t readb_cpu_nrom(uint16_t addr);
 };
 

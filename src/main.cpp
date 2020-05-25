@@ -8,7 +8,7 @@ int main(int ac, char ** av) {
     const char* romPath = cliValue(ac, av, "-rom");
     bool fullscreen = cliSwitch(ac, av, "-fullscreen");
 
-    cart* _cart = romPath ? new cart(romPath) : nullptr;
+    cart* _cart = romPath ? cart::fromFile(romPath) : nullptr;
 
     if (!initUi(fullscreen)) {
         return EXIT_FAILURE;

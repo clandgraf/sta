@@ -31,6 +31,7 @@
     <ClCompile Include="src\gui_filebrowser.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rom.cpp" />
+    <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\clargs.hpp" />
@@ -40,6 +41,7 @@
     <ClInclude Include="src\gui_opengl.hpp" />
     <ClInclude Include="src\mappers.hpp" />
     <ClInclude Include="src\rom.hpp" />
+    <ClInclude Include="src\util.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

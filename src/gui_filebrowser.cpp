@@ -4,14 +4,18 @@
 #include <vector>
 #include "gui_filebrowser.hpp"
 
+static const int BUFFER_LEN = 0xff;
+
 namespace fs = std::filesystem;
 static fs::path fileBrowserCurrentDir;
-static char fileBrowserCurrentDirCstr[0xff];
+static char fileBrowserInputBuffer[BUFFER_LEN];
 static std::vector<fs::path> files;
 static std::vector<const char *> filesCstr;
 static int fileBrowserSelection = 0;
 
-void updatePath() {
+static void updateChildren() {
+    strncpy(fileBrowserInputBuffer, fileBrowserCurrentDir.string().c_str(), BUFFER_LEN - 1);
+
     for (const auto& cstr : filesCstr) {
         free((void*)cstr);
     }
@@ -26,28 +30,46 @@ void updatePath() {
     }
 }
 
-void updatePathFromPath(const fs::path& p) {
+void updateFromPath(const fs::path& p) {
     fileBrowserCurrentDir = p;
-    strncpy(fileBrowserCurrentDirCstr, fileBrowserCurrentDir.string().c_str(), 0xff - 1);
-    updatePath();
+    updateChildren();
+}
+
+void updateFromString(const char* p) {
+    fileBrowserCurrentDir = p;
+    updateChildren();
 }
 
 bool ImGui_FileBrowser(fs::path& selectedFile) {
     if (ImGui::Button("Up")) {
-        updatePathFromPath(fileBrowserCurrentDir.parent_path());
+        updateFromPath(fileBrowserCurrentDir.parent_path());
     }
     ImGui::SameLine(); 
-    ImGui::InputText("##Path", fileBrowserCurrentDirCstr, IM_ARRAYSIZE(fileBrowserCurrentDirCstr));
+    if (ImGui::InputText("##Path", fileBrowserInputBuffer, IM_ARRAYSIZE(fileBrowserInputBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
+        fs::path tmpPath = fileBrowserInputBuffer;
+        if (fs::exists(tmpPath)) {
+            if (fs::is_directory(tmpPath)) {
+                updateFromPath(tmpPath);
+            } else {
+                selectedFile = tmpPath;
+                return true;
+            }
+        } else {
+            updateFromPath(fileBrowserCurrentDir);
+        }
+    }
 
+    ImGui::PushItemWidth(-1);
     if (ImGui::ListBox("##Files", &fileBrowserSelection, filesCstr.data(), filesCstr.size(), 10)) {
         fs::path selectedPath = files[fileBrowserSelection];
         if (fs::is_directory(selectedPath)) {
-            updatePathFromPath(selectedPath);
+            updateFromPath(selectedPath);
         } else {
             selectedFile = selectedPath;
             return true;
         }
     }
+    ImGui::PopItemWidth();
 
     return false;
 }
@@ -59,7 +81,5 @@ void ImGui_FileBrowser_Init() {
     char* base = getenv("HOME");
 #endif
 
-    fileBrowserCurrentDir = base;
-    strncpy(fileBrowserCurrentDirCstr, base, 0xff - 1);
-    updatePath();
+    updateFromString(base);
 }

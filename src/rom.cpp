@@ -3,46 +3,11 @@
 #include <iostream>
 #include "rom.hpp"
 
-const uint8_t FLAG_TRAINER = 1 << 2;
+constexpr uint8_t FLAG_TRAINER = 1 << 2;
 
-uint8_t* readFile(std::ifstream& file) {
-    file.seekg(0, file.end);
-    size_t length = file.tellg();
-    file.seekg(0, file.beg);
+cart::cart(uint8_t* data) {
+    this->data = data;
 
-    uint8_t* data = new uint8_t[length];
-    file.read((char*)(data), length);
-
-    return data;
-}
-
-uint8_t* readFile(const char* path) {
-    std::ifstream file(path, std::ios::binary);
-    uint8_t* data = readFile(file);
-    file.close();
-    return data;
-}
-
-uint8_t* readFile(const std::filesystem::path& path) {
-    std::ifstream file(path, std::ios::binary);
-    uint8_t* data = readFile(file);
-    file.close();
-    return data;
-}
-
-cart::cart(const char* path)
-{
-    this->data = readFile(path);
-    _init();
-}
-
-cart::cart(const std::filesystem::path& path)
-{
-    this->data = readFile(path);
-    _init();
-}
-
-void cart::_init() {
     // Now go through each entity in image and setup cart struct
     uint8_t* cart_off = this->data;
     cart_off += 0x10;  // After header
@@ -71,7 +36,6 @@ void cart::_init() {
 
     // Setup mapper id from flags fields from hi nybble of flags 6, 7
     this->mapper_id = (this->header->flags_7 & 0xf0) & (this->header->flags_6 >> 4);
-
 }
 
 cart::~cart()
