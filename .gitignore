@@ -1,7 +1,5 @@
 assets/
 imgui.ini
-sta.vcxproj*
-sta.sln
 
 # Visual Studio
 Debug/

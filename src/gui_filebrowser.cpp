@@ -1,8 +1,8 @@
 #include <imgui.h>
 #include <cstring>
 #include <cstdlib>
-#include <filesystem>
 #include <vector>
+#include "gui_filebrowser.hpp"
 
 namespace fs = std::filesystem;
 
@@ -13,15 +13,22 @@ static std::vector<fs::path> files;
 static std::vector<const char *> filesCstr;
 static int fileBrowserSelection = 0;
 
-void ImGui_FileBrowser() {
-    ImGui::InputText("Path", fileBrowserBuffer, IM_ARRAYSIZE(fileBrowserBuffer));
+bool ImGui_FileBrowser(fs::path& selectedFile) {
+    ImGui::Button("Up");
+    ImGui::SameLine(); 
+    ImGui::InputText("##Path", fileBrowserBuffer, IM_ARRAYSIZE(fileBrowserBuffer));
 
-    if (ImGui::ListBox("Files", &fileBrowserSelection, filesCstr.data(), filesCstr.size(), 10)) {
+    if (ImGui::ListBox("##Files", &fileBrowserSelection, filesCstr.data(), filesCstr.size(), 10)) {
         fs::path selectedPath = files[fileBrowserSelection];
         if (fs::is_directory(selectedPath)) {
             
+        } else {
+            selectedFile = selectedPath;
+            return true;
         }
     }
+
+    return false;
 }
 
 void updatePath() {

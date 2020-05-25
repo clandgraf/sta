@@ -1,9 +1,6 @@
 #pragma once
 
-#include <cstring>
-#include <cstdlib>
 #include <filesystem>
-#include <vector>
 
-extern void ImGui_FileBrowser();
+extern bool ImGui_FileBrowser(std::filesystem::path&);
 extern void ImGui_FileBrowser_Init();

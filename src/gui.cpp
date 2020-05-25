@@ -6,11 +6,14 @@
 
 #include <iostream>
 #include <cstdio>
+#include <filesystem>
 
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <imgui_memory_editor.h>
 
 #include "gui_filebrowser.hpp"
+
+namespace fs = std::filesystem;
 
 static ImFont* defaultFont;
 static ImFont* sansFont;
@@ -110,14 +113,18 @@ void renderMemoryView(cart* cart) {
 }
 
 void renderOpenRomDialog() {
-    if (ImGui::BeginPopupModal("Open ROM", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui_FileBrowser();
-
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+    fs::path selectedFile;
+    bool open = true;
+    if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui_FileBrowser(selectedFile)) {
+            // Load Cart
+            open = false;
+        }
         ImGui::EndPopup();
+    }
+
+    if (!open) {
+        ImGui::CloseCurrentPopup();
     }
 }
 
