@@ -112,12 +112,12 @@ void renderMemoryView(cart* cart) {
     }
 }
 
-void renderOpenRomDialog() {
+void renderOpenRomDialog(cart** _cart) {
     fs::path selectedFile;
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui_FileBrowser(selectedFile)) {
-            // Load Cart
+            *_cart = new cart(selectedFile);
             open = false;
         }
         ImGui::EndPopup();
@@ -128,7 +128,7 @@ void renderOpenRomDialog() {
     }
 }
 
-void doUi(cart* cart) {
+void doUi(cart** cart) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -143,9 +143,9 @@ void doUi(cart* cart) {
     // Render Views
     ImGui::PushFont(sansFont);
     renderMenuBar();
-    renderOpenRomDialog();
-    renderRomInfo(cart);
-    renderMemoryView(cart);
+    renderOpenRomDialog(cart);
+    renderRomInfo(*cart);
+    renderMemoryView(*cart);
     ImGui::PopFont();
 
     // Rendering

@@ -26,12 +26,14 @@
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_glfw.cpp" />
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_opengl3.cpp" />
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp" />
+    <ClCompile Include="src\clargs.cpp" />
     <ClCompile Include="src\gui.cpp" />
     <ClCompile Include="src\gui_filebrowser.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rom.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\clargs.hpp" />
     <ClInclude Include="src\defs.hpp" />
     <ClInclude Include="src\gui.hpp" />
     <ClInclude Include="src\gui_filebrowser.hpp" />
@@ -137,14 +139,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\chris\source\repos\sta\contrib\imgui-1.76;C:\Users\chris\source\repos\sta\contrib\glad;C:\Users\chris\lib\glfw-3.3.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\contrib\imgui-1.76;$(ProjectDir)\contrib\glad;%USERPROFILE%\lib\glfw-3.3.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\chris\lib\glfw-3.3.bin.WIN64\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%USERPROFILE%\lib\glfw-3.3.bin.WIN64\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

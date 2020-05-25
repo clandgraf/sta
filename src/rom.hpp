@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <filesystem>
 
 #include "defs.hpp"
 
@@ -46,6 +47,7 @@ public:
     // play choice p-rom
 
     cart(const char* path);
+    cart(const std::filesystem::path& path);
     ~cart();
 
     inline uint8_t prg_size() const { return this->header->prg_size; }
@@ -56,6 +58,8 @@ public:
 
     uint8_t readb_cpu(uint16_t addr);
 private:
+    void _init();
+
     uint8_t readb_cpu_nrom(uint16_t addr);
 };
 
