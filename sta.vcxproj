@@ -27,19 +27,23 @@
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_opengl3.cpp" />
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp" />
     <ClCompile Include="src\clargs.cpp" />
+    <ClCompile Include="src\emu.cpp" />
     <ClCompile Include="src\gui.cpp" />
     <ClCompile Include="src\gui_filebrowser.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\mem.cpp" />
     <ClCompile Include="src\rom.cpp" />
     <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\clargs.hpp" />
     <ClInclude Include="src\defs.hpp" />
+    <ClInclude Include="src\emu.hpp" />
     <ClInclude Include="src\gui.hpp" />
     <ClInclude Include="src\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui_opengl.hpp" />
     <ClInclude Include="src\mappers.hpp" />
+    <ClInclude Include="src\mem.hpp" />
     <ClInclude Include="src\rom.hpp" />
     <ClInclude Include="src\util.hpp" />
   </ItemGroup>

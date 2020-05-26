@@ -1,7 +1,9 @@
-#include <cstdlib>
+﻿#include <cstdlib>
 #include <iostream>
 #include "gui.hpp"
 #include "rom.hpp"
+#include "mem.hpp"
+#include "emu.hpp"
 #include "clargs.hpp"
 
 void printUsage(const char* prog) {
@@ -18,14 +20,20 @@ int main(int ac, char ** av) {
         return EXIT_SUCCESS;
     }
 
-    cart* _cart = romPath ? cart::fromFile(romPath) : nullptr;
+    emu _emu;
+    if (romPath) {
+        cart* _cart = cart::fromFile(romPath);
+        if (_cart) {
+            _emu.init(_cart);
+        }
+    }
 
     if (!initUi(fullscreen)) {
         return EXIT_FAILURE;
     }
 
     while (!isWindowClosing()) {
-        doUi(&_cart);
+        doUi(_emu);
     }
 
     teardownUi();

@@ -3,6 +3,8 @@
 
 #include "gui.hpp"
 #include "rom.hpp"
+#include "mem.hpp"
+#include "emu.hpp"
 
 #include <iostream>
 #include <cstdio>
@@ -112,13 +114,17 @@ void renderMemoryView(cart* cart) {
     }
 }
 
-void renderOpenRomDialog(cart** _cart) {
+void renderOpenRomDialog(emu& _emu) {
     fs::path selectedFile;
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui_FileBrowser(selectedFile)) {
-            *_cart = cart::fromFile(selectedFile);
-            open = false;
+            cart* _cart = cart::fromFile(selectedFile);
+            if (_cart) {
+                _emu.init(_cart);
+                open = false;
+            }
+            
         }
         ImGui::EndPopup();
     }
@@ -128,7 +134,7 @@ void renderOpenRomDialog(cart** _cart) {
     }
 }
 
-void doUi(cart** cart) {
+void doUi(emu& _emu) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -143,9 +149,9 @@ void doUi(cart** cart) {
     // Render Views
     ImGui::PushFont(sansFont);
     renderMenuBar();
-    renderOpenRomDialog(cart);
-    renderRomInfo(*cart);
-    renderMemoryView(*cart);
+    renderOpenRomDialog(_emu);
+    renderRomInfo(_emu.m_cart);
+    renderMemoryView(_emu.m_cart);
     ImGui::PopFont();
 
     // Rendering

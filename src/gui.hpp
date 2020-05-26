@@ -1,8 +1,8 @@
 #pragma once
 
-class cart;
+class emu;
 
 extern bool initUi(bool fullscreen = false);
 extern bool isWindowClosing();
-extern void doUi(cart**);
+extern void doUi(emu&);
 extern void teardownUi();
