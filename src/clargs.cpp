@@ -18,7 +18,7 @@ bool cliSwitch(int ac, char** av, const char* param) {
 
 char* cliValue(int ac, char** av, const char* param) {
     int i = _cliIndex(ac, av, param) + 1;
-    if (i < ac) {
+    if (i < ac && i > 1) {
         return av[i];
     }
 
