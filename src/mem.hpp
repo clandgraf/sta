@@ -5,16 +5,16 @@
 
 #include <cstdint>
 
-class cart;
+class Cart;
 
 class mem {
 public:
-    mem(cart* cart_);
+    mem(Cart* cart_);
 
     uint8_t readb(uint16_t addr);
 
 private:
-    cart* m_cart;
+    Cart* m_cart;
 
     uint8_t internal_ram[0x800];
 };

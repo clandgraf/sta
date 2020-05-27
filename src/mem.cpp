@@ -3,8 +3,8 @@
 #include "rom.hpp"
 #include "mem.hpp"
 
-mem::mem(cart* cart_)
-    : m_cart(cart_)
+mem::mem(Cart* cart)
+    : m_cart(cart)
 {}
 
 uint8_t mem::readb(uint16_t addr) {

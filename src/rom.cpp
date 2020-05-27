@@ -5,7 +5,7 @@
 
 constexpr uint8_t FLAG_TRAINER = 1 << 2;
 
-cart::cart(uint8_t* data) {
+Cart::Cart(uint8_t* data) {
     this->data = data;
 
     // Now go through each entity in image and setup cart struct
@@ -38,12 +38,12 @@ cart::cart(uint8_t* data) {
     this->mapper_id = (this->header->flags_7 & 0xf0) & (this->header->flags_6 >> 4);
 }
 
-cart::~cart()
+Cart::~Cart()
 {
     delete this->data;
 }
 
-uint8_t cart::readb_cpu(uint16_t addr)
+uint8_t Cart::readb_cpu(uint16_t addr)
 {
     if (this->mapper_id == 0) {
         return this->readb_cpu_nrom(addr);
@@ -53,7 +53,7 @@ uint8_t cart::readb_cpu(uint16_t addr)
     exit(1);
 }
 
-uint8_t cart::readb_cpu_nrom(uint16_t addr)
+uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 {
     return this->prg(0)[addr - 0x8000];
 }

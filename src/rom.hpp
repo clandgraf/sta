@@ -39,10 +39,10 @@ struct ines_header {
 };
 )
 
-class cart {
+class Cart {
 public:
     template<typename Path>
-    static cart* fromFile(Path p) {
+    static Cart* fromFile(Path p) {
         uint8_t* data = readFile(p);
 
         switch (HEADER_AS_UINT32(((ines_header*)data)->magic)) {
@@ -54,7 +54,7 @@ public:
             return nullptr;
         }
 
-        return new cart(data);
+        return new Cart(data);
     }
 
     union {
@@ -70,8 +70,8 @@ public:
     // play choice inst-rom
     // play choice p-rom
 
-    cart(uint8_t*);
-    ~cart();
+    Cart(uint8_t*);
+    ~Cart();
 
     inline uint8_t prg_size() const { return this->header->prg_size; }
     inline uint8_t chr_size() const { return this->header->chr_size; }

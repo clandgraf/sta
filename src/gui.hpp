@@ -1,8 +1,8 @@
 #pragma once
 
-class emu;
+class Emu;
 
 extern bool initUi(bool fullscreen = false);
 extern bool isWindowClosing();
-extern void doUi(emu&);
+extern void doUi(Emu&);
 extern void teardownUi();

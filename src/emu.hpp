@@ -3,7 +3,7 @@
 #include <cstdint>
 
 class mem;
-class cart;
+class Cart;
 
 // Address where execution starts
 uint16_t constexpr RESET_VECTOR = 0xfffc;
@@ -12,10 +12,10 @@ struct registers {
     
 };
 
-class emu {
+class Emu {
 public:
     mem* m_mem = nullptr;
-    cart* m_cart = nullptr;
+    Cart* m_cart = nullptr;
 
     uint16_t m_pc = 0x0000;
     uint8_t m_sp = 0x00;
@@ -23,24 +23,29 @@ public:
     bool m_f_irq = false;
     bool m_f_decimal = false;
 
-    emu() {}
+    Emu() {}
 
-    void init(cart* _cart);
+    void init(Cart* _cart);
+    bool isInitialized();
     void reset();
-    void step();
+    int8_t stepOperation();
+    int8_t stepCycle();
 
 private:
-    enum class mode {
+    enum class Mode {
         EXEC,
         RESET,
     };
 
-    mode m_mode = mode::RESET;
+    Mode m_mode = Mode::RESET;
 
     // How many Cycles does the current instruction still have
     int8_t m_cycles_left = 0;
+    uint8_t m_next_opcode = 0;
+    uint8_t m_last_cycle_fetched = false;
     
     // CPU Initialization after RESET
+    void exec_opcode();
     void exec_reset();
 
     void fetch();

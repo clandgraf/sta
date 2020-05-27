@@ -20,11 +20,11 @@ int main(int ac, char ** av) {
         return EXIT_SUCCESS;
     }
 
-    emu _emu;
+    Emu emu;
     if (romPath) {
-        cart* _cart = cart::fromFile(romPath);
-        if (_cart) {
-            _emu.init(_cart);
+        Cart* cart = Cart::fromFile(romPath);
+        if (cart) {
+            emu.init(cart);
         }
     }
 
@@ -33,7 +33,7 @@ int main(int ac, char ** av) {
     }
 
     while (!isWindowClosing()) {
-        doUi(_emu);
+        doUi(emu);
     }
 
     teardownUi();

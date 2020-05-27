@@ -5,6 +5,8 @@
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
+#include "mappers.hpp"
+#include "IconsMaterialDesign.h"
 
 #include <iostream>
 #include <cstdio>
@@ -25,6 +27,7 @@ static MemoryEditor mem_edit;
 
 static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+static bool showEmuState = true;
 static bool showMemoryView = true;
 static bool showRomInfo = true;
 
@@ -52,6 +55,10 @@ void renderMenuBar() {
 
             ImGui::Separator();
 
+            if (ImGui::MenuItem("Emu State", nullptr, showEmuState)) {
+                showEmuState = !showEmuState;
+            }
+
             if (ImGui::MenuItem("Rom Info", nullptr, showRomInfo)) {
                 showRomInfo = !showRomInfo;
             }
@@ -69,39 +76,60 @@ void renderMenuBar() {
     }
 }
 
-void renderRomInfo(cart* cart) {
-    if (cart && showRomInfo) {
+void renderRomInfo(Emu& emu) {
+    if (emu.isInitialized() && showRomInfo) {
         if (ImGui::Begin("ROM Info", &showRomInfo)) {
-            ImGui::Text("Mapper: %d, %s", cart->mapper_id, "foo");
-            ImGui::Text("PRG ROM #: %d", cart->prg_size());
-            ImGui::Text("CHR ROM #: %d", cart->chr_size());
+            ImGui::Text("Mapper: %d, %s", emu.m_cart->mapper_id, mappers[emu.m_cart->mapper_id]);
+            ImGui::Text("PRG ROM #: %d", emu.m_cart->prg_size());
+            ImGui::Text("CHR ROM #: %d", emu.m_cart->chr_size());
         }
         ImGui::End();
     }
 }
 
-void renderMemoryView(cart* cart) {
+void renderEmuState(Emu& emu) {
+    if (emu.isInitialized() && showEmuState) {
+        if (ImGui::Begin("Emu State", &showEmuState)) {
+            //ImGui::PushFont(iconFont);
+            if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
+                emu.stepOperation();
+            }
+            //ImGui::PopFont();
+
+            ImGui::PushFont(monoFont);
+            ImGui::Text("PC: %04x", emu.m_pc);
+            ImGui::Text("SP: %02x", emu.m_sp);
+            ImGui::Text("A:  %02x", 0); 
+            ImGui::Text("X:  %02x", 0);
+            ImGui::Text("Y:  %02x", 0);
+            ImGui::PopFont();
+        }
+        ImGui::End();
+    }
+}
+
+void renderMemoryView(Emu& emu) {
     // Create Memory View
-    if (cart && showMemoryView) {
+    if (emu.isInitialized() && showMemoryView) {
         if (ImGui::Begin("Memory", &showMemoryView)) {
             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
             char title[10];
             if (ImGui::BeginTabBar("Memory Tabbar", tab_bar_flags)) {
-                for (uint8_t i = 0; i < cart->prg_size(); i++) {
+                for (uint8_t i = 0; i < emu.m_cart->prg_size(); i++) {
                     snprintf(title, 10, "PRG %d", i);
                     if (ImGui::BeginTabItem(title)) {
                         ImGui::PushFont(monoFont);
-                        mem_edit.DrawContents(cart->prg_banks[i], 0x4000, 0x4000 * i);
+                        mem_edit.DrawContents(emu.m_cart->prg_banks[i], 0x4000, 0x8000 + 0x4000 * i);  // TODO only true for NROM
                         ImGui::PopFont();
                         ImGui::EndTabItem();
                     }
                 }
 
-                for (uint8_t i = 0; i < cart->chr_size(); i++) {
+                for (uint8_t i = 0; i < emu.m_cart->chr_size(); i++) {
                     snprintf(title, 10, "CHR %d", i);
                     if (ImGui::BeginTabItem(title)) {
                         ImGui::PushFont(monoFont);
-                        mem_edit.DrawContents(cart->chr_banks[i], 0x2000, 0x2000 * i);
+                        mem_edit.DrawContents(emu.m_cart->chr_banks[i], 0x2000, 0x2000 * i);
                         ImGui::PopFont();
                         ImGui::EndTabItem();
                     }
@@ -114,14 +142,14 @@ void renderMemoryView(cart* cart) {
     }
 }
 
-void renderOpenRomDialog(emu& _emu) {
+void renderOpenRomDialog(Emu& emu) {
     fs::path selectedFile;
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui_FileBrowser(selectedFile)) {
-            cart* _cart = cart::fromFile(selectedFile);
-            if (_cart) {
-                _emu.init(_cart);
+            Cart* cart = Cart::fromFile(selectedFile);
+            if (cart) {
+                emu.init(cart);
                 open = false;
             }
             
@@ -134,7 +162,7 @@ void renderOpenRomDialog(emu& _emu) {
     }
 }
 
-void doUi(emu& _emu) {
+void doUi(Emu& emu) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -148,10 +176,14 @@ void doUi(emu& _emu) {
 
     // Render Views
     ImGui::PushFont(sansFont);
+
+    ImGui::ShowDemoWindow();
+
     renderMenuBar();
-    renderOpenRomDialog(_emu);
-    renderRomInfo(_emu.m_cart);
-    renderMemoryView(_emu.m_cart);
+    renderOpenRomDialog(emu);
+    renderEmuState(emu);
+    renderRomInfo(emu);
+    renderMemoryView(emu);
     ImGui::PopFont();
 
     // Rendering
@@ -165,6 +197,8 @@ void doUi(emu& _emu) {
 
     glfwSwapBuffers(window);
 }
+
+#define ICON_FONT "assets/" ## FONT_ICON_FILE_NAME_FAR
 
 bool initImGUI(GLFWwindow* window) {
     // Setup Dear ImGui context
@@ -180,13 +214,13 @@ bool initImGUI(GLFWwindow* window) {
     // Setup Platform/Renderer bindings
     ImGui_Impl_Init();
 
-    defaultFont = io.Fonts->AddFontDefault();
     sansFont = io.Fonts->AddFontFromFileTTF("assets/SourceSansPro-Regular.ttf", 24.0f);
+    ImFontConfig config;
+    config.MergeMode = true;
+    static const ImWchar icon_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
+    io.Fonts->AddFontFromFileTTF("assets/MaterialIcons-Regular.ttf", 20.0f, &config, icon_ranges);
     monoFont = io.Fonts->AddFontFromFileTTF("assets/SourceCodePro-Medium.ttf", 20.0f);
-    if (!monoFont) {
-        std::cerr << "Failed to load Monospaced-Font!\n";
-        return false;
-    }
+    io.Fonts->Build();
 
     return true;
 }

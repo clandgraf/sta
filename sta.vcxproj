@@ -37,11 +37,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\clargs.hpp" />
+    <ClInclude Include="src\cpu_cycles.hpp" />
+    <ClInclude Include="src\cpu_mnemonics.hpp" />
+    <ClInclude Include="src\cpu_opcodes.hpp" />
     <ClInclude Include="src\defs.hpp" />
     <ClInclude Include="src\emu.hpp" />
     <ClInclude Include="src\gui.hpp" />
     <ClInclude Include="src\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui_opengl.hpp" />
+    <ClInclude Include="src\IconsMaterialDesign.h" />
     <ClInclude Include="src\mappers.hpp" />
     <ClInclude Include="src\mem.hpp" />
     <ClInclude Include="src\rom.hpp" />
