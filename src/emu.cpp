@@ -11,6 +11,8 @@ void Emu::init(Cart* cart) {
 
     m_cart = cart;
     m_mem = new mem(m_cart);
+
+    reset();
 }
 
 bool Emu::isInitialized() {
@@ -83,18 +85,14 @@ void Emu::fetch() {
     m_next_opcode = m_mem->readb(m_pc);
     m_cycles_left = OPC_CYCLES[m_next_opcode];
 
-    //std::stringstream ss;
-    //dump_opcode(ss, next_opcode);
-    //std::cout << std::hex << pc << " " << +next_opcode << " " << ss.str() << std::endl;
-
     m_pc++;
     m_last_cycle_fetched = true;
 }
 
 int8_t Emu::stepOperation() {
-    while (!m_last_cycle_fetched) {
+    do  {
         stepCycle();
-    }
+    } while (!m_last_cycle_fetched);
 
     return m_cycles_left;
 }

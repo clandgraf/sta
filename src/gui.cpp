@@ -177,7 +177,9 @@ void renderDisassembly(Emu& emu) {
     }
 
     if (ImGui::Begin("Disassembly", &showDisassembly)) {
+        ImGui::PushFont(monoFont);
         ImGui::Text(disassembledLine.c_str());
+        ImGui::PopFont();
     }
     ImGui::End();
 }
