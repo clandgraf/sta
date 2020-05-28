@@ -17,6 +17,10 @@ bool Emu::isInitialized() {
     return m_cart && m_mem;
 }
 
+uint8_t Emu::getOpcode() { return m_next_opcode; }
+uint16_t Emu::getOpcodeAddress() { return m_pc - 1; }
+uint8_t Emu::getImmediateArg(int offset) { return m_mem->readb(m_pc + offset); }
+
 void Emu::reset() {
     m_mode = Mode::RESET;
     m_cycles_left = 9;

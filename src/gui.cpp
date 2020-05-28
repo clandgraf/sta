@@ -5,6 +5,7 @@
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
+#include "disasm.hpp"
 #include "mappers.hpp"
 #include "IconsMaterialDesign.h"
 
@@ -30,6 +31,7 @@ static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 static bool showEmuState = true;
 static bool showMemoryView = true;
 static bool showRomInfo = true;
+static bool showDisassembly = true;
 
 void renderMenuBar() {
     bool openRom = false;
@@ -63,6 +65,10 @@ void renderMenuBar() {
                 showRomInfo = !showRomInfo;
             }
 
+            if (ImGui::MenuItem("Disassembly", nullptr, showDisassembly)) {
+                showDisassembly = !showDisassembly;
+            }
+
             if (ImGui::MenuItem("Memory", nullptr, showMemoryView)) {
                 showMemoryView = !showMemoryView;
             }
@@ -90,11 +96,9 @@ void renderRomInfo(Emu& emu) {
 void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
-            //ImGui::PushFont(iconFont);
             if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
                 emu.stepOperation();
             }
-            //ImGui::PopFont();
 
             ImGui::PushFont(monoFont);
             ImGui::Text("PC: %04x", emu.m_pc);
@@ -162,6 +166,22 @@ void renderOpenRomDialog(Emu& emu) {
     }
 }
 
+int16_t lastOpcode = -1;
+std::string disassembledLine{""};
+
+void renderDisassembly(Emu& emu) {
+    uint8_t currentOpcode = emu.getOpcode();
+    if (currentOpcode != lastOpcode && emu.getMode() == Emu::Mode::EXEC) {
+        lastOpcode = currentOpcode;
+        disassembledLine = disasmNextOpcode(emu);
+    }
+
+    if (ImGui::Begin("Disassembly", &showDisassembly)) {
+        ImGui::Text(disassembledLine.c_str());
+    }
+    ImGui::End();
+}
+
 void doUi(Emu& emu) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -177,13 +197,14 @@ void doUi(Emu& emu) {
     // Render Views
     ImGui::PushFont(sansFont);
 
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     renderMenuBar();
     renderOpenRomDialog(emu);
     renderEmuState(emu);
     renderRomInfo(emu);
     renderMemoryView(emu);
+    renderDisassembly(emu);
     ImGui::PopFont();
 
     // Rendering

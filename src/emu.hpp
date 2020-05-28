@@ -14,6 +14,11 @@ struct registers {
 
 class Emu {
 public:
+    enum class Mode {
+        EXEC,
+        RESET,
+    };
+
     mem* m_mem = nullptr;
     Cart* m_cart = nullptr;
 
@@ -31,12 +36,12 @@ public:
     int8_t stepOperation();
     int8_t stepCycle();
 
-private:
-    enum class Mode {
-        EXEC,
-        RESET,
-    };
+    Mode getMode() { return m_mode; }
+    uint8_t getOpcode();
+    uint16_t getOpcodeAddress();
+    uint8_t getImmediateArg(int offset);
 
+private:
     Mode m_mode = Mode::RESET;
 
     // How many Cycles does the current instruction still have
