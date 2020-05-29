@@ -20,8 +20,10 @@ bool Emu::isInitialized() {
 }
 
 uint8_t Emu::getOpcode() { return m_next_opcode; }
+uint8_t Emu::getOpcode(uint16_t addr) { return m_mem->readb(addr); }
 uint16_t Emu::getOpcodeAddress() { return m_pc - 1; }
 uint8_t Emu::getImmediateArg(int offset) { return m_mem->readb(m_pc + offset); }
+uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(addr + 1 + offset); }
 
 void Emu::reset() {
     m_mode = Mode::RESET;

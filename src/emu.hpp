@@ -38,8 +38,10 @@ public:
 
     Mode getMode() { return m_mode; }
     uint8_t getOpcode();
+    uint8_t getOpcode(uint16_t addr);
     uint16_t getOpcodeAddress();
-    uint8_t getImmediateArg(int offset);
+    uint8_t getImmediateArg(int offset); 
+    uint8_t getImmediateArg(uint16_t addr, int offset);
 
 private:
     Mode m_mode = Mode::RESET;
