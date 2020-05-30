@@ -11,10 +11,12 @@ struct DisasmLine {
 };
 
 struct DisasmSegment {
-    uint16_t start;
-    uint16_t length;
+    uint16_t m_start;
+    uint16_t m_length;
 
-    std::map<uint16_t, DisasmLine> lines;
+    std::map<uint16_t, DisasmLine> m_lines;
+
+    DisasmSegment(uint16_t start) : m_start(start) {}
 };
 
 const char* disasmNextOpcode(Emu& emu, bool* end = nullptr, uint8_t* next = nullptr);

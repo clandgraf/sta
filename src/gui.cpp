@@ -170,18 +170,21 @@ int16_t lastOpcode = -1;
 std::string disassembledLine{""};
 
 void renderDisassembly(Emu& emu) {
-    uint8_t currentOpcode = emu.getOpcode();
-    if (currentOpcode != lastOpcode && emu.getMode() == Emu::Mode::EXEC) {
-        lastOpcode = currentOpcode;
-        disassembledLine = disasmNextOpcode(emu);
-    }
+    using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
-    if (ImGui::Begin("Disassembly", &showDisassembly)) {
-        ImGui::PushFont(monoFont);
-        ImGui::Text(disassembledLine.c_str());
-        ImGui::PopFont();
+    if (emu.getMode() == Emu::Mode::EXEC) {
+        DisasmSegmentSptr segment = disasmSegment(emu, emu.getOpcodeAddress());
+
+        if (ImGui::Begin("Disassembly", &showDisassembly)) {
+            ImGui::PushFont(monoFont);
+            for (auto& entry: segment->m_lines) {
+                auto& line = entry.second;
+                ImGui::Text(line.repr.c_str());
+            }
+            ImGui::PopFont();
+        }
+        ImGui::End();
     }
-    ImGui::End();
 }
 
 void doUi(Emu& emu) {

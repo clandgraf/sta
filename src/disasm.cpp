@@ -11,6 +11,9 @@
 #include "cpu_opcodes.hpp"
 #include "cpu_mnemonics.hpp"
 
+
+using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
+
 static size_t constexpr BUFLEN = 0xff;
 
 // Branching, Jumps and Returns end an analysis segment
@@ -74,13 +77,12 @@ const char* disasmNextOpcode(Emu& emu, bool* end, uint8_t* next) {
     return disasmOpcode(emu, emu.getOpcodeAddress(), end, next);
 }
 
-std::map<uint16_t, std::shared_ptr<DisasmSegment>> disassembly;
+std::map<uint16_t, DisasmSegmentSptr> disassembly;
 
-std::shared_ptr<DisasmSegment> 
-findSegment(uint16_t addr) {
+DisasmSegmentSptr findSegment(uint16_t addr) {
     for (auto const& segment: disassembly) {
         uint16_t start = segment.first;
-        uint16_t end = segment.first + segment.second->length;
+        uint16_t end = segment.first + segment.second->m_length;
         if (addr >= start && addr < end) {
             return segment.second;
         }
@@ -89,24 +91,41 @@ findSegment(uint16_t addr) {
     return nullptr;
 }
 
-std::shared_ptr<DisasmSegment> disasmSegment(Emu& emu, uint16_t addr) {
-    std::shared_ptr<DisasmSegment> segment = findSegment(addr);
+void mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr other) {
+    segment->m_lines.insert(other->m_lines.begin(), other->m_lines.end());
+    segment->m_length += other->m_length;
+}
+
+DisasmSegmentSptr disasmSegment(Emu& emu, uint16_t addr) {
+    DisasmSegmentSptr segment = findSegment(addr);
     if (segment) {
         return segment;
     }
 
-    segment = std::shared_ptr<DisasmSegment>(new DisasmSegment());
+    segment = std::make_shared<DisasmSegment>(addr);
+    disassembly.insert({addr, segment});
 
     uint8_t next = 0;
     bool end = false;
 
     do {
-        DisasmLine line;
-        line.offset = addr += next;
-        line.repr = disasmOpcode(emu, addr, &end, &next);
-        segment->lines.insert({line.offset, line});
+        DisasmLine line{
+            addr, 
+            disasmOpcode(emu, addr, &end, &next) 
+        };
+        segment->m_lines.insert({line.offset, line});
+        addr += next;
+
+        // Check wether current segment is adjacent to an existing segment
+        auto nextSegment = disassembly.find(addr);
+        if (nextSegment != disassembly.end()) {
+            mergeSegments(segment, nextSegment->second);
+            disassembly.erase(addr);
+            end = true;
+        }
+
     } while (!end);
 
-    segment->length = addr - segment->start;
+    segment->m_length = addr - segment->m_start;
     return segment;
 }
