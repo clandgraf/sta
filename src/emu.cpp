@@ -75,12 +75,13 @@ void Emu::exec_opcode() {
         return hi << 8 | lo; 
     };
 
-    auto branch = [this, &lo](bool flag) {
-        lo = m_pc + (int8_t) fetch_arg();
+    auto branch = [this, &hi, &lo](bool flag) {
+        hi = (int8_t) fetch_arg();
+        lo = m_pc + hi;
         if (flag) {
             m_cyclesLeft++;
             // Check wether page boundary is crossed, PC still points to next instruction
-            if ((lo & 0xf0) != (m_pc &0xf0)) {
+            if ((lo & 0xf0) != (m_pc & 0xf0)) {
                 m_cyclesLeft++;
             }
             m_pc = lo;
@@ -134,6 +135,26 @@ void Emu::exec_opcode() {
         break;
     case OPC_SED:
         m_f_decimal = true;
+        break;
+
+    /* Transfer */
+    case OPC_TXS:
+        m_sp = m_r_x;
+        break;
+    case OPC_TSX:
+        updateNZ(m_r_x = m_sp);
+        break;
+    case OPC_TXA:
+        updateNZ(m_r_a = m_r_x);
+        break;
+    case OPC_TYA:
+        updateNZ(m_r_a = m_r_y);
+        break;
+    case OPC_TAX:
+        updateNZ(m_r_x = m_r_a);
+        break;
+    case OPC_TAY:
+        updateNZ(m_r_y = m_r_a);
         break;
 
     /* Load */
@@ -201,6 +222,7 @@ int8_t Emu::stepCycle() {
 
     case Mode::CYCLES:
         if (--m_cyclesLeft == 0) {
+            m_mode = Mode::EXEC;
             fetch();
         }
         break;
