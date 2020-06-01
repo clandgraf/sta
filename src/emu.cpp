@@ -27,7 +27,7 @@ uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(ad
 
 void Emu::reset() {
     m_mode = Mode::RESET;
-    m_cycles_left = 9;
+    m_cyclesLeft = 9;
 
     // TODO do in exec_reset
     m_f_irq = false;
@@ -35,7 +35,7 @@ void Emu::reset() {
 }
 
 void Emu::exec_reset() {
-    switch (--m_cycles_left) {
+    switch (--m_cyclesLeft) {
     case 8: // C0
         m_sp = 0x00;
         break;
@@ -66,7 +66,63 @@ void Emu::exec_reset() {
 }
 
 void Emu::exec_opcode() {
+    uint16_t hi;
+    uint16_t lo;
+
+    auto hilo = [this, &hi, &lo]{
+        lo = fetch_arg();
+        hi = fetch_arg();
+        return hi << 8 | lo; 
+    };
+
+    auto branch = [this, &lo](bool flag) {
+        lo = m_pc + (int8_t) fetch_arg();
+        if (flag) {
+            m_cyclesLeft++;
+            // Check wether page boundary is crossed, PC still points to next instruction
+            if ((lo & 0xf0) != (m_pc &0xf0)) {
+                m_cyclesLeft++;
+            }
+            m_pc = lo;
+        }
+    };
+
+    auto updateNZ = [this](uint8_t value) {
+        m_f_zero = value == 0;
+        m_f_negative = value & 0b10000000;
+    };
+
     switch (m_next_opcode) {
+
+    /* Branching */
+    case OPC_BPL:
+        branch(!m_f_negative);
+        break;
+    case OPC_BMI:
+        branch(m_f_negative);
+        break;
+    case OPC_BVC:
+        branch(!m_f_overflow);
+        break;
+    case OPC_BVS:
+        branch(m_f_overflow);
+        break;
+    case OPC_BCC:
+        branch(!m_f_carry);
+        break;
+    case OPC_BCS:
+        branch(m_f_carry);
+        break;
+    case OPC_BNE:
+        branch(!m_f_zero);
+        break;
+    case OPC_BEQ:
+        branch(m_f_zero);
+        break;
+
+    /* Jumps/Returns */
+
+    /* Set/Reser Flags */
     case OPC_CLI:
         m_f_irq = false;
         break;
@@ -79,13 +135,39 @@ void Emu::exec_opcode() {
     case OPC_SED:
         m_f_decimal = true;
         break;
+
+    /* Load */
+    case OPC_LDA_ABS:
+        updateNZ(m_r_a = m_mem->readb(hilo()));
+        break;
+    case OPC_LDA_IMD:
+        updateNZ(m_r_a = fetch_arg());
+        break;
+
+    case OPC_LDX_IMD:
+        updateNZ(m_r_x = fetch_arg());
+        break;
+    
+    /* Store */
+    case OPC_STA_ABS:
+        m_mem->writeb(hilo(), m_r_a);
+        break;
+
+    default:
+        reset();
+        break;
     }
+}
+
+
+uint8_t Emu::fetch_arg() {
+    return m_mem->readb(m_pc++);
 }
 
 
 void Emu::fetch() {
     m_next_opcode = m_mem->readb(m_pc);
-    m_cycles_left = OPC_CYCLES[m_next_opcode];
+    m_cyclesLeft = OPC_CYCLES[m_next_opcode];
 
     m_pc++;
     m_last_cycle_fetched = true;
@@ -96,7 +178,7 @@ int8_t Emu::stepOperation() {
         stepCycle();
     } while (!m_last_cycle_fetched);
 
-    return m_cycles_left;
+    return m_cyclesLeft;
 }
 
 int8_t Emu::stepCycle() {
@@ -104,16 +186,29 @@ int8_t Emu::stepCycle() {
 
     switch (m_mode) {
     case Mode::EXEC:
-        if (--m_cycles_left == 0) {
+        if (--m_cyclesLeft == 0) {
             exec_opcode();
-            fetch();
+            if (m_cyclesLeft > 0) {
+                if (m_mode != Mode::RESET) {
+                    m_mode = Mode::CYCLES;
+                }
+            } else {
+                fetch();
+            }
         }
 
         break;
+
+    case Mode::CYCLES:
+        if (--m_cyclesLeft == 0) {
+            fetch();
+        }
+        break;
+
     case Mode::RESET:
         exec_reset();
         break;
     }
 
-    return m_cycles_left;
+    return m_cyclesLeft;
 }

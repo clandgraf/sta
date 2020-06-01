@@ -16,6 +16,7 @@ class Emu {
 public:
     enum class Mode {
         EXEC,
+        CYCLES,  // Additional cycles
         RESET,
     };
 
@@ -27,6 +28,13 @@ public:
     
     bool m_f_irq = false;
     bool m_f_decimal = false;
+    bool m_f_carry = false;
+    bool m_f_zero = false;
+    bool m_f_overflow = false;
+    bool m_f_negative = false;
+    uint8_t m_r_a = 0x00;
+    uint8_t m_r_x = 0x00;
+    uint8_t m_r_y = 0x00;
 
     Emu() {}
 
@@ -46,14 +54,15 @@ public:
 private:
     Mode m_mode = Mode::RESET;
 
-    // How many Cycles does the current instruction still have
-    int8_t m_cycles_left = 0;
-    uint8_t m_next_opcode = 0;
-    uint8_t m_last_cycle_fetched = false;
+    
+    int8_t m_cyclesLeft = 0;  // How many Cycles does the current instruction still have
+    uint8_t m_next_opcode = 0;  // The opcode that is now executed
+    uint8_t m_last_cycle_fetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
     
     // CPU Initialization after RESET
     void exec_opcode();
     void exec_reset();
 
     void fetch();
+    uint8_t fetch_arg();
 };

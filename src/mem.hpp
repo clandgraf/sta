@@ -12,6 +12,7 @@ public:
     mem(Cart* cart_);
 
     uint8_t readb(uint16_t addr);
+    void writeb(uint16_t addr, uint8_t value);
 
 private:
     Cart* m_cart;

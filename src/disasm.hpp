@@ -12,12 +12,29 @@ struct DisasmLine {
 
 struct DisasmSegment {
     uint16_t m_start;
-    uint16_t m_length;
+    uint16_t m_length = 0;
 
     std::map<uint16_t, DisasmLine> m_lines;
 
     DisasmSegment(uint16_t start) : m_start(start) {}
 };
 
-const char* disasmNextOpcode(Emu& emu, bool* end = nullptr, uint8_t* next = nullptr);
-std::shared_ptr<DisasmSegment> disasmSegment(Emu& emu, uint16_t addr);
+class Disassembler {
+
+    using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
+
+public:
+    Disassembler(Emu& emu) : m_emu(emu) {}
+
+    const char* disasmOpcode(uint16_t address, bool* end = nullptr, uint8_t* next = nullptr);
+    const char* disasmNextOpcode(bool* end = nullptr, uint8_t* next = nullptr);
+    std::shared_ptr<DisasmSegment> disasmSegment(uint16_t addr);
+
+private:
+    Emu& m_emu;
+
+    std::map<uint16_t, DisasmSegmentSptr> m_disassembly;
+
+    DisasmSegmentSptr findSegment(uint16_t addr);
+    void mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr other);
+};

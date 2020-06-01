@@ -33,8 +33,8 @@ static bool isFlowBreaking(uint8_t opcode) {
     return false;
 }
 
-const char* disasmOpcode(Emu& emu, uint16_t address, bool* end = nullptr, uint8_t* next = nullptr) {
-    uint8_t opc = emu.getOpcode(address);
+const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* next) {
+    uint8_t opc = m_emu.getOpcode(address);
     uint8_t opc_ac = opc_mnemonic_params[opc];
 
     static char buf[BUFLEN];
@@ -50,15 +50,15 @@ const char* disasmOpcode(Emu& emu, uint16_t address, bool* end = nullptr, uint8_
         break;
     }
     case 1:
-        arg0 = emu.getImmediateArg(address, 0);
+        arg0 = m_emu.getImmediateArg(address, 0);
         bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, "%02x %02x    : ", opc, arg0);
         bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, opc_mnemonics[opc], arg0);
         break;
     case 2:
-        arg0 = emu.getImmediateArg(address, 0);
-        arg1 = emu.getImmediateArg(address, 1);
+        arg0 = m_emu.getImmediateArg(address, 0);
+        arg1 = m_emu.getImmediateArg(address, 1);
         bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, "%02x %02x %02x : ", opc, arg0, arg1);
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, opc_mnemonics[opc], arg0, arg1);
+        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, opc_mnemonics[opc], arg1, arg0);
         break;
     }
 
@@ -73,14 +73,12 @@ const char* disasmOpcode(Emu& emu, uint16_t address, bool* end = nullptr, uint8_
     return buf;
 }
 
-const char* disasmNextOpcode(Emu& emu, bool* end, uint8_t* next) {
-    return disasmOpcode(emu, emu.getOpcodeAddress(), end, next);
+const char* Disassembler::disasmNextOpcode(bool* end, uint8_t* next) {
+    return disasmOpcode(m_emu.getOpcodeAddress(), end, next);
 }
 
-std::map<uint16_t, DisasmSegmentSptr> disassembly;
-
-DisasmSegmentSptr findSegment(uint16_t addr) {
-    for (auto const& segment: disassembly) {
+DisasmSegmentSptr Disassembler::findSegment(uint16_t addr) {
+    for (auto const& segment: m_disassembly) {
         uint16_t start = segment.first;
         uint16_t end = segment.first + segment.second->m_length;
         if (addr >= start && addr < end) {
@@ -91,19 +89,19 @@ DisasmSegmentSptr findSegment(uint16_t addr) {
     return nullptr;
 }
 
-void mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr other) {
+void Disassembler::mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr other) {
     segment->m_lines.insert(other->m_lines.begin(), other->m_lines.end());
     segment->m_length += other->m_length;
 }
 
-DisasmSegmentSptr disasmSegment(Emu& emu, uint16_t addr) {
+DisasmSegmentSptr Disassembler::disasmSegment(uint16_t addr) {
     DisasmSegmentSptr segment = findSegment(addr);
     if (segment) {
         return segment;
     }
 
     segment = std::make_shared<DisasmSegment>(addr);
-    disassembly.insert({addr, segment});
+    m_disassembly.insert({addr, segment});
 
     uint8_t next = 0;
     bool end = false;
@@ -111,16 +109,16 @@ DisasmSegmentSptr disasmSegment(Emu& emu, uint16_t addr) {
     do {
         DisasmLine line{
             addr, 
-            disasmOpcode(emu, addr, &end, &next) 
+            disasmOpcode(addr, &end, &next) 
         };
         segment->m_lines.insert({line.offset, line});
         addr += next;
 
         // Check wether current segment is adjacent to an existing segment
-        auto nextSegment = disassembly.find(addr);
-        if (nextSegment != disassembly.end()) {
+        auto nextSegment = m_disassembly.find(addr);
+        if (nextSegment != m_disassembly.end()) {
             mergeSegments(segment, nextSegment->second);
-            disassembly.erase(addr);
+            m_disassembly.erase(addr);
             end = true;
         }
 

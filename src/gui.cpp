@@ -27,6 +27,7 @@ static ImFont* monoFont;
 static MemoryEditor mem_edit;
 
 static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+static ImVec4 highlight_text_color = ImVec4(0.89f, 0.0f, 0.0f, 1.00f);
 
 static bool showEmuState = true;
 static bool showMemoryView = true;
@@ -93,6 +94,9 @@ void renderRomInfo(Emu& emu) {
     }
 }
 
+#define IMGUI_CARRY_SET (u8"Carry: " ## ICON_MD_CHECK_BOX)
+#define IMGUI_CARRY_RES (u8"Carry: " ## ICON_MD_CHECK_BOX_OUTLINE_BLANK)
+
 void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
@@ -101,11 +105,12 @@ void renderEmuState(Emu& emu) {
             }
 
             ImGui::PushFont(monoFont);
-            ImGui::Text("PC: %04x", emu.m_pc);
-            ImGui::Text("SP: %02x", emu.m_sp);
-            ImGui::Text("A:  %02x", 0); 
-            ImGui::Text("X:  %02x", 0);
-            ImGui::Text("Y:  %02x", 0);
+            ImGui::Text("PC: %04x  Carry:    %01x", emu.m_pc, emu.m_f_carry);
+            ImGui::Text("SP: %02x    Zero:     %01x", emu.m_sp, emu.m_f_zero);
+            ImGui::Text("A:  %02x    IRQ:      %01x", emu.m_r_a, emu.m_f_irq); 
+            ImGui::Text("X:  %02x    Decimal:  %01x", emu.m_r_x, emu.m_f_decimal);
+            ImGui::Text("Y:  %02x    Overflow: %01x", emu.m_r_y, emu.m_f_overflow);
+            ImGui::Text("          Negative: %01x", emu.m_f_negative);
             ImGui::PopFont();
         }
         ImGui::End();
@@ -169,17 +174,24 @@ void renderOpenRomDialog(Emu& emu) {
 int16_t lastOpcode = -1;
 std::string disassembledLine{""};
 
-void renderDisassembly(Emu& emu) {
+void renderDisassembly(Emu& emu, Disassembler& disasm) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
     if (emu.getMode() == Emu::Mode::EXEC) {
-        DisasmSegmentSptr segment = disasmSegment(emu, emu.getOpcodeAddress());
+        uint16_t address = emu.getOpcodeAddress();
+        DisasmSegmentSptr segment = disasm.disasmSegment(address);
 
         if (ImGui::Begin("Disassembly", &showDisassembly)) {
             ImGui::PushFont(monoFont);
             for (auto& entry: segment->m_lines) {
                 auto& line = entry.second;
-                ImGui::Text(line.repr.c_str());
+                if (line.offset == address) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, highlight_text_color);
+                    ImGui::Text(line.repr.c_str());
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::Text(line.repr.c_str());
+                }
             }
             ImGui::PopFont();
         }
@@ -187,7 +199,7 @@ void renderDisassembly(Emu& emu) {
     }
 }
 
-void doUi(Emu& emu) {
+void doUi(Emu& emu, Disassembler& disasm) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -209,7 +221,7 @@ void doUi(Emu& emu) {
     renderEmuState(emu);
     renderRomInfo(emu);
     renderMemoryView(emu);
-    renderDisassembly(emu);
+    renderDisassembly(emu, disasm);
     ImGui::PopFont();
 
     // Rendering

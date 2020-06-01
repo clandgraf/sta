@@ -4,6 +4,7 @@
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
+#include "disasm.hpp"
 #include "clargs.hpp"
 
 void printUsage(const char* prog) {
@@ -21,6 +22,7 @@ int main(int ac, char ** av) {
     }
 
     Emu emu;
+    Disassembler disasm(emu);
     if (romPath) {
         Cart* cart = Cart::fromFile(romPath);
         if (cart) {
@@ -33,7 +35,7 @@ int main(int ac, char ** av) {
     }
 
     while (!isWindowClosing()) {
-        doUi(emu);
+        doUi(emu, disasm);
     }
 
     teardownUi();

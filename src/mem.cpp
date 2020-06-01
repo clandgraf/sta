@@ -34,3 +34,7 @@ uint8_t mem::readb(uint16_t addr) {
         return m_cart->readb_cpu(addr);
     }
 }
+
+void mem::writeb(uint16_t addr, uint8_t value) {
+
+}
