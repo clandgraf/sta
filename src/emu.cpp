@@ -1,6 +1,7 @@
 #include "emu.hpp"
 #include "mem.hpp"
 #include "rom.hpp"
+#include "ppu.hpp"
 
 #include "cpu_cycles.hpp"
 #include "cpu_opcodes.hpp"
@@ -8,9 +9,11 @@
 void Emu::init(Cart* cart) {
     if (m_mem) { delete m_mem; m_mem = nullptr; }
     if (m_cart) { delete m_cart; m_cart = nullptr; }
+    if (m_ppu) { delete m_ppu; m_ppu = nullptr; }
 
     m_cart = cart;
-    m_mem = new mem(m_cart);
+    m_ppu = new PPU(m_cart);
+    m_mem = new Memory(m_cart, m_ppu);
 
     reset();
 }

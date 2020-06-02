@@ -80,9 +80,15 @@ public:
     inline chr_bank& chr(uint8_t bank) const { return this->chr_banks[bank]; };
 
     uint8_t readb_cpu(uint16_t addr);
+    void writeb_cpu(uint16_t addr, uint8_t value);
+
+    uint8_t readb_ppu(uint16_t addr);
 
 private:
     uint8_t readb_cpu_nrom(uint16_t addr);
+    void writeb_cpu_nrom(uint16_t addr, uint8_t value);
+
+    uint8_t readb_ppu_nrom(uint16_t addr);
 };
 
 #endif

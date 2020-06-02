@@ -18,6 +18,8 @@
 
 #include "gui_filebrowser.hpp"
 
+#include "defs.hpp"
+
 namespace fs = std::filesystem;
 
 static ImFont* defaultFont;
@@ -266,7 +268,7 @@ bool initImGUI(GLFWwindow* window) {
 bool initUi(bool fullscreen) {
     ImGui_FileBrowser_Init();
 
-    if (!initWindow(fullscreen)) {
+    if (!initWindow(WINDOW_TITLE, fullscreen)) {
         return false;
     }
 

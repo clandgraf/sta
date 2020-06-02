@@ -2,8 +2,9 @@
 
 #include <cstdint>
 
-class mem;
+class Memory;
 class Cart;
+class PPU;
 
 // Address where execution starts
 uint16_t constexpr RESET_VECTOR = 0xfffc;
@@ -20,8 +21,9 @@ public:
         RESET,
     };
 
-    mem* m_mem = nullptr;
+    Memory* m_mem = nullptr;
     Cart* m_cart = nullptr;
+    PPU* m_ppu = nullptr;
 
     uint16_t m_pc = 0x0000;
     uint8_t m_sp = 0x00;

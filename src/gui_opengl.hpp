@@ -68,7 +68,7 @@ static void glfw_error_callback(int error, const char* description)
     std::cerr << "Glfw Error " << error << ": " << description << "\n";
 }
 
-bool initWindow(bool fullscreen) {
+bool initWindow(const char* title, bool fullscreen) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {
@@ -85,21 +85,28 @@ bool initWindow(bool fullscreen) {
     unsigned int width = 0;
     unsigned int height = 0;
 
-    if (fullscreen) {
-        monitor = glfwGetPrimaryMonitor();
-        mode = glfwGetVideoMode(monitor);
-    }
+    monitor = glfwGetPrimaryMonitor();
+    mode = glfwGetVideoMode(monitor);
 
     if (monitor && mode) {
-        width = mode->width;
-        height = mode->height;
-    }
-    else {
+        if (fullscreen) {
+            width = mode->width;
+            height = mode->height;
+        } else {
+            width = .66 * float(mode->width);
+            height = .66 * float(mode->height);
+        }
+    } else {
         width = 1920;
         height = 1200;
     }
 
-    window = glfwCreateWindow(width, height, "sta", monitor, nullptr);
+    window = glfwCreateWindow(
+        width, height, 
+        "staNES", 
+        fullscreen ? monitor : nullptr, 
+        nullptr
+    );
     if (window == NULL) {
         return false;
     }

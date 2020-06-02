@@ -6,16 +6,18 @@
 #include <cstdint>
 
 class Cart;
+class PPU;
 
-class mem {
+class Memory {
 public:
-    mem(Cart* cart_);
+    Memory(Cart*, PPU* m_ppu);
 
     uint8_t readb(uint16_t addr);
     void writeb(uint16_t addr, uint8_t value);
 
 private:
     Cart* m_cart;
+    PPU* m_ppu;
 
     uint8_t internal_ram[0x800];
 };

@@ -53,7 +53,34 @@ uint8_t Cart::readb_cpu(uint16_t addr)
     exit(1);
 }
 
+void Cart::writeb_cpu(uint16_t addr, uint8_t value) {
+    if (this->mapper_id == 0) {
+        return this->writeb_cpu_nrom(addr, value);
+    }
+
+    std::cerr << "ERROR: Unsupported Mapper"  << this->mapper_id << std::endl;
+    exit(1);
+}
+
 uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 {
     return this->prg(0)[addr - 0x8000];
+}
+
+uint8_t Cart::readb_ppu(uint16_t addr)
+{
+    if (this->mapper_id == 0) {
+        return this->readb_ppu_nrom(addr);
+    }
+
+    std::cerr << "ERROR: Unsupported Mapper " << this->mapper_id << std::endl;
+    exit(1);
+}
+
+uint8_t Cart::readb_ppu_nrom(uint16_t addr) {
+    return this->chr(0)[addr];
+}
+
+void Cart::writeb_cpu_nrom(uint16_t addr, uint8_t value) {
+    std::cerr << "ERROR: Write to NROM address " << addr << std::endl;
 }

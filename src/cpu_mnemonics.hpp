@@ -19,7 +19,7 @@ const char* opc_mnemonics[0x100] = {
  /* B */    "BCS %02x",      "LDA ($%02x), Y", "",           "", "LDY $%02x, X", "LDA $%02x, X",  "LDX $%02x, Y", "", "CLV", "LDA $%02x%02x, Y", "TSX",   "", "",                "LDA $%02x%02x, X", "LDX $%02x%02x, Y", "",
  /* C */    "CPY #$%02x",    "CMP ($%02x, X)", "",           "", "CPY $%02x",    "CMP $%02x",     "DEC $%02x",    "", "INY", "CMP #$%02x",       "DEX",   "", "CPY $%02x%02x",   "CMP $%02x%02x",    "DEC $%02x%02x",    "",
  /* D */    "BNE %02x",      "CMP ($%02x), Y", "",           "", "",             "CMP $%02x, X",  "DEC $%02x, X", "", "CLD", "CMP $%02x%02x, Y", "",      "", "",                "CMP $%02x%02x, X", "DEC $%02x%02x, X", "",
- /* E */    "CPX #$%02x",    "SBC ($%02x, X)", "",           "", "CPX $%02x",    "SBC $%02x",     "INC $%02x",    "", "INX", "SBC #$%02x",       "NOP",   "", "CPX $%02x00",     "SBC $%02x%02x",    "INC $%02x%02x",    "",
+ /* E */    "CPX #$%02x",    "SBC ($%02x, X)", "",           "", "CPX $%02x",    "SBC $%02x",     "INC $%02x",    "", "INX", "SBC #$%02x",       "NOP",   "", "CPX $%02x%02x",   "SBC $%02x%02x",    "INC $%02x%02x",    "",
  /* F */    "BEQ %02x",      "SBC ($%02x), Y", "",           "", "",             "SBC $%02x, X",  "INC $%02x, X", "", "SED", "SBC $%02x%02x, Y", "",      "", "",                "SBC $%02x%02x, X", "INC $%02x%02x, X", "",
 };
 
