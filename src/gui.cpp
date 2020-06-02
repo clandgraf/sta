@@ -36,7 +36,7 @@ static bool showMemoryView = true;
 static bool showRomInfo = true;
 static bool showDisassembly = true;
 
-void renderMenuBar() {
+static void renderMenuBar(Disassembler& disasm) {
     bool openRom = false;
 
     if (ImGui::BeginMainMenuBar()) {
@@ -53,6 +53,14 @@ void renderMenuBar() {
             
             ImGui::EndMenu();
         }
+
+        if (ImGui::BeginMenu("Disassembler")) {
+            if (ImGui::MenuItem("Absolute Labels", nullptr, disasm.m_showAbsoluteLabels)) {
+                disasm.m_showAbsoluteLabels = !disasm.m_showAbsoluteLabels;
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Fullscreen", nullptr, isFullscreen())) {
                 toggleFullscreen();
@@ -85,7 +93,7 @@ void renderMenuBar() {
     }
 }
 
-void renderRomInfo(Emu& emu) {
+static void renderRomInfo(Emu& emu) {
     if (emu.isInitialized() && showRomInfo) {
         if (ImGui::Begin("ROM Info", &showRomInfo)) {
             ImGui::Text("Mapper: %d, %s", emu.m_cart->mapper_id, mappers[emu.m_cart->mapper_id]);
@@ -96,10 +104,7 @@ void renderRomInfo(Emu& emu) {
     }
 }
 
-#define IMGUI_CARRY_SET (u8"Carry: " ## ICON_MD_CHECK_BOX)
-#define IMGUI_CARRY_RES (u8"Carry: " ## ICON_MD_CHECK_BOX_OUTLINE_BLANK)
-
-void renderEmuState(Emu& emu) {
+static void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
             if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
@@ -119,7 +124,7 @@ void renderEmuState(Emu& emu) {
     }
 }
 
-void renderMemoryView(Emu& emu) {
+static void renderMemoryView(Emu& emu) {
     // Create Memory View
     if (emu.isInitialized() && showMemoryView) {
         if (ImGui::Begin("Memory", &showMemoryView)) {
@@ -153,7 +158,7 @@ void renderMemoryView(Emu& emu) {
     }
 }
 
-void renderOpenRomDialog(Emu& emu) {
+static void renderOpenRomDialog(Emu& emu) {
     fs::path selectedFile;
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -218,7 +223,7 @@ void doUi(Emu& emu, Disassembler& disasm) {
 
     // ImGui::ShowDemoWindow();
 
-    renderMenuBar();
+    renderMenuBar(disasm);
     renderOpenRomDialog(emu);
     renderEmuState(emu);
     renderRomInfo(emu);

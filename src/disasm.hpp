@@ -30,6 +30,8 @@ public:
     const char* disasmNextOpcode(bool* end = nullptr, uint8_t* next = nullptr);
     std::shared_ptr<DisasmSegment> disasmSegment(uint16_t addr);
 
+    bool m_showAbsoluteLabels = true;
+
 private:
     Emu& m_emu;
 

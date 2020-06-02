@@ -16,54 +16,20 @@ using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
 static size_t constexpr BUFLEN = 0xff;
 
-static std::map<int, const char*> inbuiltLabels = {
-    {0x2000, "PPUSTATUS"}
-};
-
-//static enum InfoHelper {  // Additional information applied at runtime
-//    NONE       = 0,    // Nothing to be done here
-//    ABSOLUTE   = 1,    // Use Label Lookup
-//    ABSOLUTE_X = 2,
-//    ABSOLUTE_Y = 3,
-//    INDIRECT   = 4,    // Read Runtime Address
-//    INDIRECT_X = 5,    // Read Runtime Address
-//    INDIRECT_Y = 6,
-//    RELATIVE   = 7,
-//    ZERO       = 8,
-//    ZERO_X     = 9,
-//    ZERO_Y     = 10,
+//static std::map<int, const char*> inbuiltLabels = {
+//    {0x2000, "PPUSTATUS"}
 //};
-
-static uint8_t infoHelperForOpcode[0x100] = {
-    0, 5, 0, 0, 0, 8, 8, 0,   0, 0, 0, 0, 0, 1, 1, 0,
-    7, 6, 0, 0, 0, 9, 9, 0,   0, 3, 0, 0, 0, 2, 2, 0,
-    1, 5, 0, 0, 8, 8, 8, 0,   0, 0, 0, 0, 1, 1, 1, 0,
-    7, 6, 0, 0, 0, 9, 9, 0,   0, 3, 0, 0, 0, 2, 2, 0,
-    0, 5, 0, 0, 0, 8, 8, 0,   0, 0, 0, 0, 1, 1, 1, 0,
-    7, 6, 0, 0, 0, 9, 9, 0,   0, 3, 0, 0, 0, 2, 2, 0,
-    0, 5, 0, 0, 0, 8, 8, 0,   0, 0, 0, 0, 4, 1, 1, 0,
-    7, 6, 0, 0, 0, 9, 9, 0,   0, 3, 0, 0, 0, 2, 2, 0,
-
-    0, 5, 0, 0, 8, 8, 8, 0,   0, 0, 0, 0, 1, 1, 1, 0,
-    7, 6, 0, 0, 9, 9,10, 0,   0, 3, 0, 0, 0, 2, 0, 0,
-    0, 5, 0, 0, 8, 8, 8, 0,   0, 0, 0, 0, 1, 1, 1, 0,
-    7, 6, 0, 0, 9, 9,10, 0,   0, 3, 0, 0, 0, 2, 3, 0,
-    0, 5, 0, 0, 8, 8, 8, 0,   0, 0, 0, 0, 1, 1, 1, 0,
-    7, 6, 0, 0, 0, 9, 9, 0,   0, 3, 0, 0, 0, 2, 2, 0,
-    0, 5, 0, 0, 8, 8, 8, 0,   0, 0, 0, 0, 1, 1, 1, 0,
-    7, 6, 0, 0, 0, 9, 9, 0,   0, 3, 0, 0, 0, 2, 2, 0,
-};
-
-typedef std::string (*MemoryLabel)(
-    Emu& emu, 
-    uint8_t opc, 
-    uint8_t arg0, uint8_t arg1, 
-    bool current
-);
-
-static std::string Absolute(Emu& emu, uint8_t opc, uint8_t arg0, uint8_t arg1, bool current) {
-     
-}
+//
+//typedef std::string (*MemoryLabel)(
+//    Emu& emu, 
+//    uint8_t opc, 
+//    uint8_t arg0, uint8_t arg1, 
+//    bool current
+//);
+//
+//static std::string Absolute(Emu& emu, uint8_t opc, uint8_t arg0, uint8_t arg1, bool current) {
+//     
+//}
 
 // Branching, Jumps and Returns end an analysis segment
 static uint8_t flowBreaking[13] = {
@@ -82,31 +48,43 @@ static bool isFlowBreaking(uint8_t opcode) {
     return false;
 }
 
+#define _DISASM_APPEND_(...) (bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, __VA_ARGS__))
+
 const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* next) {
     uint8_t opc = m_emu.getOpcode(address);
+    uint8_t opc_addressingMode = opc_addressingModes[opc];
     uint8_t opc_ac = opc_mnemonic_params[opc];
 
     static char buf[BUFLEN];
     int bufIdx = 0;
-    bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, "%04x : ", address);
+    _DISASM_APPEND_("%04x : ", address);
 
     static uint8_t args[2];
     static uint8_t arg0, arg1;
-    switch (opc_ac) {
-    case 0:
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, "%02x       : ", opc);
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, opc_mnemonics[opc]);
+    switch (opc_addressingMode) {
+    case NONE:
+        _DISASM_APPEND_("%02x       : ", opc);
+        _DISASM_APPEND_(opc_mnemonics[opc]);
         break;
-    case 1:
+    case IND_X:
+    case IND_Y:
+    case REL:
+    case ZER:
+    case ZER_X:
+    case ZER_Y:
+    case IMD:
         arg0 = m_emu.getImmediateArg(address, 0);
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, "%02x %02x    : ", opc, arg0);
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, opc_mnemonics[opc], arg0);
+        _DISASM_APPEND_("%02x %02x    : ", opc, arg0);
+        _DISASM_APPEND_(opc_mnemonics[opc], arg0);
         break;
-    case 2:
+    case ABS:
+    case ABS_X:
+    case ABS_Y:
+    case IND:
         arg0 = m_emu.getImmediateArg(address, 0);
         arg1 = m_emu.getImmediateArg(address, 1);
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, "%02x %02x %02x : ", opc, arg0, arg1);
-        bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, opc_mnemonics[opc], arg1, arg0);
+        _DISASM_APPEND_("%02x %02x %02x : ", opc, arg0, arg1);
+        _DISASM_APPEND_(opc_mnemonics[opc], arg1, arg0);
         break;
     }
 
