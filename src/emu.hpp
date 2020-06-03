@@ -46,6 +46,7 @@ public:
     int8_t stepOperation();
     int8_t stepCycle();
 
+    unsigned long getCycleCount() const { return m_cycleCount; }
     Mode getMode() { return m_mode; }
     uint8_t getOpcode();
     uint8_t getOpcode(uint16_t addr);
@@ -60,7 +61,8 @@ private:
     int8_t m_cyclesLeft = 0;  // How many Cycles does the current instruction still have
     uint8_t m_next_opcode = 0;  // The opcode that is now executed
     uint8_t m_last_cycle_fetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
-    
+    unsigned long m_cycleCount = 0;
+
     // CPU Initialization after RESET
     void exec_opcode();
     void exec_reset();

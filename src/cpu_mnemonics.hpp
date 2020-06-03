@@ -60,6 +60,21 @@ enum opc_AddressingMode {  // Additional information applied at runtime
     IMD   = 11,
 };
 
+const char* opc_paramPatterns[][2] = {
+    { nullptr,        nullptr  },
+    { "$%02x%02x",    "%s"    },
+    { "$%02x%02x, X", "%s, X" },
+    { "$%02x%02x, Y", "%s, Y" },
+    { "($%02x%02)",   "(%s)"  },
+    { "($%02x, X)",   nullptr  },
+    { "($%02x), Y",   nullptr  },
+    { "%d",           nullptr  },
+    { "$%02x",        nullptr  },
+    { "$%02x, X",     nullptr  },
+    { "$%02x, Y",     nullptr  },
+    { "#$%02x",       nullptr  },
+};
+
 const char* opc_mnemonics__[0x100] = {
     //          0      1      2      3      4      5      6      7        8      9      a        b      c      d      e      f
     /* 0 */    "BRK", "ORA", "???", "???", "???", "ORA", "ASL", "???",   "PHP", "ORA", "ASL A", "???", "???", "ORA", "ASL", "???",
@@ -99,17 +114,4 @@ static opc_AddressingMode opc_addressingModes[0x100] = {
     REL,  IND_Y, NONE, NONE, NONE,  ZER_X, ZER_X, NONE,    NONE, ABS_Y, NONE, NONE, NONE, ABS_X, ABS_X, NONE,
     IMD,  IND_X, NONE, NONE, ZER,   ZER,   ZER,   NONE,    NONE, IMD,   NONE, NONE, ABS,  ABS,   ABS,   NONE,
     REL,  IND_Y, NONE, NONE, NONE,  ZER_X, ZER_X, NONE,    NONE, ABS_Y, NONE, NONE, NONE, ABS_X, ABS_X, NONE,
-};
-
-/* Patterns for rendering params */
-const char* ARG_ABS_PLAIN   = "$%02x%02x";
-const char* ARG_ABS_X_PLAIN = "$%02x%02x, X";
-const char* ARG_ABS_Y_PLAIN = "$%02x%02x, Y";
-const char* ARG_IND_PLAIN   = "($%02x%02)";
-const char* ARG_IND_X_PLAIN = "($%02x, X)";
-const char* ARG_IND_Y_PLAIN = "($%02x), Y";
-const char* ARG_REL_PLAIN   = "%d";
-const char* ARG_ZER_PLAIN   = "$%02x";
-const char* ARG_ZER_X_PLAIN = "$%02x, X";
-const char* ARG_ZER_Y_PLAIN = "$%02x, Y";
-const char* ARG_IMD_PLAIN   = "#$%02x";
+}; 

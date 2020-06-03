@@ -16,9 +16,17 @@ using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
 static size_t constexpr BUFLEN = 0xff;
 
-//static std::map<int, const char*> inbuiltLabels = {
-//    {0x2000, "PPUSTATUS"}
-//};
+static std::map<int, const char*> inbuiltLabels = {
+    {0x2000, "PPUCTRL"},
+    {0x2001, "PPUMASK"},
+    {0x2002, "PPUSTATUS"},
+    {0x2003, "OAMADDR"},
+    {0x2004, "OAMDATA"},
+    {0x2005, "PPUSCROLL"},
+    {0x2006, "PPUADDR"},
+    {0x2007, "PPUDATA"},
+    {0x4014, "OAMDMA"},
+};
 //
 //typedef std::string (*MemoryLabel)(
 //    Emu& emu, 
@@ -80,12 +88,20 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     case ABS:
     case ABS_X:
     case ABS_Y:
-    case IND:
+    case IND: {
         arg0 = m_emu.getImmediateArg(address, 0);
         arg1 = m_emu.getImmediateArg(address, 1);
         _DISASM_APPEND_("%02x %02x %02x : ", opc, arg0, arg1);
-        _DISASM_APPEND_(opc_mnemonics[opc], arg1, arg0);
+        _DISASM_APPEND_(opc_mnemonics__[opc]);
+        _DISASM_APPEND_(" ");
+        uint16_t addr = arg1 << 8 | arg0;
+        if (m_showAbsoluteLabels && inbuiltLabels[addr]) {
+            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][1], inbuiltLabels[addr]);
+        } else {
+            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][0], arg1, arg0);
+        }
         break;
+    }
     }
 
     if (next) {

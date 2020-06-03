@@ -118,6 +118,7 @@ static void renderEmuState(Emu& emu) {
             ImGui::Text("X:  %02x    Decimal:  %01x", emu.m_r_x, emu.m_f_decimal);
             ImGui::Text("Y:  %02x    Overflow: %01x", emu.m_r_y, emu.m_f_overflow);
             ImGui::Text("          Negative: %01x", emu.m_f_negative);
+            ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
             ImGui::PopFont();
         }
         ImGui::End();

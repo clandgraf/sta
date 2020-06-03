@@ -35,10 +35,15 @@ void Emu::reset() {
     // TODO do in exec_reset
     m_f_irq = false;
     m_f_decimal = false;
+
+    // -- Non CPU Stuff
+    m_cycleCount = 0;
 }
 
 void Emu::exec_reset() {
-    switch (--m_cyclesLeft) {
+    --m_cyclesLeft;
+    m_cycleCount++;
+    switch (m_cyclesLeft) {
     case 8: // C0
         m_sp = 0x00;
         break;
@@ -210,7 +215,9 @@ int8_t Emu::stepCycle() {
 
     switch (m_mode) {
     case Mode::EXEC:
-        if (--m_cyclesLeft == 0) {
+        --m_cyclesLeft;
+        m_cycleCount++;
+        if (m_cyclesLeft == 0) {
             exec_opcode();
             if (m_cyclesLeft > 0) {
                 if (m_mode != Mode::RESET) {
@@ -224,7 +231,9 @@ int8_t Emu::stepCycle() {
         break;
 
     case Mode::CYCLES:
-        if (--m_cyclesLeft == 0) {
+        --m_cyclesLeft;
+        m_cycleCount++;
+        if (m_cyclesLeft == 0) {
             m_mode = Mode::EXEC;
             fetch();
         }
