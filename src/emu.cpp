@@ -244,5 +244,7 @@ int8_t Emu::stepCycle() {
         break;
     }
 
+    m_ppu->run(3);
+
     return m_cyclesLeft;
 }

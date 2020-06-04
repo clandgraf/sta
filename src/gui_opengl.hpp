@@ -93,8 +93,8 @@ bool initWindow(const char* title, bool fullscreen) {
             width = mode->width;
             height = mode->height;
         } else {
-            width = .66 * float(mode->width);
-            height = .66 * float(mode->height);
+            width = int(.66f * float(mode->width));
+            height = int(.66f * float(mode->height));
         }
     } else {
         width = 1920;

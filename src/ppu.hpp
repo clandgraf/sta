@@ -17,9 +17,25 @@ class PPU {
 public:
     PPU(Cart* cart) : m_cart(cart) {}
 
+    unsigned long getCycleCount() const { return m_cycleCount; }
+
     uint8_t read_register(uint8_t reg);
     void write_register(uint8_t reg, uint8_t value);
 
+    void run(unsigned int cycles);
+
+    // PPUCTRL Flags
+    bool m_f_vblank_nmi = false;
+
+    // PPUSTATUS Flags
+    bool m_f_vblank = false;
+
 private:
     Cart* m_cart;
+
+    uint8_t readPPUSTATUS();
+
+    void writePPUCTRL(uint8_t value);
+
+    unsigned long m_cycleCount = 0;
 };

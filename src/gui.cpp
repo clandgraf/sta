@@ -5,6 +5,7 @@
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
+#include "ppu.hpp"
 #include "disasm.hpp"
 #include "mappers.hpp"
 #include "IconsMaterialDesign.h"
@@ -119,6 +120,7 @@ static void renderEmuState(Emu& emu) {
             ImGui::Text("Y:  %02x    Overflow: %01x", emu.m_r_y, emu.m_f_overflow);
             ImGui::Text("          Negative: %01x", emu.m_f_negative);
             ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
+            ImGui::Text("PPU Cycles: %d", emu.m_ppu->getCycleCount());
             ImGui::PopFont();
         }
         ImGui::End();
