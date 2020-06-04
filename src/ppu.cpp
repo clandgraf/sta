@@ -21,6 +21,7 @@ void PPU::write_register(uint8_t reg, uint8_t value) {
 uint8_t PPU::readPPUSTATUS() {
     uint8_t v = 0;
     if (m_f_vblank) { v |= 0b10000000; }
+    return v;
 }
 
 void PPU::writePPUCTRL(uint8_t value) {
@@ -29,7 +30,7 @@ void PPU::writePPUCTRL(uint8_t value) {
 }
 
 void PPU::run(unsigned int cycles) {
-    for (int i = 0; i < cycles; i++) {
+    for (unsigned int i = 0; i < cycles; i++) {
         // Do PPU Stuff
     }
 }
