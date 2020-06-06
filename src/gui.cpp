@@ -109,6 +109,10 @@ static void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
             if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
+                emu.run();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(ICON_MD_SKIP_NEXT)) {
                 emu.stepOperation();
             }
             ImGui::SameLine();
@@ -197,7 +201,7 @@ std::string disassembledLine{""};
 void renderDisassembly(Emu& emu, Disassembler& disasm) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
-    if (emu.getMode() == Emu::Mode::EXEC) {
+    if (emu.getMode() != Emu::Mode::RESET) {
         uint16_t address = emu.getOpcodeAddress();
         DisasmSegmentSptr segment = disasm.disasmSegment(address);
 
@@ -205,6 +209,14 @@ void renderDisassembly(Emu& emu, Disassembler& disasm) {
             ImGui::PushFont(monoFont);
             for (auto& entry: segment->m_lines) {
                 auto& line = entry.second;
+
+                bool isBreakpoint = emu.isBreakpoint(line.offset);
+                static char buffer[0xff];
+                snprintf(buffer, 0xff, "%s###%04x_brk", isBreakpoint ? "> " : "  ", line.offset);
+                if (ImGui::Selectable(buffer, isBreakpoint)) {
+                    emu.toggleBreakpoint(line.offset);
+                }
+                ImGui::SameLine();
                 if (line.offset == address) {
                     ImGui::PushStyleColor(ImGuiCol_Text, highlight_text_color);
                     ImGui::Text(line.repr.c_str());

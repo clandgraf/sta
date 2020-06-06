@@ -18,13 +18,28 @@ void Emu::init(Cart* cart) {
     reset();
 }
 
+bool Emu::toggleBreakpoint(uint16_t address) {
+    auto bp = m_breakpoints.find(address);
+    if (bp == m_breakpoints.end()) {
+        m_breakpoints.insert(address);
+        return true;
+    } else {
+        m_breakpoints.erase(bp);
+        return false;
+    }
+}
+
+bool Emu::isBreakpoint(uint16_t address) {
+    return m_breakpoints.find(address) != m_breakpoints.end();
+}
+
 bool Emu::isInitialized() {
     return m_cart && m_mem;
 }
 
 uint8_t Emu::getOpcode() { return m_next_opcode; }
 uint8_t Emu::getOpcode(uint16_t addr) { return m_mem->readb(addr); }
-uint16_t Emu::getOpcodeAddress() { return m_pc - 1; }
+uint16_t Emu::getOpcodeAddress() { return m_next_opcode_address; }
 uint8_t Emu::getImmediateArg(int offset) { return m_mem->readb(m_pc + offset); }
 uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(addr + 1 + offset); }
 
@@ -196,11 +211,18 @@ uint8_t Emu::fetch_arg() {
 
 
 void Emu::fetch() {
+    m_next_opcode_address = m_pc;
     m_next_opcode = m_mem->readb(m_pc);
     m_cyclesLeft = OPC_CYCLES[m_next_opcode];
 
     m_pc++;
     m_last_cycle_fetched = true;
+}
+
+void Emu::run() {
+    do {
+        stepOperation();
+    } while (m_breakpoints.find(m_next_opcode_address) == m_breakpoints.end());
 }
 
 int8_t Emu::stepOperation() {

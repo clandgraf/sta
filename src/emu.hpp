@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <set>
 
 class Memory;
 class Cart;
@@ -40,9 +41,13 @@ public:
 
     Emu() {}
 
+    bool toggleBreakpoint(uint16_t address);
+    bool isBreakpoint(uint16_t address);
+
     void init(Cart* _cart);
     bool isInitialized();
     void reset();
+    void run();
     int8_t stepOperation();
     int8_t stepScanline();
     int8_t stepFrame();
@@ -59,8 +64,10 @@ public:
 private:
     Mode m_mode = Mode::RESET;
 
+    std::set<uint16_t> m_breakpoints;
     
     int8_t m_cyclesLeft = 0;  // How many Cycles does the current instruction still have
+    uint16_t m_next_opcode_address = 0;
     uint8_t m_next_opcode = 0;  // The opcode that is now executed
     uint8_t m_last_cycle_fetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
     unsigned long m_cycleCount = 0;
