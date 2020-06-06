@@ -38,6 +38,7 @@ void Emu::reset() {
 
     // -- Non CPU Stuff
     m_cycleCount = 0;
+    m_ppu->reset();
 }
 
 void Emu::exec_reset() {
@@ -207,6 +208,22 @@ int8_t Emu::stepOperation() {
         stepCycle();
     } while (!m_last_cycle_fetched);
 
+    return m_cyclesLeft;
+}
+
+int8_t Emu::stepScanline() {
+    int currentScanline = m_ppu->m_scanline;
+    while (m_ppu->m_scanline == currentScanline) {
+        stepCycle();
+    }
+    return m_cyclesLeft;
+}
+
+int8_t Emu::stepFrame() {
+    bool currentFrame = m_ppu->m_f_odd_frame;
+    while (m_ppu->m_f_odd_frame == currentFrame) {
+        stepCycle();
+    }
     return m_cyclesLeft;
 }
 

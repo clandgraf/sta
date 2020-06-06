@@ -119,11 +119,12 @@ const char* Disassembler::disasmNextOpcode(bool* end, uint8_t* next) {
     return disasmOpcode(m_emu.getOpcodeAddress(), end, next);
 }
 
-DisasmSegmentSptr Disassembler::findSegment(uint16_t addr) {
+DisasmSegmentSptr Disassembler::findSegment(uint16_t addr, bool& adjacent) {
     for (auto const& segment: m_disassembly) {
         uint16_t start = segment.first;
-        uint16_t end = segment.first + segment.second->m_length;
-        if (addr >= start && addr < end) {
+        uint16_t end = start + segment.second->m_length;
+        if (addr >= start && addr <= end) {
+            adjacent = addr == end;
             return segment.second;
         }
     }
@@ -137,14 +138,19 @@ void Disassembler::mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr ot
 }
 
 DisasmSegmentSptr Disassembler::disasmSegment(uint16_t addr) {
-    DisasmSegmentSptr segment = findSegment(addr);
+    bool adjacent;
+    DisasmSegmentSptr segment = findSegment(addr, adjacent);
     if (segment) {
-        return segment;
+        if (!adjacent) {
+            return segment;
+        }
+        // If adjacent, addr starts directly after segment, 
+        // so we simply enhance that one
+    } else {
+        segment = std::make_shared<DisasmSegment>(addr);
+        m_disassembly.insert({ addr, segment });
     }
-
-    segment = std::make_shared<DisasmSegment>(addr);
-    m_disassembly.insert({addr, segment});
-
+    
     uint8_t next = 0;
     bool end = false;
 
@@ -168,4 +174,8 @@ DisasmSegmentSptr Disassembler::disasmSegment(uint16_t addr) {
 
     segment->m_length = addr - segment->m_start;
     return segment;
+}
+
+DisasmSegmentSptr Disassembler::continueSegment(DisasmSegmentSptr segment) {
+    return disasmSegment(segment->m_start + segment->m_length);
 }

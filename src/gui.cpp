@@ -111,16 +111,26 @@ static void renderEmuState(Emu& emu) {
             if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
                 emu.stepOperation();
             }
+            ImGui::SameLine();
+            if (ImGui::Button(ICON_MD_ARROW_FORWARD)) {
+                emu.stepScanline();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(ICON_MD_CAMERA)) {
+                emu.stepFrame();
+            }
 
             ImGui::PushFont(monoFont);
+            ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
             ImGui::Text("PC: %04x  Carry:    %01x", emu.m_pc, emu.m_f_carry);
             ImGui::Text("SP: %02x    Zero:     %01x", emu.m_sp, emu.m_f_zero);
             ImGui::Text("A:  %02x    IRQ:      %01x", emu.m_r_a, emu.m_f_irq); 
             ImGui::Text("X:  %02x    Decimal:  %01x", emu.m_r_x, emu.m_f_decimal);
             ImGui::Text("Y:  %02x    Overflow: %01x", emu.m_r_y, emu.m_f_overflow);
             ImGui::Text("          Negative: %01x", emu.m_f_negative);
-            ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
+            ImGui::Separator();
             ImGui::Text("PPU Cycles: %d", emu.m_ppu->getCycleCount());
+            ImGui::Text("PPU Scanline: %d", emu.m_ppu->m_scanline);
             ImGui::PopFont();
         }
         ImGui::End();
@@ -204,6 +214,10 @@ void renderDisassembly(Emu& emu, Disassembler& disasm) {
                 }
             }
             ImGui::PopFont();
+
+            if (ImGui::Button("continue...")) {
+                disasm.continueSegment(segment);
+            }
         }
         ImGui::End();
     }

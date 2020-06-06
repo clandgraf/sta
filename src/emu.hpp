@@ -44,6 +44,8 @@ public:
     bool isInitialized();
     void reset();
     int8_t stepOperation();
+    int8_t stepScanline();
+    int8_t stepFrame();
     int8_t stepCycle();
 
     unsigned long getCycleCount() const { return m_cycleCount; }

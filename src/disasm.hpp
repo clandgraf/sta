@@ -29,6 +29,7 @@ public:
     const char* disasmOpcode(uint16_t address, bool* end = nullptr, uint8_t* next = nullptr);
     const char* disasmNextOpcode(bool* end = nullptr, uint8_t* next = nullptr);
     std::shared_ptr<DisasmSegment> disasmSegment(uint16_t addr);
+    std::shared_ptr<DisasmSegment> continueSegment(std::shared_ptr<DisasmSegment> segment);
 
     bool m_showAbsoluteLabels = true;
 
@@ -37,6 +38,6 @@ private:
 
     std::map<uint16_t, DisasmSegmentSptr> m_disassembly;
 
-    DisasmSegmentSptr findSegment(uint16_t addr);
+    DisasmSegmentSptr findSegment(uint16_t addr, bool& adjacent);
     void mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr other);
 };
