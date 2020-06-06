@@ -1,9 +1,61 @@
+#include <filesystem>
 #include <fstream>
 #include <cstdlib>
 #include <iostream>
+#include <miniz.h>
 #include "rom.hpp"
 
+namespace fs = std::filesystem;
+
 constexpr uint8_t FLAG_TRAINER = 1 << 2;
+
+uint8_t* nesFromZip(const fs::path& p, size_t& len) {
+    mz_zip_archive zip;
+    memset(&zip, 0, sizeof(zip));
+    bool success = mz_zip_reader_init_file(&zip, p.string().c_str(), 0);
+    if (!success) {
+        return nullptr;
+    }
+
+    mz_uint fileCount = mz_zip_reader_get_num_files(&zip);
+    mz_zip_archive_file_stat pStat;
+    int i = 0;
+    for (; i < fileCount; i++) {
+        mz_zip_reader_file_stat(&zip, i, &pStat);
+        fs::path p(pStat.m_filename);
+        if (p.extension() == ".nes") {
+            break;
+        }
+    }
+
+    return (uint8_t*)mz_zip_reader_extract_to_heap(&zip, i, &len, 0);
+}
+
+Cart* Cart::fromFile(const fs::path& p) {
+    uint8_t* data;
+    size_t len;
+    if (p.extension() == ".zip") {
+        data = nesFromZip(p, len);
+        if (data == nullptr) {
+            return nullptr;
+        }
+    } else {
+        std::ifstream in(p);
+        data = readFile(in, &len);
+        in.close();
+    }
+    
+    switch (HEADER_AS_UINT32(((ines_header*)data)->magic)) {
+    case INES_MAGIC:
+        break;
+    case ZIP_MAGIC:
+        // TODO unzip otf
+    default:
+        return nullptr;
+    }
+
+    return new Cart(data);
+}
 
 Cart::Cart(uint8_t* data) {
     this->data = data;

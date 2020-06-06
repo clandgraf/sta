@@ -1,11 +1,14 @@
 ﻿#include <cstdlib>
 #include <iostream>
+#include <filesystem>
 #include "gui.hpp"
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
 #include "disasm.hpp"
 #include "clargs.hpp"
+
+namespace fs = std::filesystem;
 
 void printUsage(const char* prog) {
     std::cout << prog << " [--rom <rom_file>] [--fullscreen] [--help]\n";
@@ -24,7 +27,7 @@ int main(int ac, char ** av) {
     Emu emu;
     Disassembler disasm(emu);
     if (romPath) {
-        Cart* cart = Cart::fromFile(romPath);
+        Cart* cart = Cart::fromFile(fs::path{romPath});
         if (cart) {
             emu.init(cart);
         }

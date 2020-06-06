@@ -41,21 +41,7 @@ struct ines_header {
 
 class Cart {
 public:
-    template<typename Path>
-    static Cart* fromFile(Path p) {
-        uint8_t* data = readFile(p);
-
-        switch (HEADER_AS_UINT32(((ines_header*)data)->magic)) {
-        case INES_MAGIC:
-            break;
-        case ZIP_MAGIC:
-            // TODO unzip otf
-        default:
-            return nullptr;
-        }
-
-        return new Cart(data);
-    }
+    static Cart* fromFile(const std::filesystem::path& p);
 
     union {
         uint8_t* data;
