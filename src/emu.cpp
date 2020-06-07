@@ -185,12 +185,26 @@ void Emu::exec_opcode() {
     case OPC_LDA_ABS:
         updateNZ(m_r_a = m_mem->readb(hilo()));
         break;
+    case OPC_LDA_ABS_X:
+        updateNZ(m_r_a = m_mem->readb(hilo() + m_r_x));
+        if ((lo + m_r_x) & 0xf0) {
+            m_cyclesLeft++;
+        }
+        break;
+    case OPC_LDA_ABS_Y:
+        updateNZ(m_r_a = m_mem->readb(hilo() + m_r_y));
+        if ((lo + m_r_y) & 0xf0) {
+            m_cyclesLeft++;
+        }
+        break;
     case OPC_LDA_IMD:
         updateNZ(m_r_a = fetch_arg());
         break;
-
     case OPC_LDX_IMD:
         updateNZ(m_r_x = fetch_arg());
+        break;
+    case OPC_LDY_IMD:
+        updateNZ(m_r_y = fetch_arg());
         break;
     
     /* Store */
@@ -198,6 +212,18 @@ void Emu::exec_opcode() {
         m_mem->writeb(hilo(), m_r_a);
         break;
 
+    /* Arithmetic */
+    case OPC_DEX:
+        updateNZ(m_r_x = m_r_x - 1);
+        break;
+    case OPC_DEY:
+        updateNZ(m_r_x = m_r_x - 1);
+        break;
+    case OPC_CMP_IMD:
+        lo = (0x10 | m_r_a) - fetch_arg();
+        updateNZ(lo & 0x0f);
+        m_f_carry = (lo & 0x10);
+        break;
     default:
         reset();
         break;
