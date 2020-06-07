@@ -1,7 +1,10 @@
+#include <iostream>
+
 #include "emu.hpp"
 #include "mem.hpp"
 #include "rom.hpp"
 #include "ppu.hpp"
+#include "util.hpp"
 
 #include "cpu_cycles.hpp"
 #include "cpu_opcodes.hpp"
@@ -252,6 +255,7 @@ void Emu::exec_opcode() {
         compareImd(m_r_y);
         break;
     default:
+        LOG_MSG << "Unhandled opcode " << m_next_opcode << "\n";
         reset();
         break;
     }

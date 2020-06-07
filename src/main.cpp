@@ -1,6 +1,6 @@
 ﻿#include <cstdlib>
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 #include "gui.hpp"
 #include "rom.hpp"
 #include "mem.hpp"

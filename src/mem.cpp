@@ -4,6 +4,7 @@
 #include "mem.hpp"
 #include "rom.hpp"
 #include "ppu.hpp"
+#include "util.hpp"
 
 Memory::Memory(Cart* cart, PPU* ppu)
     : m_cart(cart), m_ppu(ppu)
@@ -22,12 +23,12 @@ uint8_t Memory::readb(uint16_t addr) {
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
-        std::cerr << "ERROR: Access to APU/IO" << std::endl;
+        LOG_MSG << "ERROR: Access to APU/IO\n";
         exit(1);
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {
-        std::cerr << "ERROR " << __FILE__ << ":" << __LINE__ << ": Access to Test Mode registers" << std::endl;
+        LOG_MSG << "ERROR Access to Test Mode registers\n";
         exit(1);
     }
     // Access Cartridge CPU Bus
@@ -47,12 +48,12 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
-        std::cerr << "ERROR: Access to APU/IO" << std::endl;
+        LOG_MSG << "ERROR: Access to APU/IO\n";
         exit(1);
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {
-        std::cerr << "ERROR " << __FILE__ << ":" << __LINE__ << ": Access to Test Mode registers" << std::endl;
+        LOG_MSG << "ERROR:  Access to Test Mode registers\n";
         exit(1);
     }
     // Access Cartridge CPU Bus

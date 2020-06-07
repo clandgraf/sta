@@ -1,0 +1,4 @@
+- get back to event handling after each frame when in Emu::run
+- add reverse translation "cpu_memory -> cart_bank:memory"
+  - use in disasm
+- read symbol files and annotate disassembly with labels 
