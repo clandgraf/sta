@@ -28,7 +28,9 @@ uint8_t* nesFromZip(const fs::path& p, size_t& len) {
         }
     }
 
-    return (uint8_t*)mz_zip_reader_extract_to_heap(&zip, i, &len, 0);
+    uint8_t* data = (uint8_t*)mz_zip_reader_extract_to_heap(&zip, i, &len, 0);
+    mz_zip_reader_end(&zip);
+    return data;
 }
 
 Cart* Cart::fromFile(const fs::path& p) {
@@ -45,12 +47,9 @@ Cart* Cart::fromFile(const fs::path& p) {
         in.close();
     }
     
-    switch (HEADER_AS_UINT32(((ines_header*)data)->magic)) {
-    case INES_MAGIC:
-        break;
-    case ZIP_MAGIC:
-        // TODO unzip otf
-    default:
+    // Check if we have a valid .nes rom
+    if (INES_MAGIC != HEADER_AS_UINT32(((ines_header*)data)->magic)) {
+        std::cerr << "ROM is not a valid .nes rom\n";
         return nullptr;
     }
 
