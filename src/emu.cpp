@@ -90,13 +90,20 @@ void Emu::exec_reset() {
 }
 
 void Emu::exec_opcode() {
+    // TODO test page boundary crossing checks
+
     uint16_t hi;
     uint16_t lo;
 
     auto hilo = [this, &hi, &lo]{
         lo = fetch_arg();
         hi = fetch_arg();
-        return hi << 8 | lo; 
+        return hi << 8 | lo;
+    };
+
+    auto toHilo = [this, &hi, &lo](const uint16_t& value) {
+        lo = value & 0xff;
+        hi = value >> 8;
     };
 
     auto branch = [this, &hi, &lo](bool flag) {
@@ -105,7 +112,7 @@ void Emu::exec_opcode() {
         if (flag) {
             m_cyclesLeft++;
             // Check wether page boundary is crossed, PC still points to next instruction
-            if ((lo & 0xf0) != (m_pc & 0xf0)) {
+            if ((lo & 0xff00) != (m_pc & 0xff00)) {
                 m_cyclesLeft++;
             }
             m_pc = lo;
@@ -115,6 +122,16 @@ void Emu::exec_opcode() {
     auto updateNZ = [this](uint8_t value) {
         m_f_zero = value == 0;
         m_f_negative = value & 0b10000000;
+    };
+
+    auto compareImd = [this, &lo, &updateNZ](const uint8_t& reg) {
+        lo = (0x0100 | reg) - fetch_arg();
+        updateNZ(lo & 0xff);
+        m_f_carry = (lo & 0x0100); 
+    };
+
+    auto push = [this](const uint8_t& value) {
+        m_mem->writeb(m_sp--, value);
     };
 
     switch (m_next_opcode) {
@@ -146,6 +163,12 @@ void Emu::exec_opcode() {
         break;
 
     /* Jumps/Returns */
+    case OPC_JSR:
+        toHilo(m_pc + 2);
+        push((uint8_t)hi);
+        push((uint8_t)lo);
+        m_pc = hilo();
+        break;
 
     /* Set/Reser Flags */
     case OPC_CLI:
@@ -187,13 +210,13 @@ void Emu::exec_opcode() {
         break;
     case OPC_LDA_ABS_X:
         updateNZ(m_r_a = m_mem->readb(hilo() + m_r_x));
-        if ((lo + m_r_x) & 0xf0) {
+        if ((lo + m_r_x) & 0xff00) {
             m_cyclesLeft++;
         }
         break;
     case OPC_LDA_ABS_Y:
         updateNZ(m_r_a = m_mem->readb(hilo() + m_r_y));
-        if ((lo + m_r_y) & 0xf0) {
+        if ((lo + m_r_y) & 0xff00) {
             m_cyclesLeft++;
         }
         break;
@@ -217,12 +240,16 @@ void Emu::exec_opcode() {
         updateNZ(m_r_x = m_r_x - 1);
         break;
     case OPC_DEY:
-        updateNZ(m_r_x = m_r_x - 1);
+        updateNZ(m_r_y = m_r_y - 1);
         break;
     case OPC_CMP_IMD:
-        lo = (0x10 | m_r_a) - fetch_arg();
-        updateNZ(lo & 0x0f);
-        m_f_carry = (lo & 0x10);
+        compareImd(m_r_a);
+        break;
+    case OPC_CPX_IMD:
+        compareImd(m_r_x);
+        break;
+    case OPC_CPY_IMD:
+        compareImd(m_r_y);
         break;
     default:
         reset();
