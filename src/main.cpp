@@ -33,14 +33,20 @@ int main(int ac, char ** av) {
         }
     }
 
-    if (!initUi(fullscreen)) {
+    if (!Gui::initUi(fullscreen)) {
         return EXIT_FAILURE;
     }
 
-    while (!isWindowClosing()) {
-        doUi(emu, disasm);
+    while (!Gui::isWindowClosing()) {
+        Gui::pollEvents();
+
+        if (emu.m_isStepping || !emu.isInitialized()) {
+            Gui::runUi(emu, disasm);
+        } else {
+            emu.stepFrame();
+        }
     }
 
-    teardownUi();
+    Gui::teardownUi();
     return EXIT_SUCCESS;
 }

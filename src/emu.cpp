@@ -255,7 +255,7 @@ void Emu::exec_opcode() {
         compareImd(m_r_y);
         break;
     default:
-        LOG_MSG << "Unhandled opcode " << m_next_opcode << "\n";
+        LOG_MSG << "Unhandled opcode " << std::hex << m_next_opcode << "\n";
         reset();
         break;
     }
@@ -276,37 +276,35 @@ void Emu::fetch() {
     m_last_cycle_fetched = true;
 }
 
-void Emu::run() {
-    do {
-        stepOperation();
-    } while (m_breakpoints.find(m_next_opcode_address) == m_breakpoints.end());
-}
-
-int8_t Emu::stepOperation() {
+void Emu::stepOperation() {
     do  {
-        stepCycle();
+        if (stepCycle()) {
+            break;
+        }
     } while (!m_last_cycle_fetched);
-
-    return m_cyclesLeft;
 }
 
-int8_t Emu::stepScanline() {
+void Emu::stepScanline() {
     int currentScanline = m_ppu->m_scanline;
     while (m_ppu->m_scanline == currentScanline) {
-        stepCycle();
+        if (stepCycle()) {
+            break;
+        }
     }
-    return m_cyclesLeft;
 }
 
-int8_t Emu::stepFrame() {
+void Emu::stepFrame() {
     bool currentFrame = m_ppu->m_f_odd_frame;
     while (m_ppu->m_f_odd_frame == currentFrame) {
-        stepCycle();
+        if (stepCycle()) {
+            break;
+        }
     }
-    return m_cyclesLeft;
 }
 
-int8_t Emu::stepCycle() {
+bool Emu::stepCycle() {
+    bool breakpointHit = false;
+
     m_last_cycle_fetched = false;
 
     switch (m_mode) {
@@ -342,5 +340,11 @@ int8_t Emu::stepCycle() {
 
     m_ppu->run(3);
 
-    return m_cyclesLeft;
+    // We are at the start of a new opcode and have hit a breakpoint
+    if (m_last_cycle_fetched && m_breakpoints.find(m_next_opcode_address) != m_breakpoints.end()) {
+        m_isStepping = true;
+        breakpointHit = true;
+    }
+
+    return breakpointHit;
 }

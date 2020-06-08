@@ -18,8 +18,12 @@ void setWindowClosing(bool closing) {
     }
 }
 
-bool isWindowClosing() {
+bool Gui::isWindowClosing() {
     return glfwWindowShouldClose(window);
+}
+
+void Gui::pollEvents() {
+    return glfwPollEvents();
 }
 
 bool isFullscreen() {

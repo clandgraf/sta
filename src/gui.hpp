@@ -3,7 +3,10 @@
 class Emu;
 class Disassembler;
 
-extern bool initUi(bool fullscreen = false);
-extern bool isWindowClosing();
-extern void doUi(Emu&, Disassembler&);
-extern void teardownUi();
+namespace Gui {
+    extern bool initUi(bool fullscreen = false);
+    extern bool isWindowClosing();
+    extern void pollEvents();
+    extern void runUi(Emu&, Disassembler&);
+    extern void teardownUi();
+}

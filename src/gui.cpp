@@ -1,5 +1,4 @@
 #include <imgui.h>
-#include "gui_opengl.hpp"
 
 #include "gui.hpp"
 #include "rom.hpp"
@@ -36,6 +35,8 @@ static bool showEmuState = true;
 static bool showMemoryView = true;
 static bool showRomInfo = true;
 static bool showDisassembly = true;
+
+#include "gui_opengl.hpp"
 
 static void renderMenuBar(Disassembler& disasm) {
     bool openRom = false;
@@ -109,7 +110,7 @@ static void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
             if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
-                emu.run();
+                emu.m_isStepping = false;
             }
             ImGui::SameLine();
             if (ImGui::Button(ICON_MD_SKIP_NEXT)) {
@@ -195,10 +196,10 @@ static void renderOpenRomDialog(Emu& emu) {
     }
 }
 
-int16_t lastOpcode = -1;
-std::string disassembledLine{""};
+static int16_t lastOpcode = -1;
+static std::string disassembledLine{""};
 
-void renderDisassembly(Emu& emu, Disassembler& disasm) {
+static void renderDisassembly(Emu& emu, Disassembler& disasm) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
     if (emu.getMode() != Emu::Mode::RESET) {
@@ -235,13 +236,12 @@ void renderDisassembly(Emu& emu, Disassembler& disasm) {
     }
 }
 
-void doUi(Emu& emu, Disassembler& disasm) {
+void Gui::runUi(Emu& emu, Disassembler& disasm) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
     // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-    glfwPollEvents();
 
     // Start the Dear ImGui frame
     ImGui_Impl_NewFrame();
@@ -299,7 +299,7 @@ bool initImGUI(GLFWwindow* window) {
     return true;
 }
 
-bool initUi(bool fullscreen) {
+bool Gui::initUi(bool fullscreen) {
     ImGui_FileBrowser_Init();
 
     if (!initWindow(WINDOW_TITLE, fullscreen)) {
@@ -309,12 +309,12 @@ bool initUi(bool fullscreen) {
     return initImGUI(window);
 }
 
-void teardownImGui() {
+static void teardownImGui() {
     ImGui_Impl_Shutdown();
     ImGui::DestroyContext();
 }
 
-void teardownUi() {
+void Gui::teardownUi() {
     teardownImGui();
     teardownWindow();
 }

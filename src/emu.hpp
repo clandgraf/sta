@@ -22,6 +22,8 @@ public:
         RESET,
     };
 
+    bool m_isStepping = true;
+
     Memory* m_mem = nullptr;
     Cart* m_cart = nullptr;
     PPU* m_ppu = nullptr;
@@ -47,11 +49,10 @@ public:
     void init(Cart* _cart);
     bool isInitialized();
     void reset();
-    void run();
-    int8_t stepOperation();
-    int8_t stepScanline();
-    int8_t stepFrame();
-    int8_t stepCycle();
+    void stepOperation();
+    void stepScanline();
+    void stepFrame();
+    bool stepCycle();
 
     unsigned long getCycleCount() const { return m_cycleCount; }
     Mode getMode() { return m_mode; }
