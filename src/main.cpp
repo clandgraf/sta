@@ -1,6 +1,7 @@
 ﻿#include <cstdlib>
 #include <filesystem>
 #include <iostream>
+
 #include "gui.hpp"
 #include "rom.hpp"
 #include "mem.hpp"
@@ -23,6 +24,8 @@ int main(int ac, char ** av) {
         printUsage(av[0]);
         return EXIT_SUCCESS;
     }
+
+    Settings::read();
 
     Emu emu;
     Disassembler disasm(emu);
@@ -48,5 +51,6 @@ int main(int ac, char ** av) {
     }
 
     Gui::teardownUi();
+    Settings::write();
     return EXIT_SUCCESS;
 }

@@ -97,12 +97,12 @@ bool initWindow(const char* title, bool fullscreen) {
             width = mode->width;
             height = mode->height;
         } else {
-            width = int(.66f * float(mode->width));
-            height = int(.66f * float(mode->height));
+            width = Settings::object.value("window-width", int(.66f * float(mode->width)));
+            height = Settings::object.value("window-height", int(.66f * float(mode->height)));
         }
     } else {
-        width = 1920;
-        height = 1200;
+        width = Settings::object.value("window-width", 1920);
+        height = Settings::object.value("window-height", 1200);
     }
 
     window = glfwCreateWindow(
@@ -128,6 +128,11 @@ bool initWindow(const char* title, bool fullscreen) {
 }
 
 void teardownWindow() {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    Settings::object["window-width"] = width;
+    Settings::object["window-height"] = height;
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }

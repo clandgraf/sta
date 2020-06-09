@@ -27,3 +27,29 @@ uint8_t* readFile(const std::filesystem::path& path) {
     file.close();
     return data;
 }
+
+using json = nlohmann::json;
+
+json Settings::object;
+
+void Settings::read() {
+    std::ifstream settingsFile("settings.json");
+    if (!settingsFile.is_open()) {
+        LOG_MSG << "settings.json could not be opened.\n";
+        object = json::object();
+        return;
+    }
+
+    object = json::parse(settingsFile);
+    settingsFile.close();
+}
+
+void Settings::write() {
+    std::ofstream settingsFile("settings.json");
+    if (!settingsFile.is_open()) {
+        LOG_MSG << "settings.json could not be opened.\n";
+        return;
+    }
+    settingsFile << object;
+    settingsFile.close();
+}

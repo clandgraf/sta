@@ -1,5 +1,6 @@
 assets/
 imgui.ini
+settings.json
 
 # Visual Studio
 Debug/
