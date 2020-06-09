@@ -255,7 +255,7 @@ void Emu::exec_opcode() {
         compareImd(m_r_y);
         break;
     default:
-        LOG_MSG << "Unhandled opcode " << std::hex << m_next_opcode << "\n";
+        LOG_ERR << "Unhandled opcode " << std::hex << m_next_opcode << "\n";
         reset();
         break;
     }

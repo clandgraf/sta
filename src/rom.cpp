@@ -10,22 +10,31 @@ namespace fs = std::filesystem;
 constexpr uint8_t FLAG_TRAINER = 1 << 2;
 
 uint8_t* nesFromZip(const fs::path& p, size_t& len) {
+    LOG_MSG << "Unzipping " << p << "\n";
+
     mz_zip_archive zip;
     memset(&zip, 0, sizeof(zip));
     bool success = mz_zip_reader_init_file(&zip, p.string().c_str(), 0);
     if (!success) {
+        LOG_ERR << "Failed unzipping " << p << "\n";
         return nullptr;
     }
 
     mz_uint fileCount = mz_zip_reader_get_num_files(&zip);
     mz_zip_archive_file_stat pStat;
-    int i = 0;
+    mz_uint i = 0;
     for (; i < fileCount; i++) {
         mz_zip_reader_file_stat(&zip, i, &pStat);
         fs::path p(pStat.m_filename);
         if (p.extension() == ".nes") {
+            LOG_MSG << "Found ROM " << pStat.m_filename << "\n";
             break;
         }
+    }
+
+    if (i == fileCount) {
+        LOG_ERR << "No ROM found in " << p << "\n";
+        return nullptr;
     }
 
     uint8_t* data = (uint8_t*)mz_zip_reader_extract_to_heap(&zip, i, &len, 0);
@@ -34,6 +43,8 @@ uint8_t* nesFromZip(const fs::path& p, size_t& len) {
 }
 
 Cart* Cart::fromFile(const fs::path& p) {
+    LOG_MSG << "Loading " << p << "\n";
+
     uint8_t* data;
     size_t len;
     if (p.extension() == ".zip") {
@@ -49,7 +60,7 @@ Cart* Cart::fromFile(const fs::path& p) {
     
     // Check if we have a valid .nes rom
     if (INES_MAGIC != HEADER_AS_UINT32(((ines_header*)data)->magic)) {
-        std::cerr << "ROM is not a valid .nes rom\n";
+        LOG_ERR << "ROM is not a valid .nes rom\n";
         return nullptr;
     }
 
@@ -100,7 +111,7 @@ uint8_t Cart::readb_cpu(uint16_t addr)
         return this->readb_cpu_nrom(addr);
     }
 
-    std::cerr << "ERROR: Unsupported Mapper " << this->mapper_id << std::endl;
+    LOG_ERR << "Unsupported Mapper " << this->mapper_id << "\n";
     exit(1);
 }
 
@@ -109,7 +120,7 @@ void Cart::writeb_cpu(uint16_t addr, uint8_t value) {
         return this->writeb_cpu_nrom(addr, value);
     }
 
-    std::cerr << "ERROR: Unsupported Mapper"  << this->mapper_id << std::endl;
+    LOG_ERR << "Unsupported Mapper"  << this->mapper_id << "\n";
     exit(1);
 }
 
@@ -124,7 +135,7 @@ uint8_t Cart::readb_ppu(uint16_t addr)
         return this->readb_ppu_nrom(addr);
     }
 
-    std::cerr << "ERROR: Unsupported Mapper " << this->mapper_id << std::endl;
+    LOG_ERR << "Unsupported Mapper " << this->mapper_id << "\n";
     exit(1);
 }
 
@@ -133,5 +144,5 @@ uint8_t Cart::readb_ppu_nrom(uint16_t addr) {
 }
 
 void Cart::writeb_cpu_nrom(uint16_t addr, uint8_t value) {
-    std::cerr << "ERROR: Write to NROM address " << addr << std::endl;
+    LOG_ERR << "Write to NROM address " << addr << "\n";
 }

@@ -60,7 +60,7 @@ bool ImGui_FileBrowser(fs::path& selectedFile) {
     }
 
     ImGui::PushItemWidth(-1);
-    if (ImGui::ListBox("##Files", &fileBrowserSelection, filesCstr.data(), filesCstr.size(), 10)) {
+    if (ImGui::ListBox("##Files", &fileBrowserSelection, filesCstr.data(), (int)filesCstr.size(), 10)) {
         fs::path selectedPath = files[fileBrowserSelection];
         if (fs::is_directory(selectedPath)) {
             updateFromPath(selectedPath);
