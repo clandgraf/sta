@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <vector>
 #include "gui_filebrowser.hpp"
+#include "util.hpp"
 
 static const int BUFFER_LEN = 0xff;
 
@@ -35,7 +36,7 @@ void updateFromPath(const fs::path& p) {
     updateChildren();
 }
 
-void updateFromString(const char* p) {
+void updateFromString(const std::string& p) {
     fileBrowserCurrentDir = p;
     updateChildren();
 }
@@ -52,6 +53,7 @@ bool ImGui_FileBrowser(fs::path& selectedFile) {
                 updateFromPath(tmpPath);
             } else {
                 selectedFile = tmpPath;
+                Settings::set("rom-directory", selectedFile.parent_path());
                 return true;
             }
         } else {
@@ -66,6 +68,7 @@ bool ImGui_FileBrowser(fs::path& selectedFile) {
             updateFromPath(selectedPath);
         } else {
             selectedFile = selectedPath;
+            Settings::set("rom-directory", selectedFile.parent_path().string());
             return true;
         }
     }
@@ -76,10 +79,10 @@ bool ImGui_FileBrowser(fs::path& selectedFile) {
 
 void ImGui_FileBrowser_Init() {
 #if defined(_WIN32) || defined(WIN32) 
-    char* base = getenv("USERPROFILE");
+    std::string home{getenv("USERPROFILE")};
 #else
-    char* base = getenv("HOME");
+    std::string home{getenv("HOME")};
 #endif
 
-    updateFromString(base);
+    updateFromString(Settings::get("rom-directory", home));
 }

@@ -3,16 +3,14 @@
 #include <cstdint>
 #include <set>
 
+#include "inputs.hpp"
+
 class Memory;
 class Cart;
 class PPU;
 
 // Address where execution starts
 uint16_t constexpr RESET_VECTOR = 0xfffc;
-
-struct registers {
-    
-};
 
 class Emu {
 public:

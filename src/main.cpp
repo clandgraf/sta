@@ -46,8 +46,10 @@ int main(int ac, char ** av) {
         if (emu.m_isStepping || !emu.isInitialized()) {
             Gui::runUi(emu, disasm);
         } else {
-            emu.stepFrame();
+            Gui::runFrame(emu);
         }
+
+        Gui::swapBuffers();
     }
 
     Gui::teardownUi();

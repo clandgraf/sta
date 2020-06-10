@@ -53,13 +53,14 @@ Cart* Cart::fromFile(const fs::path& p) {
             return nullptr;
         }
     } else {
-        std::ifstream in(p);
+        std::ifstream in(p, std::ifstream::binary);
         data = readFile(in, &len);
         in.close();
     }
     
     // Check if we have a valid .nes rom
-    if (INES_MAGIC != HEADER_AS_UINT32(((ines_header*)data)->magic)) {
+    uint32_t header = HEADER_AS_UINT32(((ines_header*)data)->magic);
+    if (INES_MAGIC != header) {
         LOG_ERR << "ROM is not a valid .nes rom\n";
         return nullptr;
     }
@@ -89,38 +90,45 @@ Cart::Cart(uint8_t* data) {
 
     // CHR ROM, available?
     if (this->header->chr_size != 0) {
-        this->chr_banks = (chr_bank*)cart_off;
+        m_chrBanks = (chr_bank*)cart_off;
+        this->m_chrSize = this->header->chr_size;
         cart_off += CHR_BANK_SIZE * this->chr_size();
     }
     else {
-        this->chr_banks = nullptr;
+        // CHR RAM
+        m_chrSize = 1;
+        m_useChrRam = true;
+        m_chrBanks = new chr_bank[1];
     }
 
     // Setup mapper id from flags fields from hi nybble of flags 6, 7
-    this->mapper_id = (this->header->flags_7 & 0xf0) & (this->header->flags_6 >> 4);
+    m_mapperId = (this->header->flags_7 & 0xf0) | (this->header->flags_6 >> 4);
 }
 
 Cart::~Cart()
 {
+    if (m_useChrRam) {
+        delete[] m_chrBanks;
+    }
     delete this->data;
 }
 
 uint8_t Cart::readb_cpu(uint16_t addr)
 {
-    if (this->mapper_id == 0) {
+    if (m_mapperId == 0) {
         return this->readb_cpu_nrom(addr);
     }
 
-    LOG_ERR << "Unsupported Mapper " << this->mapper_id << "\n";
+    LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
     exit(1);
 }
 
 void Cart::writeb_cpu(uint16_t addr, uint8_t value) {
-    if (this->mapper_id == 0) {
+    if (m_mapperId == 0) {
         return this->writeb_cpu_nrom(addr, value);
     }
 
-    LOG_ERR << "Unsupported Mapper"  << this->mapper_id << "\n";
+    LOG_ERR << "Unsupported Mapper"  << m_mapperId << "\n";
     exit(1);
 }
 
@@ -131,11 +139,11 @@ uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 
 uint8_t Cart::readb_ppu(uint16_t addr)
 {
-    if (this->mapper_id == 0) {
+    if (m_mapperId == 0) {
         return this->readb_ppu_nrom(addr);
     }
 
-    LOG_ERR << "Unsupported Mapper " << this->mapper_id << "\n";
+    LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
     exit(1);
 }
 

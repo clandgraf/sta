@@ -50,6 +50,7 @@
     <ClInclude Include="src\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui_opengl.hpp" />
     <ClInclude Include="src\IconsMaterialDesign.h" />
+    <ClInclude Include="src\inputs.hpp" />
     <ClInclude Include="src\mappers.hpp" />
     <ClInclude Include="src\mem.hpp" />
     <ClInclude Include="src\ppu.hpp" />

@@ -131,6 +131,9 @@
     <ClInclude Include="src\ppu.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\inputs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt">

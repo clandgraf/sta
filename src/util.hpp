@@ -17,6 +17,17 @@ uint8_t* readFile(const std::filesystem::path& path);
 
 namespace Settings {
     extern nlohmann::json object;
+
+    template<typename V>
+    V get(const char* str, const V& value) {
+        return object.value(str, value);
+    }
+
+    template<typename V>
+    void set(const char* str, const V& value) {
+        object[str] = value;
+    }
+
     void read();
     void write();
 }

@@ -98,9 +98,9 @@ static void renderMenuBar(Disassembler& disasm) {
 static void renderRomInfo(Emu& emu) {
     if (emu.isInitialized() && showRomInfo) {
         if (ImGui::Begin("ROM Info", &showRomInfo)) {
-            ImGui::Text("Mapper: %d, %s", emu.m_cart->mapper_id, mappers[emu.m_cart->mapper_id]);
+            ImGui::Text("Mapper: %d, %s", emu.m_cart->m_mapperId, mappers[emu.m_cart->m_mapperId]);
             ImGui::Text("PRG ROM #: %d", emu.m_cart->prg_size());
-            ImGui::Text("CHR ROM #: %d", emu.m_cart->chr_size());
+            ImGui::Text(emu.m_cart->m_useChrRam ? "CHR RAM #: %d" : "CHR ROM #: %d", emu.m_cart->chr_size());
         }
         ImGui::End();
     }
@@ -163,7 +163,7 @@ static void renderMemoryView(Emu& emu) {
                     snprintf(title, 10, "CHR %d", i);
                     if (ImGui::BeginTabItem(title)) {
                         ImGui::PushFont(monoFont);
-                        mem_edit.DrawContents(emu.m_cart->chr_banks[i], 0x2000, 0x2000 * i);
+                        mem_edit.DrawContents(emu.m_cart->chr(i), 0x2000, 0x2000 * i);
                         ImGui::PopFont();
                         ImGui::EndTabItem();
                     }
@@ -188,11 +188,10 @@ static void renderOpenRomDialog(Emu& emu) {
             }
             
         }
+        if (!open) {
+            ImGui::CloseCurrentPopup();
+        }
         ImGui::EndPopup();
-    }
-
-    if (!open) {
-        ImGui::CloseCurrentPopup();
     }
 }
 
@@ -236,6 +235,24 @@ static void renderDisassembly(Emu& emu, Disassembler& disasm) {
     }
 }
 
+static void renderFrame() {
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Gui::runFrame(Emu& emu) {
+    EmuInputs inputs = getInputs();
+    if (inputs.escape) {
+        emu.m_isStepping = true;
+    } else {
+        emu.stepFrame();
+        renderFrame();
+    }
+}
+
 void Gui::runUi(Emu& emu, Disassembler& disasm) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -262,14 +279,8 @@ void Gui::runUi(Emu& emu, Disassembler& disasm) {
 
     // Rendering
     ImGui::Render();
-    int display_w, display_h;
-    glfwGetFramebufferSize(window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
+    renderFrame();
     ImGui_Impl_RenderDrawData(ImGui::GetDrawData());
-
-    glfwSwapBuffers(window);
 }
 
 #define ICON_FONT "assets/" ## FONT_ICON_FILE_NAME_FAR
@@ -306,6 +317,11 @@ bool Gui::initUi(bool fullscreen) {
         return false;
     }
 
+    showMemoryView = Settings::get("debugger-view-memory", true);
+    showEmuState = Settings::get("debugger-view-state", true);
+    showDisassembly = Settings::get("debugger-view-disassembly", true);
+    showRomInfo = Settings::get("debugger-view-rominfo", true);
+
     return initImGUI(window);
 }
 
@@ -315,6 +331,11 @@ static void teardownImGui() {
 }
 
 void Gui::teardownUi() {
+    Settings::set("debugger-view-memory", showMemoryView);
+    Settings::set("debugger-view-state", showEmuState);
+    Settings::set("debugger-view-disassembly", showDisassembly);
+    Settings::set("debugger-view-rominfo", showRomInfo);
+
     teardownImGui();
     teardownWindow();
 }

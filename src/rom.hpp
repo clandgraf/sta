@@ -48,11 +48,12 @@ public:
         ines_header* header;
     };
 
-    uint8_t mapper_id;
+    uint8_t m_mapperId;
+    bool m_useChrRam = false;
 
     trainer_bank* trainer;
     prg_bank* prg_banks;
-    chr_bank* chr_banks;
+    chr_bank* m_chrBanks;
     // play choice inst-rom
     // play choice p-rom
 
@@ -60,10 +61,10 @@ public:
     ~Cart();
 
     inline uint8_t prg_size() const { return this->header->prg_size; }
-    inline uint8_t chr_size() const { return this->header->chr_size; }
+    inline uint8_t chr_size() const { return m_chrSize; }
 
     inline prg_bank& prg(uint8_t bank) const { return this->prg_banks[bank]; };
-    inline chr_bank& chr(uint8_t bank) const { return this->chr_banks[bank]; };
+    inline chr_bank& chr(uint8_t bank) const { return m_chrBanks[bank]; };
 
     uint8_t readb_cpu(uint16_t addr);
     void writeb_cpu(uint16_t addr, uint8_t value);
@@ -71,6 +72,8 @@ public:
     uint8_t readb_ppu(uint16_t addr);
 
 private:
+    uint8_t m_chrSize = 0;
+
     uint8_t readb_cpu_nrom(uint16_t addr);
     void writeb_cpu_nrom(uint16_t addr, uint8_t value);
 

@@ -8,9 +8,17 @@
 
 #include <iostream>
 
+#include "inputs.hpp"
+
 static const char* glsl_version = "#version 130";
 
 static GLFWwindow* window = nullptr;
+
+static EmuInputs inputs;
+
+EmuInputs getInputs() {
+    return inputs;
+}
 
 void setWindowClosing(bool closing) {
     if (window) {
@@ -23,11 +31,16 @@ bool Gui::isWindowClosing() {
 }
 
 void Gui::pollEvents() {
+    inputs.escape = false;
     return glfwPollEvents();
 }
 
 bool isFullscreen() {
     return glfwGetWindowMonitor(window) != nullptr;
+}
+
+void Gui::swapBuffers() {
+    glfwSwapBuffers(window);
 }
 
 void toggleFullscreen() {
@@ -72,6 +85,12 @@ static void glfw_error_callback(int error, const char* description)
     std::cerr << "Glfw Error " << error << ": " << description << "\n";
 }
 
+void updateInputs(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        inputs.escape = true;
+    }
+}
+
 bool initWindow(const char* title, bool fullscreen) {
     glfwSetErrorCallback(glfw_error_callback);
 
@@ -97,12 +116,12 @@ bool initWindow(const char* title, bool fullscreen) {
             width = mode->width;
             height = mode->height;
         } else {
-            width = Settings::object.value("window-width", int(.66f * float(mode->width)));
-            height = Settings::object.value("window-height", int(.66f * float(mode->height)));
+            width = Settings::get("window-width", int(.66f * float(mode->width)));
+            height = Settings::get("window-height", int(.66f * float(mode->height)));
         }
     } else {
-        width = Settings::object.value("window-width", 1920);
-        height = Settings::object.value("window-height", 1200);
+        width = Settings::get("window-width", 1920);
+        height = Settings::get("window-height", 1200);
     }
 
     window = glfwCreateWindow(
@@ -124,14 +143,16 @@ bool initWindow(const char* title, bool fullscreen) {
         return false;
     }
 
+    glfwSetKeyCallback(window, updateInputs);
+
     return true;
 }
 
 void teardownWindow() {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-    Settings::object["window-width"] = width;
-    Settings::object["window-height"] = height;
+    Settings::set("window-width", width);
+    Settings::set("window-height", height);
 
     glfwDestroyWindow(window);
     glfwTerminate();
