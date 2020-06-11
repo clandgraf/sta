@@ -38,7 +38,7 @@ static bool showDisassembly = true;
 
 #include "gui_opengl.hpp"
 
-static void renderMenuBar(Disassembler& disasm) {
+static void renderMenuBar(Emu& emu, Disassembler& disasm) {
     bool openRom = false;
 
     if (ImGui::BeginMainMenuBar()) {
@@ -47,6 +47,10 @@ static void renderMenuBar(Disassembler& disasm) {
                 openRom = true;
             }
             
+            if (ImGui::MenuItem("Reset")) {
+                emu.reset();
+            }
+
             ImGui::Separator();
             
             if (ImGui::MenuItem("Exit")) {
@@ -276,7 +280,7 @@ void Gui::runUi(Emu& emu, Disassembler& disasm) {
 
     // ImGui::ShowDemoWindow();
 
-    renderMenuBar(disasm);
+    renderMenuBar(emu, disasm);
     renderOpenRomDialog(emu);
     renderEmuState(emu);
     renderRomInfo(emu);
