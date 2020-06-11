@@ -69,19 +69,16 @@ Cart* Cart::fromFile(const fs::path& p) {
 }
 
 Cart::Cart(uint8_t* data) {
-    this->data = data;
+    m_data = data;
 
     // Now go through each entity in image and setup cart struct
-    uint8_t* cart_off = this->data;
+    uint8_t* cart_off = m_data;
     cart_off += 0x10;  // After header
 
     // Cart has trainer?
-    if (this->header->flags_6 & FLAG_TRAINER) {
-        this->trainer = (trainer_bank*)cart_off;
+    if (m_header->flags_6 & FLAG_TRAINER) {
+        m_trainer = (trainer_bank*)cart_off;
         cart_off += TRAINER_BANK_SIZE;
-    }
-    else {
-        this->trainer = nullptr;
     }
 
     // PRG ROM, always available
@@ -89,12 +86,11 @@ Cart::Cart(uint8_t* data) {
     cart_off += PRG_BANK_SIZE * this->prg_size();
 
     // CHR ROM, available?
-    if (this->header->chr_size != 0) {
+    if (m_header->chr_size != 0) {
         m_chrBanks = (chr_bank*)cart_off;
-        this->m_chrSize = this->header->chr_size;
+        m_chrSize = m_header->chr_size;
         cart_off += CHR_BANK_SIZE * this->chr_size();
-    }
-    else {
+    } else {
         // CHR RAM
         m_chrSize = 1;
         m_useChrRam = true;
@@ -102,7 +98,7 @@ Cart::Cart(uint8_t* data) {
     }
 
     // Setup mapper id from flags fields from hi nybble of flags 6, 7
-    m_mapperId = (this->header->flags_7 & 0xf0) | (this->header->flags_6 >> 4);
+    m_mapperId = (m_header->flags_7 & 0xf0) | (m_header->flags_6 >> 4);
 }
 
 Cart::~Cart()
@@ -110,7 +106,7 @@ Cart::~Cart()
     if (m_useChrRam) {
         delete[] m_chrBanks;
     }
-    delete this->data;
+    delete m_data;
 }
 
 uint8_t Cart::readb_cpu(uint16_t addr)
@@ -120,6 +116,15 @@ uint8_t Cart::readb_cpu(uint16_t addr)
     }
 
     LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
+    exit(1);
+}
+
+void Cart::translate_cpu(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {
+    if (m_mapperId == 0) {
+        return translate_cpu_nrom(addressIn, bankOut, addressOut);
+    }
+
+    LOG_ERR << "Unsupported Mapper" << m_mapperId << "\n";
     exit(1);
 }
 
@@ -137,6 +142,15 @@ uint8_t Cart::readb_cpu_nrom(uint16_t addr)
     return this->prg(0)[addr - 0x8000];
 }
 
+void Cart::translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {
+    bankOut = 0;
+    addressOut = addressIn - 0x8000;
+}
+
+void Cart::writeb_cpu_nrom(uint16_t addr, uint8_t value) {
+    LOG_ERR << "Write to NROM address " << addr << "\n";
+}
+
 uint8_t Cart::readb_ppu(uint16_t addr)
 {
     if (m_mapperId == 0) {
@@ -149,8 +163,4 @@ uint8_t Cart::readb_ppu(uint16_t addr)
 
 uint8_t Cart::readb_ppu_nrom(uint16_t addr) {
     return this->chr(0)[addr];
-}
-
-void Cart::writeb_cpu_nrom(uint16_t addr, uint8_t value) {
-    LOG_ERR << "Write to NROM address " << addr << "\n";
 }

@@ -7,6 +7,7 @@
 #include "disasm.hpp"
 
 #include "emu.hpp"
+#include "rom.hpp"
 #include "mem.hpp"
 #include "cpu_opcodes.hpp"
 #include "cpu_mnemonics.hpp"
@@ -27,17 +28,6 @@ static std::map<int, const char*> inbuiltLabels = {
     {0x2007, "PPUDATA"},
     {0x4014, "OAMDMA"},
 };
-//
-//typedef std::string (*MemoryLabel)(
-//    Emu& emu, 
-//    uint8_t opc, 
-//    uint8_t arg0, uint8_t arg1, 
-//    bool current
-//);
-//
-//static std::string Absolute(Emu& emu, uint8_t opc, uint8_t arg0, uint8_t arg1, bool current) {
-//     
-//}
 
 // Branching, Jumps and Returns end an analysis segment
 static uint8_t flowBreaking[13] = {
@@ -65,7 +55,14 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
 
     static char buf[BUFLEN];
     int bufIdx = 0;
-    _DISASM_APPEND_("%04x : ", address);
+    if (m_translateCartSpace && Memory::isCartSpace(address)) {
+        static uint8_t cartBank;
+        static uint16_t cartAddress;
+        m_emu.m_cart->translate_cpu(address, cartBank, cartAddress);
+        _DISASM_APPEND_("%02x:%04x : ", cartBank, cartAddress);
+    } else {
+        _DISASM_APPEND_("   %04x : ", address);
+    }
 
     static uint8_t args[2];
     static uint8_t arg0, arg1;
@@ -178,4 +175,12 @@ DisasmSegmentSptr Disassembler::disasmSegment(uint16_t addr) {
 
 DisasmSegmentSptr Disassembler::continueSegment(DisasmSegmentSptr segment) {
     return disasmSegment(segment->m_start + segment->m_length);
+}
+
+void Disassembler::refresh() {
+    for (auto& segment: m_disassembly) {
+        for (auto& line: segment.second->m_lines) {
+            line.second.repr = disasmOpcode(line.second.offset);
+        }
+    }
 }

@@ -31,7 +31,10 @@ public:
     std::shared_ptr<DisasmSegment> disasmSegment(uint16_t addr);
     std::shared_ptr<DisasmSegment> continueSegment(std::shared_ptr<DisasmSegment> segment);
 
-    bool m_showAbsoluteLabels = true;
+    void refresh();
+
+    bool m_translateCartSpace = true;  // Translate Addresses into Cartridge Space if applicable
+    bool m_showAbsoluteLabels = true;  // Show Labels for Absolute Addressing
 
 private:
     Emu& m_emu;

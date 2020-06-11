@@ -59,7 +59,14 @@ static void renderMenuBar(Disassembler& disasm) {
         if (ImGui::BeginMenu("Disassembler")) {
             if (ImGui::MenuItem("Absolute Labels", nullptr, disasm.m_showAbsoluteLabels)) {
                 disasm.m_showAbsoluteLabels = !disasm.m_showAbsoluteLabels;
+                disasm.refresh();
             }
+
+            if (ImGui::MenuItem("Display Cartridge Addresses", nullptr, disasm.m_translateCartSpace)) {
+                disasm.m_translateCartSpace = !disasm.m_translateCartSpace;
+                disasm.refresh();
+            }
+
             ImGui::EndMenu();
         }
 
@@ -212,7 +219,7 @@ static void renderDisassembly(Emu& emu, Disassembler& disasm) {
 
                 bool isBreakpoint = emu.isBreakpoint(line.offset);
                 static char buffer[0xff];
-                snprintf(buffer, 0xff, "%s###%04x_brk", isBreakpoint ? "> " : "  ", line.offset);
+                snprintf(buffer, 0xff, "%s###%04x_brk", isBreakpoint ? ">" : " ", line.offset);
                 if (ImGui::Selectable(buffer, isBreakpoint)) {
                     emu.toggleBreakpoint(line.offset);
                 }

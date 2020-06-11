@@ -44,14 +44,14 @@ public:
     static Cart* fromFile(const std::filesystem::path& p);
 
     union {
-        uint8_t* data;
-        ines_header* header;
+        uint8_t* m_data;
+        ines_header* m_header;
     };
 
     uint8_t m_mapperId;
     bool m_useChrRam = false;
 
-    trainer_bank* trainer;
+    trainer_bank* m_trainer = nullptr;
     prg_bank* prg_banks;
     chr_bank* m_chrBanks;
     // play choice inst-rom
@@ -60,24 +60,26 @@ public:
     Cart(uint8_t*);
     ~Cart();
 
-    inline uint8_t prg_size() const { return this->header->prg_size; }
+    inline uint8_t prg_size() const { return m_header->prg_size; }
     inline uint8_t chr_size() const { return m_chrSize; }
 
     inline prg_bank& prg(uint8_t bank) const { return this->prg_banks[bank]; };
     inline chr_bank& chr(uint8_t bank) const { return m_chrBanks[bank]; };
 
-    uint8_t readb_cpu(uint16_t addr);
-    void writeb_cpu(uint16_t addr, uint8_t value);
+    uint8_t readb_cpu(uint16_t address);
+    void translate_cpu(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut);
+    void writeb_cpu(uint16_t address, uint8_t value);
 
-    uint8_t readb_ppu(uint16_t addr);
+    uint8_t readb_ppu(uint16_t address);
 
 private:
     uint8_t m_chrSize = 0;
 
-    uint8_t readb_cpu_nrom(uint16_t addr);
-    void writeb_cpu_nrom(uint16_t addr, uint8_t value);
+    uint8_t readb_cpu_nrom(uint16_t address);
+    void translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut);
+    void writeb_cpu_nrom(uint16_t address, uint8_t value);
 
-    uint8_t readb_ppu_nrom(uint16_t addr);
+    uint8_t readb_ppu_nrom(uint16_t address);
 };
 
 #endif

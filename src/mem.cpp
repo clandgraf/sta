@@ -37,6 +37,10 @@ uint8_t Memory::readb(uint16_t addr) {
     }
 }
 
+bool Memory::isCartSpace(uint16_t addr) {
+    return addr > 0x4020;
+}
+
 void Memory::writeb(uint16_t addr, uint8_t value) {
     if (addr < 0x2000) {
         uint8_t addr_lo = addr & 0x7ff;
