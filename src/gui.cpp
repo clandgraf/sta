@@ -59,10 +59,10 @@ static void refreshPatternTable(Emu& emu) {
         for (int tile = 0; tile < 256; tile++) {
             uint16_t offset = (table ? 0x1000 : 0) + tile * 0x10;
             for (int row = 0; row < 8; row++) {
-                uint8_t p0 = emu.m_cart->readb_ppu(offset + 0);
-                uint16_t p1 = emu.m_cart->readb_ppu(offset + 8);
+                uint8_t p0 = emu.m_cart->readb_ppu(offset + row + 0);
+                uint16_t p1 = emu.m_cart->readb_ppu(offset + row + 8);
                 for (int col = 0; col < 8; col++) {
-                    uint8_t pxl = ((p0 >> col) & 1) | (((p1 >> col) & 1) << 1);
+                    uint8_t pxl = ((p0 >> (7 - col)) & 1) | (((p1 >> (7 - col)) & 1) << 1);
 
                     size_t textureX = ((table ? 128 : 0) + (tile % 16) * 8 + col);
                     size_t textureY = ((tile / 16) * 8 + row);
@@ -84,7 +84,7 @@ static void initPatternTable() {
     uint8_t* data = new uint8_t[2 /*tables*/ * 3 /*colors*/ * 128 * 128];
 
     for (int i = 0; i < 2 * 128 * 128; i++) {
-        data[i * 3 + 0] = 0xff;
+        data[i * 3 + 0] = float(i) / (2 * 128 * 128) * 0xff;
         data[i * 3 + 1] = 0x00;
         data[i * 3 + 2] = 0x00;
     }
@@ -308,7 +308,7 @@ static void renderDisassembly(Emu& emu, Disassembler& disasm) {
 
 static void renderPatternTable() {
     if (ImGui::Begin("Pattern Table", &showPatternTable)) {
-        ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(256, 128));
+        ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(512, 256));
         ImGui::End();
     }
 }
