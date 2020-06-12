@@ -98,15 +98,18 @@ void Emu::exec_opcode() {
     uint16_t hi;
     uint16_t lo;
 
-    auto hilo = [this, &hi, &lo]{
-        lo = fetch_arg();
-        hi = fetch_arg();
-        return hi << 8 | lo;
-    };
-
     auto toHilo = [this, &hi, &lo](const uint16_t& value) {
         lo = value & 0xff;
         hi = value >> 8;
+    };
+
+    auto fromHilo = [this, &hi, &lo]
+        { return hi << 8 | lo; };
+
+    auto hilo = [this, &hi, &lo, &fromHilo]{
+        lo = fetch_arg();
+        hi = fetch_arg();
+        return fromHilo();
     };
 
     auto branch = [this, &hi, &lo](bool flag) {
@@ -133,9 +136,14 @@ void Emu::exec_opcode() {
         m_f_carry = (lo & 0x0100); 
     };
 
-    auto push = [this](const uint8_t& value) {
-        m_mem->writeb(m_sp--, value);
-    };
+    auto push = [this](const uint8_t& value) 
+        { m_mem->writeb(m_sp--, value); };
+
+    auto pop = [this] 
+        { return m_mem->readb(++m_sp); };
+
+    auto storeZpg = [this, &lo](const uint8_t& reg) 
+        { m_mem->writeb(lo = fetch_arg(), reg); };
 
     switch (m_next_opcode) {
 
@@ -172,6 +180,11 @@ void Emu::exec_opcode() {
         push((uint8_t)lo);
         m_pc = hilo();
         break;
+    case OPC_RTS:
+        lo = pop();
+        hi = pop();
+        m_pc = fromHilo() + 1;
+        break;
 
     /* Set/Reser Flags */
     case OPC_CLI:
@@ -188,24 +201,12 @@ void Emu::exec_opcode() {
         break;
 
     /* Transfer */
-    case OPC_TXS:
-        m_sp = m_r_x;
-        break;
-    case OPC_TSX:
-        updateNZ(m_r_x = m_sp);
-        break;
-    case OPC_TXA:
-        updateNZ(m_r_a = m_r_x);
-        break;
-    case OPC_TYA:
-        updateNZ(m_r_a = m_r_y);
-        break;
-    case OPC_TAX:
-        updateNZ(m_r_x = m_r_a);
-        break;
-    case OPC_TAY:
-        updateNZ(m_r_y = m_r_a);
-        break;
+    case OPC_TXS: m_sp = m_r_x; break;
+    case OPC_TSX: updateNZ(m_r_x = m_sp); break;
+    case OPC_TXA: updateNZ(m_r_a = m_r_x); break;
+    case OPC_TYA: updateNZ(m_r_a = m_r_y); break;
+    case OPC_TAX: updateNZ(m_r_x = m_r_a); break;
+    case OPC_TAY: updateNZ(m_r_y = m_r_a); break;
 
     /* Load */
     case OPC_LDA_ABS:
@@ -223,20 +224,22 @@ void Emu::exec_opcode() {
             m_cyclesLeft++;
         }
         break;
-    case OPC_LDA_IMD:
-        updateNZ(m_r_a = fetch_arg());
-        break;
-    case OPC_LDX_IMD:
-        updateNZ(m_r_x = fetch_arg());
-        break;
-    case OPC_LDY_IMD:
-        updateNZ(m_r_y = fetch_arg());
-        break;
+    case OPC_LDA_IMD: updateNZ(m_r_a = fetch_arg()); break;
+    case OPC_LDX_IMD: updateNZ(m_r_x = fetch_arg()); break;
+    case OPC_LDY_IMD: updateNZ(m_r_y = fetch_arg()); break;
     
     /* Store */
     case OPC_STA_ABS:
         m_mem->writeb(hilo(), m_r_a);
         break;
+    case OPC_STA_IND_Y:
+        lo = fetch_arg();
+        hi = ((uint16_t(m_mem->readb(lo + 1)) << 8) | m_mem->readb(lo)) + m_r_y;
+        m_mem->writeb(hi, m_r_a);
+        break;
+    case OPC_STA_ZPG: storeZpg(m_r_a); break;
+    case OPC_STX_ZPG: storeZpg(m_r_x); break;
+    case OPC_STY_ZPG: storeZpg(m_r_y); break;
 
     /* Arithmetic */
     case OPC_DEX:
@@ -255,7 +258,7 @@ void Emu::exec_opcode() {
         compareImd(m_r_y);
         break;
     default:
-        LOG_ERR << "Unhandled opcode " << std::hex << m_next_opcode << "\n";
+        LOG_ERR << "Unhandled opcode " << std::hex << int(m_next_opcode) << "\n";
         reset();
         break;
     }
