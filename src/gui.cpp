@@ -31,12 +31,66 @@ static MemoryEditor mem_edit;
 static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 static ImVec4 highlight_text_color = ImVec4(0.89f, 0.0f, 0.0f, 1.00f);
 
+static bool patternTableLoaded = false;
+
 static bool showEmuState = true;
 static bool showMemoryView = true;
 static bool showRomInfo = true;
 static bool showDisassembly = true;
+static bool showPatternTable = true;
 
 #include "gui_opengl.hpp"
+
+static Gui::TextureType patternTableTexture;
+
+uint8_t colors[4][3] = {
+    { 0xff, 0xff, 0xff },
+    { 0xbb, 0xbb, 0xbb },
+    { 0x77, 0x77, 0x77 },
+    { 0x00, 0x00, 0x00 },
+};
+
+static void refreshPatternTable(Emu& emu) {
+    // 256 x 128
+
+    uint8_t* data = new uint8_t[2 /*tables*/ * 3 /*colors*/ * 128 * 128];
+
+    for (int table = 0; table < 2; table++) {
+        for (int tile = 0; tile < 256; tile++) {
+            uint16_t offset = (table ? 0x1000 : 0) + tile * 0x10;
+            for (int row = 0; row < 8; row++) {
+                uint8_t p0 = emu.m_cart->readb_ppu(offset + 0);
+                uint16_t p1 = emu.m_cart->readb_ppu(offset + 8);
+                for (int col = 0; col < 8; col++) {
+                    uint8_t pxl = ((p0 >> col) & 1) | (((p1 >> col) & 1) << 1);
+
+                    size_t textureX = ((table ? 128 : 0) + (tile % 16) * 8 + col);
+                    size_t textureY = ((tile / 16) * 8 + row);
+
+                    size_t textureOff = (textureY * 256 + textureX) * 3;
+                    data[textureOff + 0] = colors[pxl][0];
+                    data[textureOff + 1] = colors[pxl][1];
+                    data[textureOff + 2] = colors[pxl][2];
+                }
+            }
+        }
+    }
+
+    Gui::uploadTextureData(patternTableTexture, 256, 128, data);
+    delete[] data;
+}
+
+static void initPatternTable() {
+    uint8_t* data = new uint8_t[2 /*tables*/ * 3 /*colors*/ * 128 * 128];
+
+    for (int i = 0; i < 2 * 128 * 128; i++) {
+        data[i * 3 + 0] = 0xff;
+        data[i * 3 + 1] = 0x00;
+        data[i * 3 + 2] = 0x00;
+    }
+
+    Gui::uploadTextureData(patternTableTexture, 256, 128, data);
+}
 
 static void renderMenuBar(Emu& emu, Disassembler& disasm) {
     bool openRom = false;
@@ -61,6 +115,12 @@ static void renderMenuBar(Emu& emu, Disassembler& disasm) {
         }
 
         if (ImGui::BeginMenu("Disassembler")) {
+            if (ImGui::MenuItem("Refresh Pattern Table", nullptr)) {
+                if (emu.isInitialized()) {
+                    refreshPatternTable(emu);
+                }
+            }
+
             if (ImGui::MenuItem("Absolute Labels", nullptr, disasm.m_showAbsoluteLabels)) {
                 disasm.m_showAbsoluteLabels = !disasm.m_showAbsoluteLabels;
                 disasm.refresh();
@@ -246,6 +306,13 @@ static void renderDisassembly(Emu& emu, Disassembler& disasm) {
     }
 }
 
+static void renderPatternTable() {
+    if (ImGui::Begin("Pattern Table", &showPatternTable)) {
+        ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(256, 128));
+        ImGui::End();
+    }
+}
+
 static void renderFrame() {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -286,6 +353,7 @@ void Gui::runUi(Emu& emu, Disassembler& disasm) {
     renderRomInfo(emu);
     renderMemoryView(emu);
     renderDisassembly(emu, disasm);
+    renderPatternTable();
     ImGui::PopFont();
 
     // Rendering
@@ -333,6 +401,9 @@ bool Gui::initUi(bool fullscreen) {
     showDisassembly = Settings::get("debugger-view-disassembly", true);
     showRomInfo = Settings::get("debugger-view-rominfo", true);
 
+    patternTableTexture = Gui::createTexture();
+    initPatternTable();
+
     return initImGUI(window);
 }
 
@@ -342,6 +413,8 @@ static void teardownImGui() {
 }
 
 void Gui::teardownUi() {
+    freeTexture(patternTableTexture);
+
     Settings::set("debugger-view-memory", showMemoryView);
     Settings::set("debugger-view-state", showEmuState);
     Settings::set("debugger-view-disassembly", showDisassembly);
