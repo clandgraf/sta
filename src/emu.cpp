@@ -15,7 +15,7 @@ void Emu::init(Cart* cart) {
     if (m_ppu) { delete m_ppu; m_ppu = nullptr; }
 
     m_cart = cart;
-    m_ppu = new PPU(m_cart);
+    m_ppu = new PPU(this, m_cart);
     m_mem = new Memory(m_cart, m_ppu);
 
     reset();
@@ -46,7 +46,20 @@ uint16_t Emu::getOpcodeAddress() { return m_next_opcode_address; }
 uint8_t Emu::getImmediateArg(int offset) { return m_mem->readb(m_pc + offset); }
 uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(addr + 1 + offset); }
 
+uint8_t Emu::getProcStatus(bool setBrk) {
+    uint8_t v = 0x16;  // Bit 5 is always set, see https://wiki.nesdev.com/w/index.php/Status_flags#The_B_flag
+    if (m_f_carry)    v |= 0x01;
+    if (m_f_zero)     v |= 0x02;
+    if (m_f_irq)      v |= 0x04;
+    if (m_f_decimal)  v |= 0x08;
+    if (setBrk)       v |= 0x32;
+    if (m_f_overflow) v |= 0x64;
+    if (m_f_negative) v |= 0x128;
+    return v;
+}
+
 void Emu::reset() {
+    // Enter Reset Mode
     m_mode = Mode::RESET;
     m_cyclesLeft = 9;
 
@@ -57,6 +70,36 @@ void Emu::reset() {
     // -- Non CPU Stuff
     m_cycleCount = 0;
     m_ppu->reset();
+
+    // Reset Interrupt Lines
+    m_nmi_request = false;
+    m_irq_request = false;
+    m_intVector = IRQ_VECTOR;
+    m_isInterrupt = false;
+}
+
+uint8_t Emu::fetch_arg() {
+    return m_mem->readb(m_pc++);
+}
+
+void Emu::fetch() {
+    m_next_opcode_address = m_pc;
+    m_next_opcode = m_mem->readb(m_pc);
+    m_cyclesLeft = OPC_CYCLES[m_next_opcode];
+
+    m_pc++;
+    m_last_cycle_fetched = true;
+}
+
+void Emu::requestInterrupt(uint16_t vector) {
+    m_next_opcode_address = m_pc;
+    m_next_opcode = OPC_BRK;
+    m_cyclesLeft = OPC_CYCLES[m_next_opcode];
+    m_intVector = vector;
+    m_isInterrupt = true;
+
+    m_pc++;
+    m_last_cycle_fetched = true;
 }
 
 void Emu::exec_reset() {
@@ -137,10 +180,10 @@ void Emu::exec_opcode() {
     };
 
     auto push = [this](const uint8_t& value) 
-        { m_mem->writeb(m_sp--, value); };
+        { m_mem->writeb(0x0100 | m_sp--, value); };
 
     auto pop = [this] 
-        { return m_mem->readb(++m_sp); };
+        { return m_mem->readb(0x0100 | ++m_sp); };
 
     auto storeZpg = [this, &lo](const uint8_t& reg) 
         { m_mem->writeb(lo = fetch_arg(), reg); };
@@ -174,6 +217,17 @@ void Emu::exec_opcode() {
         break;
 
     /* Jumps/Returns */
+    case OPC_BRK:
+        fetch_arg();
+        push(m_pc >> 8);
+        push(m_pc & 0xff);
+        push(getProcStatus(!m_isInterrupt));
+        m_pc = m_mem->readb(m_intVector);
+        if (m_isInterrupt) { m_f_irq = true; }
+        // Reset Interrupt Variables
+        m_intVector = IRQ_VECTOR;
+        m_isInterrupt = false;
+        break;
     case OPC_JSR:
         toHilo(m_pc + 2);
         push((uint8_t)hi);
@@ -185,7 +239,7 @@ void Emu::exec_opcode() {
         hi = pop();
         m_pc = fromHilo() + 1;
         break;
-
+        
     /* Set/Reser Flags */
     case OPC_CLI:
         m_f_irq = false;
@@ -258,25 +312,10 @@ void Emu::exec_opcode() {
         compareImd(m_r_y);
         break;
     default:
-        LOG_ERR << "Unhandled opcode " << std::hex << int(m_next_opcode) << "\n";
+        LOG_ERR << "Unhandled opcode at " << std::hex << int(m_next_opcode_address) << ": " << int(m_next_opcode) << "\n";
         reset();
         break;
     }
-}
-
-
-uint8_t Emu::fetch_arg() {
-    return m_mem->readb(m_pc++);
-}
-
-
-void Emu::fetch() {
-    m_next_opcode_address = m_pc;
-    m_next_opcode = m_mem->readb(m_pc);
-    m_cyclesLeft = OPC_CYCLES[m_next_opcode];
-
-    m_pc++;
-    m_last_cycle_fetched = true;
 }
 
 void Emu::stepOperation() {
@@ -298,7 +337,7 @@ void Emu::stepScanline() {
 
 void Emu::stepFrame() {
     bool currentFrame = m_ppu->m_f_odd_frame;
-    while (m_ppu->m_f_odd_frame == currentFrame) {
+    while (m_ppu->m_f_odd_frame == currentFrame && m_mode != Mode::RESET) {
         if (stepCycle()) {
             break;
         }
@@ -312,14 +351,20 @@ bool Emu::stepCycle() {
 
     switch (m_mode) {
     case Mode::EXEC:
-        --m_cyclesLeft;
         m_cycleCount++;
-        if (m_cyclesLeft == 0) {
+        if (--m_cyclesLeft == 0) {
             exec_opcode();
             if (m_cyclesLeft > 0) {
                 if (m_mode != Mode::RESET) {
+                    // Opcode uses additional cycles
                     m_mode = Mode::CYCLES;
                 }
+            } else if (m_nmi_request) {
+                requestInterrupt(NMI_VECTOR);
+                m_nmi_request = false;
+            } else if (m_irq_request) {
+                requestInterrupt(IRQ_VECTOR);
+                m_irq_request = false;
             } else {
                 fetch();
             }
@@ -328,11 +373,18 @@ bool Emu::stepCycle() {
         break;
 
     case Mode::CYCLES:
-        --m_cyclesLeft;
         m_cycleCount++;
-        if (m_cyclesLeft == 0) {
+        if (--m_cyclesLeft == 0) {
             m_mode = Mode::EXEC;
-            fetch();
+            if (m_nmi_request) {
+                requestInterrupt(NMI_VECTOR);
+                m_nmi_request = false;
+            } else if (m_irq_request) {
+                requestInterrupt(IRQ_VECTOR);
+                m_irq_request = false;
+            } else {
+                fetch();
+            }
         }
         break;
 

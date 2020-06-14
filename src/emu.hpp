@@ -9,8 +9,9 @@ class Memory;
 class Cart;
 class PPU;
 
-// Address where execution starts
-uint16_t constexpr RESET_VECTOR = 0xfffc;
+uint16_t constexpr NMI_VECTOR = 0xfffa;    // Address where NMI starts
+uint16_t constexpr RESET_VECTOR = 0xfffc;  // Address where execution starts
+uint16_t constexpr IRQ_VECTOR = 0xfffe;    // Address where IRQ/BRK starts
 
 class Emu {
 public:
@@ -18,6 +19,7 @@ public:
         EXEC,
         CYCLES,  // Additional cycles
         RESET,
+        INTERRUPT,
     };
 
     bool m_isStepping = true;
@@ -38,6 +40,9 @@ public:
     uint8_t m_r_a = 0x00;
     uint8_t m_r_x = 0x00;
     uint8_t m_r_y = 0x00;
+
+    bool m_nmi_request = false;
+    bool m_irq_request = false;
 
     Emu() {}
 
@@ -71,9 +76,16 @@ private:
     uint8_t m_last_cycle_fetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
     unsigned long m_cycleCount = 0;
 
+    uint16_t m_intVector = IRQ_VECTOR;  // When interrupt occurs, we store the vector here (either NMI or IRQ/BRK)
+    bool m_isInterrupt = false;         // True, when BRK is executed from interrupt
+
+    uint8_t getProcStatus(bool setBrk);
+
     // CPU Initialization after RESET
     void exec_opcode();
     void exec_reset();
+    
+    void requestInterrupt(uint16_t vector);
 
     void fetch();
     uint8_t fetch_arg();

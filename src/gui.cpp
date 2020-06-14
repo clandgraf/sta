@@ -220,6 +220,12 @@ static void renderMemoryView(Emu& emu) {
             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
             char title[10];
             if (ImGui::BeginTabBar("Memory Tabbar", tab_bar_flags)) {
+                if (ImGui::BeginTabItem("RAM")) {
+                    ImGui::PushFont(monoFont);
+                    mem_edit.DrawContents(emu.m_mem->m_internalRam, 0x800, 0x0000);
+                    ImGui::PopFont();
+                    ImGui::EndTabItem();
+                }
                 for (uint8_t i = 0; i < emu.m_cart->prg_size(); i++) {
                     snprintf(title, 10, "PRG %d", i);
                     if (ImGui::BeginTabItem(title)) {
@@ -309,8 +315,8 @@ static void renderDisassembly(Emu& emu, Disassembler& disasm) {
 static void renderPatternTable() {
     if (ImGui::Begin("Pattern Table", &showPatternTable)) {
         ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(512, 256));
-        ImGui::End();
     }
+    ImGui::End();
 }
 
 static void renderFrame() {

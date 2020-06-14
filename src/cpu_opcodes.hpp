@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+uint8_t constexpr OPC_BRK = 0x00;
 uint8_t constexpr OPC_BPL = 0x10;
 uint8_t constexpr OPC_JSR = 0x20;
 uint8_t constexpr OPC_BMI = 0x30;

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "emu.hpp"
 #include "ppu.hpp"
 
 void PPU::reset() {
@@ -18,13 +19,17 @@ void PPU::reset() {
 
 void PPU::run(unsigned int cycles) {
     for (unsigned int i = 0; i < cycles; i++) {
+        
         // Here be rendering
         
         if (m_scanline == 241 && m_sl_cycle == 1) {
             m_f_vblank = true;
-            // TODO invoke nmi if m_f_vblank_nmi is not set
+            if (m_f_vblank_nmi) {
+                m_emu->m_nmi_request = true;
+            }
         }
 
+        // Update Counters for next scanline
         ++m_sl_cycle;
         bool skipTick = (m_f_odd_frame && m_scanline == 261 && (m_f_background_enable || m_f_sprites_enable));
         bool nextScanline = m_sl_cycle >= (skipTick ? 340 : 341);

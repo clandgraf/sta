@@ -13,8 +13,8 @@ Memory::Memory(Cart* cart, PPU* ppu)
 uint8_t Memory::readb(uint16_t addr) {
     // Internal RAM, mirrored
     if (addr < 0x2000) {
-        uint8_t addr_lo = addr & 0x7ff;
-        return internal_ram[addr_lo];
+        uint16_t addr_lo = addr & 0x7ff;
+        return m_internalRam[addr_lo];
     }
     // PPU Registers, mirrored
     else if (addr < 0x4000) {
@@ -43,8 +43,8 @@ bool Memory::isCartSpace(uint16_t addr) {
 
 void Memory::writeb(uint16_t addr, uint8_t value) {
     if (addr < 0x2000) {
-        uint8_t addr_lo = addr & 0x7ff;
-        internal_ram[addr_lo] = value;
+        uint16_t addr_lo = addr & 0x7ff;
+        m_internalRam[addr_lo] = value;
     }
     else if (addr < 0x4000) {
         uint8_t addr_lo = addr & 0b00000111;

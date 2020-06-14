@@ -17,12 +17,11 @@ public:
     uint8_t readb(uint16_t addr);
     void writeb(uint16_t addr, uint8_t value);
 
+    uint8_t m_internalRam[0x800];
 
 private:
     Cart* m_cart;
     PPU* m_ppu;
-
-    uint8_t internal_ram[0x800];
 };
 
 #endif

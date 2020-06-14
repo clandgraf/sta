@@ -3,6 +3,7 @@
 #include <cstdint>
 
 class Cart;
+class Emu;
 
 uint8_t constexpr PPUCTRL   = 0x0;
 uint8_t constexpr PPUMASK   = 0x1;
@@ -15,7 +16,7 @@ uint8_t constexpr PPUDATA   = 0x7;
 
 class PPU {
 public:
-    PPU(Cart* cart) : m_cart(cart) {}
+    PPU(Emu* emu, Cart* cart) : m_emu(emu), m_cart(cart) {}
 
     unsigned long getCycleCount() const { return m_cycleCount; }
 
@@ -41,6 +42,7 @@ public:
     bool m_f_vblank = false;
 
 private:
+    Emu* m_emu;
     Cart* m_cart;
 
     uint8_t readPPUSTATUS();
