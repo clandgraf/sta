@@ -84,7 +84,7 @@ static void initPatternTable() {
     uint8_t* data = new uint8_t[2 /*tables*/ * 3 /*colors*/ * 128 * 128];
 
     for (int i = 0; i < 2 * 128 * 128; i++) {
-        data[i * 3 + 0] = float(i) / (2 * 128 * 128) * 0xff;
+        data[i * 3 + 0] = 0x00;
         data[i * 3 + 1] = 0x00;
         data[i * 3 + 2] = 0x00;
     }

@@ -71,9 +71,9 @@ private:
     std::set<uint16_t> m_breakpoints;
     
     int8_t m_cyclesLeft = 0;  // How many Cycles does the current instruction still have
-    uint16_t m_next_opcode_address = 0;
-    uint8_t m_next_opcode = 0;  // The opcode that is now executed
-    uint8_t m_last_cycle_fetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
+    uint16_t m_nextOpcodeAddress = 0;
+    uint8_t m_nextOpcode = 0;  // The opcode that is now executed
+    uint8_t m_lastCycleFetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
     unsigned long m_cycleCount = 0;
 
     uint16_t m_intVector = IRQ_VECTOR;  // When interrupt occurs, we store the vector here (either NMI or IRQ/BRK)
@@ -82,11 +82,11 @@ private:
     uint8_t getProcStatus(bool setBrk);
 
     // CPU Initialization after RESET
-    void exec_opcode();
-    void exec_reset();
+    void execOpcode();
+    void execReset();
     
     void requestInterrupt(uint16_t vector);
 
     void fetch();
-    uint8_t fetch_arg();
+    uint8_t fetchArg();
 };

@@ -40,9 +40,9 @@ bool Emu::isInitialized() {
     return m_cart && m_mem;
 }
 
-uint8_t Emu::getOpcode() { return m_next_opcode; }
+uint8_t Emu::getOpcode() { return m_nextOpcode; }
 uint8_t Emu::getOpcode(uint16_t addr) { return m_mem->readb(addr); }
-uint16_t Emu::getOpcodeAddress() { return m_next_opcode_address; }
+uint16_t Emu::getOpcodeAddress() { return m_nextOpcodeAddress; }
 uint8_t Emu::getImmediateArg(int offset) { return m_mem->readb(m_pc + offset); }
 uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(addr + 1 + offset); }
 
@@ -78,31 +78,31 @@ void Emu::reset() {
     m_isInterrupt = false;
 }
 
-uint8_t Emu::fetch_arg() {
+uint8_t Emu::fetchArg() {
     return m_mem->readb(m_pc++);
 }
 
 void Emu::fetch() {
-    m_next_opcode_address = m_pc;
-    m_next_opcode = m_mem->readb(m_pc);
-    m_cyclesLeft = OPC_CYCLES[m_next_opcode];
+    m_nextOpcodeAddress = m_pc;
+    m_nextOpcode = m_mem->readb(m_pc);
+    m_cyclesLeft = OPC_CYCLES[m_nextOpcode];
 
     m_pc++;
-    m_last_cycle_fetched = true;
+    m_lastCycleFetched = true;
 }
 
 void Emu::requestInterrupt(uint16_t vector) {
-    m_next_opcode_address = m_pc;
-    m_next_opcode = OPC_BRK;
-    m_cyclesLeft = OPC_CYCLES[m_next_opcode];
+    m_nextOpcodeAddress = m_pc;
+    m_nextOpcode = OPC_BRK;
+    m_cyclesLeft = OPC_CYCLES[m_nextOpcode];
     m_intVector = vector;
     m_isInterrupt = true;
 
     m_pc++;
-    m_last_cycle_fetched = true;
+    m_lastCycleFetched = true;
 }
 
-void Emu::exec_reset() {
+void Emu::execReset() {
     --m_cyclesLeft;
     m_cycleCount++;
     switch (m_cyclesLeft) {
@@ -135,7 +135,7 @@ void Emu::exec_reset() {
     }
 }
 
-void Emu::exec_opcode() {
+void Emu::execOpcode() {
     // TODO test page boundary crossing checks
 
     uint16_t hi;
@@ -150,13 +150,13 @@ void Emu::exec_opcode() {
         { return hi << 8 | lo; };
 
     auto hilo = [this, &hi, &lo, &fromHilo]{
-        lo = fetch_arg();
-        hi = fetch_arg();
+        lo = fetchArg();
+        hi = fetchArg();
         return fromHilo();
     };
 
     auto branch = [this, &hi, &lo](bool flag) {
-        hi = (int8_t) fetch_arg();
+        hi = (int8_t) fetchArg();
         lo = m_pc + hi;
         if (flag) {
             m_cyclesLeft++;
@@ -174,7 +174,7 @@ void Emu::exec_opcode() {
     };
 
     auto compareImd = [this, &lo, &updateNZ](const uint8_t& reg) {
-        lo = (0x0100 | reg) - fetch_arg();
+        lo = (0x0100 | reg) - fetchArg();
         updateNZ(lo & 0xff);
         m_f_carry = (lo & 0x0100); 
     };
@@ -186,9 +186,9 @@ void Emu::exec_opcode() {
         { return m_mem->readb(0x0100 | ++m_sp); };
 
     auto storeZpg = [this, &lo](const uint8_t& reg) 
-        { m_mem->writeb(lo = fetch_arg(), reg); };
+        { m_mem->writeb(lo = fetchArg(), reg); };
 
-    switch (m_next_opcode) {
+    switch (m_nextOpcode) {
 
     /* Branching */
     case OPC_BPL:
@@ -218,7 +218,7 @@ void Emu::exec_opcode() {
 
     /* Jumps/Returns */
     case OPC_BRK:
-        fetch_arg();
+        fetchArg();
         push(m_pc >> 8);
         push(m_pc & 0xff);
         push(getProcStatus(!m_isInterrupt));
@@ -278,16 +278,16 @@ void Emu::exec_opcode() {
             m_cyclesLeft++;
         }
         break;
-    case OPC_LDA_IMD: updateNZ(m_r_a = fetch_arg()); break;
-    case OPC_LDX_IMD: updateNZ(m_r_x = fetch_arg()); break;
-    case OPC_LDY_IMD: updateNZ(m_r_y = fetch_arg()); break;
+    case OPC_LDA_IMD: updateNZ(m_r_a = fetchArg()); break;
+    case OPC_LDX_IMD: updateNZ(m_r_x = fetchArg()); break;
+    case OPC_LDY_IMD: updateNZ(m_r_y = fetchArg()); break;
     
     /* Store */
     case OPC_STA_ABS:
         m_mem->writeb(hilo(), m_r_a);
         break;
     case OPC_STA_IND_Y:
-        lo = fetch_arg();
+        lo = fetchArg();
         hi = ((uint16_t(m_mem->readb(lo + 1)) << 8) | m_mem->readb(lo)) + m_r_y;
         m_mem->writeb(hi, m_r_a);
         break;
@@ -312,7 +312,7 @@ void Emu::exec_opcode() {
         compareImd(m_r_y);
         break;
     default:
-        LOG_ERR << "Unhandled opcode at " << std::hex << int(m_next_opcode_address) << ": " << int(m_next_opcode) << "\n";
+        LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
         reset();
         break;
     }
@@ -323,7 +323,7 @@ void Emu::stepOperation() {
         if (stepCycle()) {
             break;
         }
-    } while (!m_last_cycle_fetched);
+    } while (!m_lastCycleFetched);
 }
 
 void Emu::stepScanline() {
@@ -347,13 +347,13 @@ void Emu::stepFrame() {
 bool Emu::stepCycle() {
     bool breakpointHit = false;
 
-    m_last_cycle_fetched = false;
+    m_lastCycleFetched = false;
 
     switch (m_mode) {
     case Mode::EXEC:
         m_cycleCount++;
         if (--m_cyclesLeft == 0) {
-            exec_opcode();
+            execOpcode();
             if (m_cyclesLeft > 0) {
                 if (m_mode != Mode::RESET) {
                     // Opcode uses additional cycles
@@ -389,14 +389,14 @@ bool Emu::stepCycle() {
         break;
 
     case Mode::RESET:
-        exec_reset();
+        execReset();
         break;
     }
 
     m_ppu->run(3);
 
     // We are at the start of a new opcode and have hit a breakpoint
-    if (m_last_cycle_fetched && m_breakpoints.find(m_next_opcode_address) != m_breakpoints.end()) {
+    if (m_lastCycleFetched && m_breakpoints.find(m_nextOpcodeAddress) != m_breakpoints.end()) {
         m_isStepping = true;
         breakpointHit = true;
     }
