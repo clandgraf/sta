@@ -82,7 +82,7 @@ Cart::Cart(uint8_t* data) {
     }
 
     // PRG ROM, always available
-    this->prg_banks = (prg_bank*)cart_off;
+    m_prgBanks = (prg_bank*)cart_off;
     cart_off += PRG_BANK_SIZE * this->prg_size();
 
     // CHR ROM, available?
@@ -139,7 +139,11 @@ void Cart::writeb_cpu(uint16_t addr, uint8_t value) {
 
 uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 {
-    return this->prg(0)[addr - 0x8000];
+    addr -= 0x8000;
+    if (prg_size() == 1) {
+        addr &= 0x3fff;
+    }
+    return prg(0)[addr];
 }
 
 void Cart::translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {

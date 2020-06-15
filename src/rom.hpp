@@ -52,7 +52,7 @@ public:
     bool m_useChrRam = false;
 
     trainer_bank* m_trainer = nullptr;
-    prg_bank* prg_banks;
+    prg_bank* m_prgBanks;
     chr_bank* m_chrBanks;
     // play choice inst-rom
     // play choice p-rom
@@ -63,7 +63,7 @@ public:
     inline uint8_t prg_size() const { return m_header->prg_size; }
     inline uint8_t chr_size() const { return m_chrSize; }
 
-    inline prg_bank& prg(uint8_t bank) const { return this->prg_banks[bank]; };
+    inline prg_bank& prg(uint8_t bank) const { return m_prgBanks[bank]; };
     inline chr_bank& chr(uint8_t bank) const { return m_chrBanks[bank]; };
 
     uint8_t readb_cpu(uint16_t address);

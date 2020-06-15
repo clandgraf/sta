@@ -230,7 +230,7 @@ static void renderMemoryView(Emu& emu) {
                     snprintf(title, 10, "PRG %d", i);
                     if (ImGui::BeginTabItem(title)) {
                         ImGui::PushFont(monoFont);
-                        mem_edit.DrawContents(emu.m_cart->prg_banks[i], 0x4000, 0x8000 + 0x4000 * i);  // TODO only true for NROM
+                        mem_edit.DrawContents(emu.m_cart->m_prgBanks[i], 0x4000, 0x8000 + 0x4000 * i);  // TODO only true for NROM
                         ImGui::PopFont();
                         ImGui::EndTabItem();
                     }
