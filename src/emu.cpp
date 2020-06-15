@@ -190,6 +190,13 @@ void Emu::execOpcode() {
 
     switch (m_nextOpcode) {
 
+    case OPC_NOP:
+        break;
+
+    case OPC_PHA:
+        push(m_r_a);
+        break;
+
     /* Branching */
     case OPC_BPL:
         branch(!m_f_negative);
@@ -227,6 +234,9 @@ void Emu::execOpcode() {
         // Reset Interrupt Variables
         m_intVector = IRQ_VECTOR;
         m_isInterrupt = false;
+        break;
+    case OPC_JMP:
+        m_pc = hilo();
         break;
     case OPC_JSR:
         toHilo(m_pc + 2);
@@ -296,6 +306,12 @@ void Emu::execOpcode() {
     case OPC_STY_ZPG: storeZpg(m_r_y); break;
 
     /* Arithmetic */
+    case OPC_DEC_ZPG:
+        lo = fetchArg();
+        hi = (m_mem->readb(lo) - 1) & 0xff;
+        updateNZ(uint8_t(hi));
+        m_mem->writeb(lo, uint8_t(hi));
+        break;
     case OPC_DEX:
         updateNZ(m_r_x = m_r_x - 1);
         break;
@@ -310,6 +326,9 @@ void Emu::execOpcode() {
         break;
     case OPC_CPY_IMD:
         compareImd(m_r_y);
+        break;
+    case OPC_AND_IMD:
+        updateNZ(m_r_a &= fetchArg());
         break;
     default:
         LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
