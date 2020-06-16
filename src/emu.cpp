@@ -6,7 +6,6 @@
 #include "ppu.hpp"
 #include "util.hpp"
 
-#include "cpu_cycles.hpp"
 #include "cpu_opcodes.hpp"
 
 void Emu::init(Cart* cart) {
