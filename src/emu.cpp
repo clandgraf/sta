@@ -287,6 +287,9 @@ void Emu::execOpcode() {
             m_cyclesLeft++;
         }
         break;
+    case OPC_LDA_ZPG: updateNZ(m_r_a = m_mem->readb(fetchArg())); break;
+    case OPC_LDX_ZPG: updateNZ(m_r_x = m_mem->readb(fetchArg())); break;
+    case OPC_LDY_ZPG: updateNZ(m_r_y = m_mem->readb(fetchArg())); break;
     case OPC_LDA_IMD: updateNZ(m_r_a = fetchArg()); break;
     case OPC_LDX_IMD: updateNZ(m_r_x = fetchArg()); break;
     case OPC_LDY_IMD: updateNZ(m_r_y = fetchArg()); break;
