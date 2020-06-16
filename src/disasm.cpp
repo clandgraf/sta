@@ -57,8 +57,8 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     static uint16_t cartAddress;
 
     uint8_t opc = m_emu.getOpcode(address);
-    uint8_t opc_addressingMode = opc_addressingModes[opc];
-    uint8_t opc_ac = opc_mnemonic_params[opc];
+    Opcode::AddressingMode opc_addressingMode = Opcode::addressingModes[opc];
+    uint8_t opc_ac = Opcode::paramCount[opc_addressingMode];
 
     static char buf[BUFLEN];
     int bufIdx = 0;
@@ -72,38 +72,41 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     static uint8_t args[2];
     static uint8_t arg0, arg1;
     switch (opc_addressingMode) {
-    case NONE:
+    case Opcode::Undefined:
+    case Opcode::Implicit:
         _DISASM_APPEND_("%02x       : ", opc);
-        _DISASM_APPEND_(opc_mnemonics[opc]);
+        _DISASM_APPEND_(Opcode::mnemonics[opc]);
         break;
-    case IND_X:
-    case IND_Y:
-    case REL:
-    case ZER:
-    case ZER_X:
-    case ZER_Y:
-    case IMD:
+    case Opcode::IndirectX:
+    case Opcode::IndirectY:
+    case Opcode::Relative:
+    case Opcode::ZeroPage:
+    case Opcode::ZeroPageX:
+    case Opcode::ZeroPageY:
+    case Opcode::Immediate:
         arg0 = m_emu.getImmediateArg(address, 0);
         _DISASM_APPEND_("%02x %02x    : ", opc, arg0);
-        _DISASM_APPEND_(opc_mnemonics[opc], arg0);
+        _DISASM_APPEND_(Opcode::mnemonics[opc]);
+        _DISASM_APPEND_(" ");
+        _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][0], arg0);
         break;
-    case ABS:
-    case ABS_X:
-    case ABS_Y:
-    case IND: {
+    case Opcode::Absolute:
+    case Opcode::AbsoluteX:
+    case Opcode::AbsoluteY:
+    case Opcode::Indirect: {
         arg0 = m_emu.getImmediateArg(address, 0);
         arg1 = m_emu.getImmediateArg(address, 1);
         _DISASM_APPEND_("%02x %02x %02x : ", opc, arg0, arg1);
-        _DISASM_APPEND_(opc_mnemonics__[opc]);
+        _DISASM_APPEND_(Opcode::mnemonics[opc]);
         _DISASM_APPEND_(" ");
         uint16_t opcAddress = arg1 << 8 | arg0;
         if (m_showAbsoluteLabels && inbuiltLabels[opcAddress]) {
-            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][1], inbuiltLabels[opcAddress]);
+            _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][1], inbuiltLabels[opcAddress]);
         } else if (translateToCartSpace(opcAddress)) {
             m_emu.m_cart->translate_cpu(opcAddress, cartBank, cartAddress);
-            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][2], cartBank, cartAddress);
+            _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][2], cartBank, cartAddress);
         } else {
-            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][0], arg1, arg0);
+            _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][0], arg1, arg0);
         }
         break;
     }

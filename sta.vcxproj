@@ -40,7 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\clargs.hpp" />
-    <ClInclude Include="src\cpu_cycles.hpp" />
     <ClInclude Include="src\cpu_mnemonics.hpp" />
     <ClInclude Include="src\cpu_opcodes.hpp" />
     <ClInclude Include="src\defs.hpp" />

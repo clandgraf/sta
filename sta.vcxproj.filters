@@ -116,9 +116,6 @@
     <ClInclude Include="src\IconsMaterialDesign.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\cpu_cycles.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\cpu_opcodes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
