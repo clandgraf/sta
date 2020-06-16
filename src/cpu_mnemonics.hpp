@@ -82,19 +82,19 @@ enum opc_AddressingMode {  // Additional information applied at runtime
     IMD   = 11,
 };
 
-const char* opc_paramPatterns[][2] = {
-    { nullptr,        nullptr  },
-    { "$%02x%02x",    "%s"    },
-    { "$%02x%02x, X", "%s, X" },
-    { "$%02x%02x, Y", "%s, Y" },
-    { "($%02x%02)",   "(%s)"  },
-    { "($%02x, X)",   nullptr  },
-    { "($%02x), Y",   nullptr  },
-    { "%d",           nullptr  },
-    { "$%02x",        nullptr  },
-    { "$%02x, X",     nullptr  },
-    { "$%02x, Y",     nullptr  },
-    { "#$%02x",       nullptr  },
+const char* opc_paramPatterns[][3] = {
+    { nullptr,        nullptr, nullptr        },
+    { "$%02x%02x",    "%s",    "%02x:%04x"    },
+    { "$%02x%02x, X", "%s, X", "%02x:%04x, X" },
+    { "$%02x%02x, Y", "%s, Y", "%02x:%04x, Y" },
+    { "($%02x%02)",   "(%s)",  "(%02x:%04x)"  },
+    { "($%02x, X)",   nullptr, nullptr        },
+    { "($%02x), Y",   nullptr, nullptr        },
+    { "%d",           nullptr, nullptr        },
+    { "$%02x",        nullptr, nullptr        },
+    { "$%02x, X",     nullptr, nullptr        },
+    { "$%02x, Y",     nullptr, nullptr        },
+    { "#$%02x",       nullptr, nullptr        },
 };
 
 const char* opc_mnemonics__[0x100] = {

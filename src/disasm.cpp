@@ -46,18 +46,23 @@ static bool isFlowBreaking(uint8_t opcode) {
     return false;
 }
 
+bool Disassembler::translateToCartSpace(uint16_t address) const { 
+    return m_translateCartSpace && Memory::isCartSpace(address); 
+}
+
 #define _DISASM_APPEND_(...) (bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, __VA_ARGS__))
 
 const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* next) {
+    static uint8_t cartBank;
+    static uint16_t cartAddress;
+
     uint8_t opc = m_emu.getOpcode(address);
     uint8_t opc_addressingMode = opc_addressingModes[opc];
     uint8_t opc_ac = opc_mnemonic_params[opc];
 
     static char buf[BUFLEN];
     int bufIdx = 0;
-    if (m_translateCartSpace && Memory::isCartSpace(address)) {
-        static uint8_t cartBank;
-        static uint16_t cartAddress;
+    if (translateToCartSpace(address)) {
         m_emu.m_cart->translate_cpu(address, cartBank, cartAddress);
         _DISASM_APPEND_("%02x:%04x : ", cartBank, cartAddress);
     } else {
@@ -91,9 +96,12 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
         _DISASM_APPEND_("%02x %02x %02x : ", opc, arg0, arg1);
         _DISASM_APPEND_(opc_mnemonics__[opc]);
         _DISASM_APPEND_(" ");
-        uint16_t addr = arg1 << 8 | arg0;
-        if (m_showAbsoluteLabels && inbuiltLabels[addr]) {
-            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][1], inbuiltLabels[addr]);
+        uint16_t opcAddress = arg1 << 8 | arg0;
+        if (m_showAbsoluteLabels && inbuiltLabels[opcAddress]) {
+            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][1], inbuiltLabels[opcAddress]);
+        } else if (translateToCartSpace(opcAddress)) {
+            m_emu.m_cart->translate_cpu(opcAddress, cartBank, cartAddress);
+            _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][2], cartBank, cartAddress);
         } else {
             _DISASM_APPEND_(opc_paramPatterns[opc_addressingMode][0], arg1, arg0);
         }

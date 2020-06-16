@@ -149,6 +149,9 @@ uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 void Cart::translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {
     bankOut = 0;
     addressOut = addressIn - 0x8000;
+    if (prg_size() == 1) {
+        addressOut &= 0x3fff;
+    }
 }
 
 void Cart::writeb_cpu_nrom(uint16_t addr, uint8_t value) {

@@ -43,4 +43,6 @@ private:
 
     DisasmSegmentSptr findSegment(uint16_t addr, bool& adjacent);
     void mergeSegments(DisasmSegmentSptr segment, DisasmSegmentSptr other);
+
+    bool translateToCartSpace(uint16_t address) const;
 };
