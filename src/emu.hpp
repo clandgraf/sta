@@ -80,6 +80,7 @@ private:
     bool m_isInterrupt = false;         // True, when BRK is executed from interrupt
 
     uint8_t getProcStatus(bool setBrk);
+    uint8_t setProcStatus(uint8_t value);
 
     // CPU Initialization after RESET
     void execOpcode();

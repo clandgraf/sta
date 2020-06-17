@@ -47,13 +47,23 @@ uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(ad
 
 uint8_t Emu::getProcStatus(bool setBrk) {
     uint8_t v = 0x16;  // Bit 5 is always set, see https://wiki.nesdev.com/w/index.php/Status_flags#The_B_flag
-    if (m_f_carry)    v |= 0x01;
-    if (m_f_zero)     v |= 0x02;
-    if (m_f_irq)      v |= 0x04;
-    if (m_f_decimal)  v |= 0x08;
-    if (setBrk)       v |= 0x32;
-    if (m_f_overflow) v |= 0x64;
-    if (m_f_negative) v |= 0x128;
+    if (m_f_carry)    v |= 1;
+    if (m_f_zero)     v |= 2;
+    if (m_f_irq)      v |= 4;
+    if (m_f_decimal)  v |= 8;
+    if (setBrk)       v |= 32;
+    if (m_f_overflow) v |= 64;
+    if (m_f_negative) v |= 128;
+    return v;
+}
+
+uint8_t Emu::setProcStatus(uint8_t v) {
+    m_f_carry    = v & 1;
+    m_f_zero     = v & 2;
+    m_f_irq      = v & 4;
+    m_f_decimal  = v & 8;
+    m_f_overflow = v & 64;
+    m_f_negative = v & 128;
     return v;
 }
 
@@ -134,6 +144,9 @@ void Emu::execReset() {
     }
 }
 
+bool ADC_CARRY_LUT[8]    = { 0, 0, 0, 1, 0, 1, 1, 1 };
+bool ADC_OVERFLOW_LUT[8] = { 0, 1, 0, 0, 0, 0, 1, 0 };
+
 void Emu::execOpcode() {
     // TODO test page boundary crossing checks
 
@@ -170,12 +183,13 @@ void Emu::execOpcode() {
     auto updateNZ = [this](uint8_t value) {
         m_f_zero = value == 0;
         m_f_negative = value & 0b10000000;
+        return value;
     };
 
-    auto compareImd = [this, &lo, &updateNZ](const uint8_t& reg) {
-        lo = (0x0100 | reg) - fetchArg();
+    auto compare = [this, &lo, updateNZ](const uint8_t& reg) {
+        lo = (0x0100 | reg) - lo;
         updateNZ(lo & 0xff);
-        m_f_carry = (lo & 0x0100); 
+        m_f_carry = (lo & 0x0100);
     };
 
     auto push = [this](const uint8_t& value) 
@@ -186,41 +200,89 @@ void Emu::execOpcode() {
 
     auto storeZpg = [this, &lo](const uint8_t& reg) 
         { m_mem->writeb(lo = fetchArg(), reg); };
+    
+    auto readZpg = [this, &lo]
+        { lo = m_mem->readb(fetchArg()); };
+    auto readZpgX = [this, &lo]
+        { lo = m_mem->readb(fetchArg() + m_r_x); };
+    auto readAbs = [this, &lo, hilo]
+        { lo = m_mem->readb(hilo()); };
+    auto readAbsX = [this, &lo, &hi, hilo] { 
+        lo = hilo();
+        hi = lo + m_r_x;
+        if ((lo & 0xff00) != (hi & 0xff00)) {
+            m_cyclesLeft++;
+        }
+        lo = m_mem->readb(hi);
+    };
+    auto readAbsY = [this, &lo, &hi, hilo] {
+        lo = hilo();
+        hi = lo + m_r_y;
+        if ((lo & 0xff00) != (hi & 0xff00)) {
+            m_cyclesLeft++;
+        }
+        lo = m_mem->readb(hi);
+    };
+    auto readImd = [this, &lo]
+        { lo = fetchArg(); };
+    auto readIndX = [this, &lo, &hi, fromHilo] {
+        lo = fetchArg() + m_r_x;
+        hi = m_mem->readb(lo + 1);
+        lo = m_mem->readb(lo);
+        lo = m_mem->readb(fromHilo());
+    };
+    auto readIndY = [this, &lo, &hi, fromHilo] {
+        lo = fetchArg();
+        hi = m_mem->readb(lo + 1);
+        lo = m_mem->readb(lo);
+        lo = fromHilo();
+        hi = lo + m_r_y;
+        if ((lo & 0xff00) != (hi & 0xff00)) {
+            m_cyclesLeft++;
+        }
+        lo = m_mem->readb(hi);
+    };
+
+    auto execAnd = [this, lo, updateNZ]
+        { updateNZ(m_r_a &= lo); };
+    auto execEor = [this, lo, updateNZ]
+        { updateNZ(m_r_a ^= lo); };
+    auto execOra = [this, lo, updateNZ]
+        { updateNZ(m_r_a |= lo); };
+    auto execCmp = [this, lo, compare]
+        { compare(m_r_a); };
+    auto execAdc = [this, &hi, &lo, &updateNZ] {
+        // See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
+        hi = lo >> 5                         // m_7
+           | m_r_a & 0x80 >> 6               // n_7
+           | ((lo & m_r_a & 0x40) >> 6);     // c_6
+        if (m_f_carry) {
+            m_r_a += 1;
+        }
+        m_f_carry = ADC_CARRY_LUT[hi];
+        m_f_overflow = ADC_OVERFLOW_LUT[hi];
+        updateNZ(m_r_a += lo);
+    };
 
     switch (m_nextOpcode) {
 
     case OPC_NOP:
         break;
 
-    case OPC_PHA:
-        push(m_r_a);
-        break;
+    case OPC_PHP: push(getProcStatus(true)); break;
+    case OPC_PHA: push(m_r_a); break;
+    case OPC_PLP: updateNZ(setProcStatus(pop())); break;
+    case OPC_PLA: updateNZ(m_r_a = pop()); break;
 
     /* Branching */
-    case OPC_BPL:
-        branch(!m_f_negative);
-        break;
-    case OPC_BMI:
-        branch(m_f_negative);
-        break;
-    case OPC_BVC:
-        branch(!m_f_overflow);
-        break;
-    case OPC_BVS:
-        branch(m_f_overflow);
-        break;
-    case OPC_BCC:
-        branch(!m_f_carry);
-        break;
-    case OPC_BCS:
-        branch(m_f_carry);
-        break;
-    case OPC_BNE:
-        branch(!m_f_zero);
-        break;
-    case OPC_BEQ:
-        branch(m_f_zero);
-        break;
+    case OPC_BPL: branch(!m_f_negative); break;
+    case OPC_BMI: branch(m_f_negative);  break;
+    case OPC_BVC: branch(!m_f_overflow); break;
+    case OPC_BVS: branch(m_f_overflow);  break;
+    case OPC_BCC: branch(!m_f_carry);    break;
+    case OPC_BCS: branch(m_f_carry);     break;
+    case OPC_BNE: branch(!m_f_zero);     break;
+    case OPC_BEQ: branch(m_f_zero);      break;
 
     /* Jumps/Returns */
     case OPC_BRK:
@@ -238,7 +300,7 @@ void Emu::execOpcode() {
         m_pc = hilo();
         break;
     case OPC_JSR:
-        toHilo(m_pc + 2);
+        toHilo(m_pc + 1);
         push((uint8_t)hi);
         push((uint8_t)lo);
         m_pc = hilo();
@@ -250,22 +312,17 @@ void Emu::execOpcode() {
         break;
         
     /* Set/Reser Flags */
-    case OPC_CLI:
-        m_f_irq = false;
-        break;
-    case OPC_SEI:
-        m_f_irq = true;
-        break;
-    case OPC_CLD:
-        m_f_decimal = false;
-        break;
-    case OPC_SED:
-        m_f_decimal = true;
-        break;
+    case OPC_CLC: m_f_carry = false;    break;
+    case OPC_SEC: m_f_carry = true;     break;
+    case OPC_CLI: m_f_irq = false;      break;
+    case OPC_SEI: m_f_irq = true;       break;
+    case OPC_CLD: m_f_decimal = false;  break;
+    case OPC_SED: m_f_decimal = true;   break;
+    case OPC_CLV: m_f_overflow = false; break;
 
     /* Transfer */
     case OPC_TXS: m_sp = m_r_x; break;
-    case OPC_TSX: updateNZ(m_r_x = m_sp); break;
+    case OPC_TSX: updateNZ(m_r_x = m_sp);  break;
     case OPC_TXA: updateNZ(m_r_a = m_r_x); break;
     case OPC_TYA: updateNZ(m_r_a = m_r_y); break;
     case OPC_TAX: updateNZ(m_r_x = m_r_a); break;
@@ -308,30 +365,67 @@ void Emu::execOpcode() {
     case OPC_STY_ZPG: storeZpg(m_r_y); break;
 
     /* Arithmetic */
+    case OPC_LSR:
+        m_f_carry = m_r_a & 1;
+        updateNZ(m_r_a >>= 1);
+        break;
+
+    case OPC_INX: updateNZ(m_r_x += 1); break;
+    case OPC_INY: updateNZ(m_r_y += 1); break;
     case OPC_DEC_ZPG:
         lo = fetchArg();
-        hi = (m_mem->readb(lo) - 1) & 0xff;
-        updateNZ(uint8_t(hi));
-        m_mem->writeb(lo, uint8_t(hi));
+        hi = m_mem->readb(lo);
+        m_mem->writeb(lo, updateNZ(uint8_t(hi) - 1));
         break;
-    case OPC_DEX:
-        updateNZ(m_r_x = m_r_x - 1);
-        break;
-    case OPC_DEY:
-        updateNZ(m_r_y = m_r_y - 1);
-        break;
-    case OPC_CMP_IMD:
-        compareImd(m_r_a);
-        break;
-    case OPC_CPX_IMD:
-        compareImd(m_r_x);
-        break;
-    case OPC_CPY_IMD:
-        compareImd(m_r_y);
-        break;
-    case OPC_AND_IMD:
-        updateNZ(m_r_a &= fetchArg());
-        break;
+    case OPC_DEX: updateNZ(m_r_x -= 1); break;
+    case OPC_DEY: updateNZ(m_r_y -= 1); break;
+
+    case OPC_CPX_IMD: readImd(); compare(m_r_x); break;
+    case OPC_CPY_IMD: readImd(); compare(m_r_y); break;
+
+    case OPC_CMP_ZPG:   readZpg();  execCmp(); break;
+    case OPC_CMP_ZPG_X: readZpgX(); execCmp(); break;
+    case OPC_CMP_ABS:   readAbs();  execCmp(); break;
+    case OPC_CMP_ABS_X: readAbsX(); execCmp(); break;
+    case OPC_CMP_ABS_Y: readAbsX(); execCmp(); break;
+    case OPC_CMP_IMD:   readImd();  execCmp(); break;
+    case OPC_CMP_IND_X: readIndX(); execCmp(); break;
+    case OPC_CMP_IND_Y: readIndY(); execCmp(); break;
+
+    case OPC_ADC_ZPG:   readZpg();  execAdc(); break;
+    case OPC_ADC_ZPG_X: readZpgX(); execAdc(); break;
+    case OPC_ADC_ABS:   readAbs();  execAdc(); break;
+    case OPC_ADC_ABS_X: readAbsX(); execAdc(); break;
+    case OPC_ADC_ABS_Y: readAbsY(); execAdc(); break;
+    case OPC_ADC_IMD:   readImd();  execAdc(); break;
+    case OPC_ADC_IND_X: readIndX(); execAdc(); break;
+    case OPC_ADC_IND_Y: readIndY(); execAdc(); break;
+
+    case OPC_AND_ZPG:   readZpg();  execAnd(); break;
+    case OPC_AND_ZPG_X: readZpgX(); execAnd(); break;
+    case OPC_AND_ABS:   readAbs();  execAnd(); break;
+    case OPC_AND_ABS_X: readAbsX(); execAnd(); break;
+    case OPC_AND_ABS_Y: readAbsY(); execAnd(); break;
+    case OPC_AND_IMD:   readImd();  execAnd(); break;
+    case OPC_AND_IND_X: readIndX(); execAnd(); break;
+    case OPC_AND_IND_Y: readIndY(); execAnd(); break;
+    
+    case OPC_EOR_ZPG:   readZpg();  execEor(); break;
+    case OPC_EOR_ABS:   readAbs();  execEor(); break;
+    case OPC_EOR_ABS_X: readAbsX(); execEor(); break;
+    case OPC_EOR_ABS_Y: readAbsY(); execEor(); break;
+    case OPC_EOR_IMD:   readImd();  execEor(); break;
+    case OPC_EOR_IND_X: readIndX(); execEor(); break;
+    case OPC_EOR_IND_Y: readIndY(); execEor(); break;
+
+    case OPC_ORA_ZPG:   readZpg();  execOra(); break;
+    case OPC_ORA_ABS:   readAbs();  execOra(); break;
+    case OPC_ORA_ABS_X: readAbsX(); execOra(); break;
+    case OPC_ORA_ABS_Y: readAbsY(); execOra(); break;
+    case OPC_ORA_IMD:   readImd();  execOra(); break;
+    case OPC_ORA_IND_X: readIndX(); execOra(); break;
+    case OPC_ORA_IND_Y: readIndY(); execOra(); break;
+
     default:
         LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
         reset();
