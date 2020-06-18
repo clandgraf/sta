@@ -147,292 +147,6 @@ void Emu::execReset() {
 bool ADC_CARRY_LUT[8]    = { 0, 0, 0, 1, 0, 1, 1, 1 };
 bool ADC_OVERFLOW_LUT[8] = { 0, 1, 0, 0, 0, 0, 1, 0 };
 
-void Emu::execOpcode() {
-    // TODO test page boundary crossing checks
-
-    uint16_t hi;
-    uint16_t lo;
-
-    auto toHilo = [this, &hi, &lo](const uint16_t& value) {
-        lo = value & 0xff;
-        hi = value >> 8;
-    };
-
-    auto fromHilo = [this, &hi, &lo]
-        { return hi << 8 | lo; };
-
-    auto hilo = [this, &hi, &lo, &fromHilo]{
-        lo = fetchArg();
-        hi = fetchArg();
-        return fromHilo();
-    };
-
-    auto branch = [this, &hi, &lo](bool flag) {
-        hi = (int8_t) fetchArg();
-        lo = m_pc + hi;
-        if (flag) {
-            m_cyclesLeft++;
-            // Check wether page boundary is crossed, PC still points to next instruction
-            if ((lo & 0xff00) != (m_pc & 0xff00)) {
-                m_cyclesLeft++;
-            }
-            m_pc = lo;
-        }
-    };
-
-    auto updateNZ = [this](uint8_t value) {
-        m_f_zero = value == 0;
-        m_f_negative = value & 0b10000000;
-        return value;
-    };
-
-    auto compare = [this, &lo, updateNZ](const uint8_t& reg) {
-        lo = (0x0100 | reg) - lo;
-        updateNZ(lo & 0xff);
-        m_f_carry = (lo & 0x0100);
-    };
-
-    auto push = [this](const uint8_t& value) 
-        { m_mem->writeb(0x0100 | m_sp--, value); };
-
-    auto pop = [this] 
-        { return m_mem->readb(0x0100 | ++m_sp); };
-
-    auto storeZpg = [this, &lo](const uint8_t& reg) 
-        { m_mem->writeb(lo = fetchArg(), reg); };
-    
-    auto readZpg = [this, &lo]
-        { lo = m_mem->readb(fetchArg()); };
-    auto readZpgX = [this, &lo]
-        { lo = m_mem->readb(fetchArg() + m_r_x); };
-    auto readAbs = [this, &lo, hilo]
-        { lo = m_mem->readb(hilo()); };
-    auto readAbsX = [this, &lo, &hi, hilo] { 
-        lo = hilo();
-        hi = lo + m_r_x;
-        if ((lo & 0xff00) != (hi & 0xff00)) {
-            m_cyclesLeft++;
-        }
-        lo = m_mem->readb(hi);
-    };
-    auto readAbsY = [this, &lo, &hi, hilo] {
-        lo = hilo();
-        hi = lo + m_r_y;
-        if ((lo & 0xff00) != (hi & 0xff00)) {
-            m_cyclesLeft++;
-        }
-        lo = m_mem->readb(hi);
-    };
-    auto readImd = [this, &lo]
-        { lo = fetchArg(); };
-    auto readIndX = [this, &lo, &hi, fromHilo] {
-        lo = fetchArg() + m_r_x;
-        hi = m_mem->readb(lo + 1);
-        lo = m_mem->readb(lo);
-        lo = m_mem->readb(fromHilo());
-    };
-    auto readIndY = [this, &lo, &hi, fromHilo] {
-        lo = fetchArg();
-        hi = m_mem->readb(lo + 1);
-        lo = m_mem->readb(lo);
-        lo = fromHilo();
-        hi = lo + m_r_y;
-        if ((lo & 0xff00) != (hi & 0xff00)) {
-            m_cyclesLeft++;
-        }
-        lo = m_mem->readb(hi);
-    };
-
-    auto execAnd = [this, lo, updateNZ]
-        { updateNZ(m_r_a &= lo); };
-    auto execEor = [this, lo, updateNZ]
-        { updateNZ(m_r_a ^= lo); };
-    auto execOra = [this, lo, updateNZ]
-        { updateNZ(m_r_a |= lo); };
-    auto execCmp = [this, lo, compare]
-        { compare(m_r_a); };
-    auto execAdc = [this, &hi, &lo, &updateNZ] {
-        // See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
-        hi = lo >> 5                         // m_7
-           | m_r_a & 0x80 >> 6               // n_7
-           | ((lo & m_r_a & 0x40) >> 6);     // c_6
-        if (m_f_carry) {
-            m_r_a += 1;
-        }
-        m_f_carry = ADC_CARRY_LUT[hi];
-        m_f_overflow = ADC_OVERFLOW_LUT[hi];
-        updateNZ(m_r_a += lo);
-    };
-
-    switch (m_nextOpcode) {
-
-    case OPC_NOP:
-        break;
-
-    case OPC_PHP: push(getProcStatus(true)); break;
-    case OPC_PHA: push(m_r_a); break;
-    case OPC_PLP: updateNZ(setProcStatus(pop())); break;
-    case OPC_PLA: updateNZ(m_r_a = pop()); break;
-
-    /* Branching */
-    case OPC_BPL: branch(!m_f_negative); break;
-    case OPC_BMI: branch(m_f_negative);  break;
-    case OPC_BVC: branch(!m_f_overflow); break;
-    case OPC_BVS: branch(m_f_overflow);  break;
-    case OPC_BCC: branch(!m_f_carry);    break;
-    case OPC_BCS: branch(m_f_carry);     break;
-    case OPC_BNE: branch(!m_f_zero);     break;
-    case OPC_BEQ: branch(m_f_zero);      break;
-
-    /* Jumps/Returns */
-    case OPC_BRK:
-        fetchArg();
-        push(m_pc >> 8);
-        push(m_pc & 0xff);
-        push(getProcStatus(!m_isInterrupt));
-        m_pc = m_mem->readb(m_intVector);
-        if (m_isInterrupt) { m_f_irq = true; }
-        // Reset Interrupt Variables
-        m_intVector = IRQ_VECTOR;
-        m_isInterrupt = false;
-        break;
-    case OPC_JMP:
-        m_pc = hilo();
-        break;
-    case OPC_JSR:
-        toHilo(m_pc + 1);
-        push((uint8_t)hi);
-        push((uint8_t)lo);
-        m_pc = hilo();
-        break;
-    case OPC_RTS:
-        lo = pop();
-        hi = pop();
-        m_pc = fromHilo() + 1;
-        break;
-        
-    /* Set/Reser Flags */
-    case OPC_CLC: m_f_carry = false;    break;
-    case OPC_SEC: m_f_carry = true;     break;
-    case OPC_CLI: m_f_irq = false;      break;
-    case OPC_SEI: m_f_irq = true;       break;
-    case OPC_CLD: m_f_decimal = false;  break;
-    case OPC_SED: m_f_decimal = true;   break;
-    case OPC_CLV: m_f_overflow = false; break;
-
-    /* Transfer */
-    case OPC_TXS: m_sp = m_r_x; break;
-    case OPC_TSX: updateNZ(m_r_x = m_sp);  break;
-    case OPC_TXA: updateNZ(m_r_a = m_r_x); break;
-    case OPC_TYA: updateNZ(m_r_a = m_r_y); break;
-    case OPC_TAX: updateNZ(m_r_x = m_r_a); break;
-    case OPC_TAY: updateNZ(m_r_y = m_r_a); break;
-
-    /* Load */
-    case OPC_LDA_ABS:
-        updateNZ(m_r_a = m_mem->readb(hilo()));
-        break;
-    case OPC_LDA_ABS_X:
-        updateNZ(m_r_a = m_mem->readb(hilo() + m_r_x));
-        if ((lo + m_r_x) & 0xff00) {
-            m_cyclesLeft++;
-        }
-        break;
-    case OPC_LDA_ABS_Y:
-        updateNZ(m_r_a = m_mem->readb(hilo() + m_r_y));
-        if ((lo + m_r_y) & 0xff00) {
-            m_cyclesLeft++;
-        }
-        break;
-    case OPC_LDA_ZPG: updateNZ(m_r_a = m_mem->readb(fetchArg())); break;
-    case OPC_LDX_ZPG: updateNZ(m_r_x = m_mem->readb(fetchArg())); break;
-    case OPC_LDY_ZPG: updateNZ(m_r_y = m_mem->readb(fetchArg())); break;
-    case OPC_LDA_IMD: updateNZ(m_r_a = fetchArg()); break;
-    case OPC_LDX_IMD: updateNZ(m_r_x = fetchArg()); break;
-    case OPC_LDY_IMD: updateNZ(m_r_y = fetchArg()); break;
-    
-    /* Store */
-    case OPC_STA_ABS:
-        m_mem->writeb(hilo(), m_r_a);
-        break;
-    case OPC_STA_IND_Y:
-        lo = fetchArg();
-        hi = ((uint16_t(m_mem->readb(lo + 1)) << 8) | m_mem->readb(lo)) + m_r_y;
-        m_mem->writeb(hi, m_r_a);
-        break;
-    case OPC_STA_ZPG: storeZpg(m_r_a); break;
-    case OPC_STX_ZPG: storeZpg(m_r_x); break;
-    case OPC_STY_ZPG: storeZpg(m_r_y); break;
-
-    /* Arithmetic */
-    case OPC_LSR:
-        m_f_carry = m_r_a & 1;
-        updateNZ(m_r_a >>= 1);
-        break;
-
-    case OPC_INX: updateNZ(m_r_x += 1); break;
-    case OPC_INY: updateNZ(m_r_y += 1); break;
-    case OPC_DEC_ZPG:
-        lo = fetchArg();
-        hi = m_mem->readb(lo);
-        m_mem->writeb(lo, updateNZ(uint8_t(hi) - 1));
-        break;
-    case OPC_DEX: updateNZ(m_r_x -= 1); break;
-    case OPC_DEY: updateNZ(m_r_y -= 1); break;
-
-    case OPC_CPX_IMD: readImd(); compare(m_r_x); break;
-    case OPC_CPY_IMD: readImd(); compare(m_r_y); break;
-
-    case OPC_CMP_ZPG:   readZpg();  execCmp(); break;
-    case OPC_CMP_ZPG_X: readZpgX(); execCmp(); break;
-    case OPC_CMP_ABS:   readAbs();  execCmp(); break;
-    case OPC_CMP_ABS_X: readAbsX(); execCmp(); break;
-    case OPC_CMP_ABS_Y: readAbsX(); execCmp(); break;
-    case OPC_CMP_IMD:   readImd();  execCmp(); break;
-    case OPC_CMP_IND_X: readIndX(); execCmp(); break;
-    case OPC_CMP_IND_Y: readIndY(); execCmp(); break;
-
-    case OPC_ADC_ZPG:   readZpg();  execAdc(); break;
-    case OPC_ADC_ZPG_X: readZpgX(); execAdc(); break;
-    case OPC_ADC_ABS:   readAbs();  execAdc(); break;
-    case OPC_ADC_ABS_X: readAbsX(); execAdc(); break;
-    case OPC_ADC_ABS_Y: readAbsY(); execAdc(); break;
-    case OPC_ADC_IMD:   readImd();  execAdc(); break;
-    case OPC_ADC_IND_X: readIndX(); execAdc(); break;
-    case OPC_ADC_IND_Y: readIndY(); execAdc(); break;
-
-    case OPC_AND_ZPG:   readZpg();  execAnd(); break;
-    case OPC_AND_ZPG_X: readZpgX(); execAnd(); break;
-    case OPC_AND_ABS:   readAbs();  execAnd(); break;
-    case OPC_AND_ABS_X: readAbsX(); execAnd(); break;
-    case OPC_AND_ABS_Y: readAbsY(); execAnd(); break;
-    case OPC_AND_IMD:   readImd();  execAnd(); break;
-    case OPC_AND_IND_X: readIndX(); execAnd(); break;
-    case OPC_AND_IND_Y: readIndY(); execAnd(); break;
-    
-    case OPC_EOR_ZPG:   readZpg();  execEor(); break;
-    case OPC_EOR_ABS:   readAbs();  execEor(); break;
-    case OPC_EOR_ABS_X: readAbsX(); execEor(); break;
-    case OPC_EOR_ABS_Y: readAbsY(); execEor(); break;
-    case OPC_EOR_IMD:   readImd();  execEor(); break;
-    case OPC_EOR_IND_X: readIndX(); execEor(); break;
-    case OPC_EOR_IND_Y: readIndY(); execEor(); break;
-
-    case OPC_ORA_ZPG:   readZpg();  execOra(); break;
-    case OPC_ORA_ABS:   readAbs();  execOra(); break;
-    case OPC_ORA_ABS_X: readAbsX(); execOra(); break;
-    case OPC_ORA_ABS_Y: readAbsY(); execOra(); break;
-    case OPC_ORA_IMD:   readImd();  execOra(); break;
-    case OPC_ORA_IND_X: readIndX(); execOra(); break;
-    case OPC_ORA_IND_Y: readIndY(); execOra(); break;
-
-    default:
-        LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
-        reset();
-        break;
-    }
-}
-
 void Emu::stepOperation() {
     do  {
         if (stepCycle()) {
@@ -518,3 +232,285 @@ bool Emu::stepCycle() {
 
     return breakpointHit;
 }
+
+void Emu::execOpcode() {
+    switch (m_nextOpcode) {
+
+    case OPC_NOP:
+        break;
+
+    case OPC_PHP: _push(getProcStatus(true)); break;
+    case OPC_PHA: _push(m_r_a); break;
+    case OPC_PLP: _updateNZ(setProcStatus(_pop())); break;
+    case OPC_PLA: _updateNZ(m_r_a = _pop()); break;
+
+        /* Branching */
+    case OPC_BPL: _branch(!m_f_negative); break;
+    case OPC_BMI: _branch(m_f_negative);  break;
+    case OPC_BVC: _branch(!m_f_overflow); break;
+    case OPC_BVS: _branch(m_f_overflow);  break;
+    case OPC_BCC: _branch(!m_f_carry);    break;
+    case OPC_BCS: _branch(m_f_carry);     break;
+    case OPC_BNE: _branch(!m_f_zero);     break;
+    case OPC_BEQ: _branch(m_f_zero);      break;
+
+        /* Jumps/Returns */
+    case OPC_BRK:
+        fetchArg();
+        _push(m_pc >> 8);
+        _push(m_pc & 0xff);
+        _push(getProcStatus(!m_isInterrupt));
+        m_pc = m_mem->readb(m_intVector);
+        if (m_isInterrupt) { m_f_irq = true; }
+        // Reset Interrupt Variables
+        m_intVector = IRQ_VECTOR;
+        m_isInterrupt = false;
+        break;
+    case OPC_JMP:
+        m_pc = _hilo();
+        break;
+    case OPC_JSR:
+        _toHilo(m_pc + 1);
+        _push((uint8_t)_m_hi);
+        _push((uint8_t)_m_lo);
+        m_pc = _hilo();
+        break;
+    case OPC_RTS:
+        _m_lo = _pop();
+        _m_hi = _pop();
+        m_pc = _fromHilo() + 1;
+        break;
+
+        /* Set/Reser Flags */
+    case OPC_CLC: m_f_carry = false;    break;
+    case OPC_SEC: m_f_carry = true;     break;
+    case OPC_CLI: m_f_irq = false;      break;
+    case OPC_SEI: m_f_irq = true;       break;
+    case OPC_CLD: m_f_decimal = false;  break;
+    case OPC_SED: m_f_decimal = true;   break;
+    case OPC_CLV: m_f_overflow = false; break;
+
+        /* Transfer */
+    case OPC_TXS: m_sp = m_r_x; break;
+    case OPC_TSX: _updateNZ(m_r_x = m_sp);  break;
+    case OPC_TXA: _updateNZ(m_r_a = m_r_x); break;
+    case OPC_TYA: _updateNZ(m_r_a = m_r_y); break;
+    case OPC_TAX: _updateNZ(m_r_x = m_r_a); break;
+    case OPC_TAY: _updateNZ(m_r_y = m_r_a); break;
+
+        /* Store */
+    case OPC_STA_ABS:
+        m_mem->writeb(_hilo(), m_r_a);
+        break;
+    case OPC_STA_IND_Y:
+        _m_lo = fetchArg();
+        _m_hi = ((uint16_t(m_mem->readb(_m_lo + 1)) << 8) | m_mem->readb(_m_lo)) + m_r_y;
+        m_mem->writeb(_m_hi, m_r_a);
+        break;
+    case OPC_STA_ZPG: _readImd(); _store(m_r_a); break;
+    case OPC_STX_ZPG: _readImd(); _store(m_r_x); break;
+    case OPC_STY_ZPG: _readImd(); _store(m_r_y); break;
+
+        /* Arithmetic */
+    case OPC_LSR:
+        m_f_carry = m_r_a & 1;
+        _updateNZ(m_r_a >>= 1);
+        break;
+
+    case OPC_INX: _updateNZ(m_r_x += 1); break;
+    case OPC_INY: _updateNZ(m_r_y += 1); break;
+    case OPC_DEC_ZPG:
+        _m_lo = fetchArg();
+        _m_hi = m_mem->readb(_m_lo);
+        m_mem->writeb(_m_lo, _updateNZ(uint8_t(_m_hi) - 1));
+        break;
+    case OPC_DEX: _updateNZ(m_r_x -= 1); break;
+    case OPC_DEY: _updateNZ(m_r_y -= 1); break;
+
+    case OPC_LDA_IMD:   _readImd();  _execLd(m_r_a); break;
+    case OPC_LDA_ABS:   _readAbs();  _execLd(m_r_a); break;
+    case OPC_LDA_ABS_X: _readAbsX(); _execLd(m_r_a); break;
+    case OPC_LDA_ABS_Y: _readAbsY(); _execLd(m_r_a); break;
+    case OPC_LDA_ZPG:   _readZpg();  _execLd(m_r_a); break;
+    case OPC_LDA_ZPG_X: _readZpgX(); _execLd(m_r_a); break;
+    case OPC_LDA_IND_X: _readIndX(); _execLd(m_r_a); break;
+    case OPC_LDA_IND_Y: _readIndY(); _execLd(m_r_a); break;
+
+    case OPC_LDX_IMD:   _readImd();  _execLd(m_r_x); break;
+    case OPC_LDX_ABS:   _readAbs();  _execLd(m_r_x); break;
+    case OPC_LDX_ABS_Y: _readAbsY(); _execLd(m_r_x); break;
+    case OPC_LDX_ZPG:   _readZpg();  _execLd(m_r_x); break;
+    case OPC_LDX_ZPG_Y: _readZpgY(); _execLd(m_r_x); break;
+
+    case OPC_LDY_IMD:   _readImd();  _execLd(m_r_y); break;
+    case OPC_LDY_ABS:   _readAbs();  _execLd(m_r_y); break;
+    case OPC_LDY_ABS_X: _readAbsX(); _execLd(m_r_y); break;
+    case OPC_LDY_ZPG:   _readZpg();  _execLd(m_r_y); break;
+    case OPC_LDY_ZPG_X: _readZpgX(); _execLd(m_r_y); break;
+
+    case OPC_CPX_IMD:   _readImd();  _compare(m_r_x); break;
+    case OPC_CPX_ABS:   _readAbs();  _compare(m_r_x); break;
+    case OPC_CPX_ZPG:   _readZpg();  _compare(m_r_x); break;
+    case OPC_CPY_IMD:   _readImd();  _compare(m_r_y); break;
+    case OPC_CPY_ABS:   _readAbs();  _compare(m_r_y); break;
+    case OPC_CPY_ZPG:   _readZpg();  _compare(m_r_y); break;
+
+    case OPC_CMP_IMD:   _readImd();  _execCmp(); break;
+    case OPC_CMP_ABS:   _readAbs();  _execCmp(); break;
+    case OPC_CMP_ABS_X: _readAbsX(); _execCmp(); break;
+    case OPC_CMP_ABS_Y: _readAbsX(); _execCmp(); break;
+    case OPC_CMP_ZPG:   _readZpg();  _execCmp(); break;
+    case OPC_CMP_ZPG_X: _readZpgX(); _execCmp(); break;
+    case OPC_CMP_IND_X: _readIndX(); _execCmp(); break;
+    case OPC_CMP_IND_Y: _readIndY(); _execCmp(); break;
+
+    case OPC_ADC_IMD:   _readImd();  _execAdc(); break;
+    case OPC_ADC_ABS:   _readAbs();  _execAdc(); break;
+    case OPC_ADC_ABS_X: _readAbsX(); _execAdc(); break;
+    case OPC_ADC_ABS_Y: _readAbsY(); _execAdc(); break;
+    case OPC_ADC_ZPG:   _readZpg();  _execAdc(); break;
+    case OPC_ADC_ZPG_X: _readZpgX(); _execAdc(); break;
+    case OPC_ADC_IND_X: _readIndX(); _execAdc(); break;
+    case OPC_ADC_IND_Y: _readIndY(); _execAdc(); break;
+
+    case OPC_AND_IMD:   _readImd();  _execAnd(); break;
+    case OPC_AND_ABS:   _readAbs();  _execAnd(); break;
+    case OPC_AND_ABS_X: _readAbsX(); _execAnd(); break;
+    case OPC_AND_ABS_Y: _readAbsY(); _execAnd(); break;
+    case OPC_AND_ZPG:   _readZpg();  _execAnd(); break;
+    case OPC_AND_ZPG_X: _readZpgX(); _execAnd(); break;
+    case OPC_AND_IND_X: _readIndX(); _execAnd(); break;
+    case OPC_AND_IND_Y: _readIndY(); _execAnd(); break;
+
+    case OPC_EOR_IMD:   _readImd();  _execEor(); break;
+    case OPC_EOR_ABS:   _readAbs();  _execEor(); break;
+    case OPC_EOR_ABS_X: _readAbsX(); _execEor(); break;
+    case OPC_EOR_ABS_Y: _readAbsY(); _execEor(); break;
+    case OPC_EOR_ZPG:   _readZpg();  _execEor(); break;
+    case OPC_EOR_ZPG_X: _readZpgX(); _execEor(); break;
+    case OPC_EOR_IND_X: _readIndX(); _execEor(); break;
+    case OPC_EOR_IND_Y: _readIndY(); _execEor(); break;
+
+    case OPC_ORA_IMD:   _readImd();  _execOra(); break;
+    case OPC_ORA_ABS:   _readAbs();  _execOra(); break;
+    case OPC_ORA_ABS_X: _readAbsX(); _execOra(); break;
+    case OPC_ORA_ABS_Y: _readAbsY(); _execOra(); break;
+    case OPC_ORA_ZPG:   _readZpg();  _execOra(); break;
+    case OPC_ORA_ZPG_X: _readZpgX(); _execOra(); break;
+    case OPC_ORA_IND_X: _readIndX(); _execOra(); break;
+    case OPC_ORA_IND_Y: _readIndY(); _execOra(); break;
+
+    default:
+        LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
+        reset();
+        break;
+    }
+}
+
+__forceinline void Emu::_toHilo(const uint16_t& value) {
+    _m_lo = value & 0xff;
+    _m_hi = value >> 8;
+}
+
+__forceinline uint16_t Emu::_fromHilo() { return _m_hi << 8 | _m_lo; }
+
+__forceinline uint16_t Emu::_hilo() {
+    _m_lo = fetchArg();
+    _m_hi = fetchArg();
+    return _fromHilo();
+}
+
+__forceinline void Emu::_branch(bool flag) {
+    _m_hi = (int8_t)fetchArg();
+    _m_lo = m_pc + _m_hi;
+    if (flag) {
+        m_cyclesLeft++;
+        // Check wether page boundary is crossed, PC still points to next instruction
+        if ((_m_lo & 0xff00) != (m_pc & 0xff00)) {
+            m_cyclesLeft++;
+        }
+        m_pc = _m_lo;
+    }
+}
+
+__forceinline uint8_t Emu::_updateNZ(uint8_t value) {
+    m_f_zero = value == 0;
+    m_f_negative = value & 0b10000000;
+    return value;
+}
+
+__forceinline void Emu::_compare(const uint8_t& reg) {
+    _m_lo = (0x0100 | reg) - _m_lo;
+    _updateNZ(_m_lo & 0xff);
+    m_f_carry = (_m_lo & 0x0100);
+}
+
+__forceinline void Emu::_push(const uint8_t& value) {
+    m_mem->writeb(0x0100 | m_sp--, value);
+}
+
+__forceinline uint8_t Emu::_pop() {
+    return m_mem->readb(0x0100 | ++m_sp);
+}
+
+__forceinline void Emu::_store(const uint8_t& reg) {
+    m_mem->writeb(_m_lo, reg);
+}
+
+__forceinline void Emu::_readImd() { _m_lo = fetchArg(); };
+__forceinline void Emu::_readZpg() { _m_lo = m_mem->readb(fetchArg()); }
+__forceinline void Emu::_readZpgX() { _m_lo = m_mem->readb(fetchArg() + m_r_x); }
+__forceinline void Emu::_readZpgY() { _m_lo = m_mem->readb(fetchArg() + m_r_y); }
+__forceinline void Emu::_readAbs() { _m_lo = m_mem->readb(_hilo()); }
+__forceinline void Emu::_readAbsX() {
+    _m_lo = _hilo();
+    _m_hi = _m_lo + m_r_x;
+    if ((_m_lo & 0xff00) != (_m_hi & 0xff00)) {
+        m_cyclesLeft++;
+    }
+    _m_lo = m_mem->readb(_m_hi);
+}
+__forceinline void Emu::_readAbsY() {
+    _m_lo = _hilo();
+    _m_hi = _m_lo + m_r_y;
+    if ((_m_lo & 0xff00) != (_m_hi & 0xff00)) {
+        m_cyclesLeft++;
+    }
+    _m_lo = m_mem->readb(_m_hi);
+}
+__forceinline void Emu::_readIndX() {
+    _m_lo = fetchArg() + m_r_x;
+    _m_hi = m_mem->readb(_m_lo + 1);
+    _m_lo = m_mem->readb(_m_lo);
+    _m_lo = m_mem->readb(_fromHilo());
+}
+__forceinline void Emu::_readIndY() {
+    _m_lo = fetchArg();
+    _m_hi = m_mem->readb(_m_lo + 1);
+    _m_lo = m_mem->readb(_m_lo);
+    _m_lo = _fromHilo();
+    _m_hi = _m_lo + m_r_y;
+    if ((_m_lo & 0xff00) != (_m_hi & 0xff00)) {
+        m_cyclesLeft++;
+    }
+    _m_lo = m_mem->readb(_m_hi);
+}
+
+__forceinline void Emu::_execAdc() {
+    // See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
+    _m_hi = _m_lo >> 5                         // m_7
+        | m_r_a & 0x80 >> 6               // n_7
+        | ((_m_lo & m_r_a & 0x40) >> 6);     // c_6
+    if (m_f_carry) {
+        m_r_a += 1;
+    }
+    m_f_carry = ADC_CARRY_LUT[_m_hi];
+    m_f_overflow = ADC_OVERFLOW_LUT[_m_hi];
+    _updateNZ(m_r_a += _m_lo);
+};
+__forceinline void Emu::_execAnd() { _updateNZ(m_r_a &= _m_lo); }
+__forceinline void Emu::_execCmp() { _compare(m_r_a); };
+__forceinline void Emu::_execEor() { _updateNZ(m_r_a ^= _m_lo); };
+__forceinline void Emu::_execOra() { _updateNZ(m_r_a |= _m_lo); };
+
+__forceinline void Emu::_execLd(uint8_t& reg) { _updateNZ(reg = (uint8_t)_m_lo); }

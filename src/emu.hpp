@@ -90,4 +90,35 @@ private:
 
     void fetch();
     uint8_t fetchArg();
+
+    // cycle primitives
+    uint16_t _m_hi;
+    uint16_t _m_lo;
+
+    __forceinline void     _toHilo(const uint16_t& value);
+    __forceinline uint16_t _fromHilo();
+    __forceinline uint16_t _hilo();
+    __forceinline void     _branch(bool flag);
+    __forceinline uint8_t  _updateNZ(uint8_t value);
+    __forceinline void     _compare(const uint8_t& reg);
+    __forceinline void     _push(const uint8_t& value);
+    __forceinline uint8_t  _pop();
+    __forceinline void     _store(const uint8_t& reg);
+
+    __forceinline void     _readImd();
+    __forceinline void     _readZpg();
+    __forceinline void     _readZpgX();
+    __forceinline void     _readZpgY();
+    __forceinline void     _readAbs();
+    __forceinline void     _readAbsX();
+    __forceinline void     _readAbsY();
+    __forceinline void     _readIndX();
+    __forceinline void     _readIndY();
+
+    __forceinline void     _execAdc();
+    __forceinline void     _execAnd();
+    __forceinline void     _execCmp();
+    __forceinline void     _execEor();
+    __forceinline void     _execOra();
+    __forceinline void     _execLd(uint8_t& reg);
 };
