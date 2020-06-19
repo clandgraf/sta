@@ -8,6 +8,18 @@
 
 #include "cpu_opcodes.hpp"
 
+Emu::Emu() {
+    #ifdef LOG_EXECUTION
+    logOut.open("cpu.log");
+    #endif
+}
+
+Emu::~Emu() {
+    #ifdef LOG_EXECUTION
+    logOut.close();
+    #endif
+}
+
 void Emu::init(Cart* cart) {
     if (m_mem) { delete m_mem; m_mem = nullptr; }
     if (m_cart) { delete m_cart; m_cart = nullptr; }
@@ -70,7 +82,8 @@ uint8_t Emu::setProcStatus(uint8_t v) {
 void Emu::reset() {
     // Enter Reset Mode
     m_mode = Mode::RESET;
-    m_cyclesLeft = 9;
+    //m_cyclesLeft = 9;
+    m_cyclesLeft = 7;
 
     // TODO do in exec_reset
     m_f_irq = false;
@@ -98,6 +111,23 @@ void Emu::fetch() {
 
     m_pc++;
     m_lastCycleFetched = true;
+
+    #ifdef LOG_EXECUTION
+    logOut << std::hex 
+           << std::setfill('0') 
+           << std::setw(4) << m_nextOpcodeAddress
+           << " A:"  << std::setw(2) << int(m_r_a)
+           << " X:"  << std::setw(2) << int(m_r_x)
+           << " Y:"  << std::setw(2) << int(m_r_y)
+           << " P:"  << std::setw(2) << int(getProcStatus(false))
+           << " SP:" << std::setw(2) << int(m_sp)
+           << std::dec
+           << std::setfill(' ')
+           << " PPU:" << std::setw(3) << int(m_ppu->m_sl_cycle) << "," << std::setw(3) << int(m_ppu->m_scanline)
+           << " CYC:" << std::setw(0) << m_cycleCount
+           << "\n";
+    logOut.flush();
+    #endif
 }
 
 void Emu::requestInterrupt(uint16_t vector) {
@@ -118,10 +148,10 @@ void Emu::execReset() {
     case 8: // C0
         m_sp = 0x00;
         break;
-    case 7: // C1
-        break;
-    case 6: // C2
-        break;
+    //case 7: // C1
+    //    break;
+    //case 6: // C2
+    //    break;
     case 5: // C3
         m_sp--;
         break;
@@ -137,7 +167,8 @@ void Emu::execReset() {
     case 1: // C7
         m_pc |= m_mem->readb(RESET_VECTOR + 1) << 8;
         break;
-    case 0: // C8            
+    case 0: // C8  
+        //m_pc = 0xc000;          
         m_mode = Mode::EXEC;
         fetch();
         break;
@@ -281,7 +312,13 @@ void Emu::execOpcode() {
         m_pc = _fromHilo() + 1;
         break;
 
-        /* Set/Reser Flags */
+    /* Arithmetic */
+    case OPC_LSR:
+        m_f_carry = m_r_a & 1;
+        _updateNZ(m_r_a >>= 1);
+        break;
+
+    /* Set/Reset Flags */
     case OPC_CLC: m_f_carry = false;    break;
     case OPC_SEC: m_f_carry = true;     break;
     case OPC_CLI: m_f_irq = false;      break;
@@ -290,7 +327,7 @@ void Emu::execOpcode() {
     case OPC_SED: m_f_decimal = true;   break;
     case OPC_CLV: m_f_overflow = false; break;
 
-        /* Transfer */
+    /* Transfer */
     case OPC_TXS: m_sp = m_r_x; break;
     case OPC_TSX: _updateNZ(m_r_x = m_sp);  break;
     case OPC_TXA: _updateNZ(m_r_a = m_r_x); break;
@@ -298,34 +335,37 @@ void Emu::execOpcode() {
     case OPC_TAX: _updateNZ(m_r_x = m_r_a); break;
     case OPC_TAY: _updateNZ(m_r_y = m_r_a); break;
 
-        /* Store */
-    case OPC_STA_ABS:
-        m_mem->writeb(_hilo(), m_r_a);
-        break;
+    /* Store */
     case OPC_STA_IND_Y:
         _m_lo = fetchArg();
         _m_hi = ((uint16_t(m_mem->readb(_m_lo + 1)) << 8) | m_mem->readb(_m_lo)) + m_r_y;
         m_mem->writeb(_m_hi, m_r_a);
         break;
-    case OPC_STA_ZPG: _readImd(); _store(m_r_a); break;
-    case OPC_STX_ZPG: _readImd(); _store(m_r_x); break;
-    case OPC_STY_ZPG: _readImd(); _store(m_r_y); break;
 
-        /* Arithmetic */
-    case OPC_LSR:
-        m_f_carry = m_r_a & 1;
-        _updateNZ(m_r_a >>= 1);
-        break;
+    case OPC_STA_ZPG:   _redrZpg(); _storeReg(m_r_a); break;
+    case OPC_STA_ABS:   _redrAbs(); _storeReg(m_r_a); break;
 
-    case OPC_INX: _updateNZ(m_r_x += 1); break;
-    case OPC_INY: _updateNZ(m_r_y += 1); break;
-    case OPC_DEC_ZPG:
-        _m_lo = fetchArg();
-        _m_hi = m_mem->readb(_m_lo);
-        m_mem->writeb(_m_lo, _updateNZ(uint8_t(_m_hi) - 1));
-        break;
-    case OPC_DEX: _updateNZ(m_r_x -= 1); break;
-    case OPC_DEY: _updateNZ(m_r_y -= 1); break;
+    case OPC_STX_ZPG:   _redrZpg(); _storeReg(m_r_x); break;
+    case OPC_STX_ABS:   _redrAbs(); _storeReg(m_r_x); break;
+
+    case OPC_STY_ZPG:   _redrZpg(); _storeReg(m_r_y); break;
+    case OPC_STY_ABS:   _redrAbs(); _storeReg(m_r_y); break;
+
+    case OPC_INC_ZPG:   _redmZpg();  _execInc(_m_lo); _storeMem(); break;
+    case OPC_INC_ZPG_X: _redmZpgX(); _execInc(_m_lo); _storeMem(); break;
+    case OPC_INC_ABS:   _redmAbs();  _execInc(_m_lo); _storeMem(); break;
+    case OPC_INC_ABS_X: _redmAbsX(); _execInc(_m_lo); _storeMem(); break;
+
+    case OPC_DEC_ZPG:   _redmZpg();  _execDec(_m_lo); _storeMem(); break;
+    case OPC_DEC_ZPG_X: _redmZpgX(); _execDec(_m_lo); _storeMem(); break;
+    case OPC_DEC_ABS:   _redmAbs();  _execDec(_m_lo); _storeMem(); break;
+    case OPC_DEC_ABS_X: _redmAbsX(); _execDec(_m_lo); _storeMem(); break;
+
+    case OPC_INX:       _execInc(m_r_x); break;
+    case OPC_INY:       _execInc(m_r_y); break;
+
+    case OPC_DEX:       _execDec(m_r_x); break;
+    case OPC_DEY:       _execDec(m_r_y); break;
 
     case OPC_LDA_IMD:   _readImd();  _execLd(m_r_a); break;
     case OPC_LDA_ABS:   _readAbs();  _execLd(m_r_a); break;
@@ -453,15 +493,11 @@ __forceinline uint8_t Emu::_pop() {
     return m_mem->readb(0x0100 | ++m_sp);
 }
 
-__forceinline void Emu::_store(const uint8_t& reg) {
-    m_mem->writeb(_m_lo, reg);
-}
-
-__forceinline void Emu::_readImd() { _m_lo = fetchArg(); };
-__forceinline void Emu::_readZpg() { _m_lo = m_mem->readb(fetchArg()); }
+__forceinline void Emu::_readImd()  { _m_lo = fetchArg(); };
+__forceinline void Emu::_readZpg()  { _m_lo = m_mem->readb(fetchArg()); }
 __forceinline void Emu::_readZpgX() { _m_lo = m_mem->readb(fetchArg() + m_r_x); }
 __forceinline void Emu::_readZpgY() { _m_lo = m_mem->readb(fetchArg() + m_r_y); }
-__forceinline void Emu::_readAbs() { _m_lo = m_mem->readb(_hilo()); }
+__forceinline void Emu::_readAbs()  { _m_lo = m_mem->readb(_hilo()); }
 __forceinline void Emu::_readAbsX() {
     _m_lo = _hilo();
     _m_hi = _m_lo + m_r_x;
@@ -496,6 +532,16 @@ __forceinline void Emu::_readIndY() {
     _m_lo = m_mem->readb(_m_hi);
 }
 
+template<typename T>
+__forceinline void Emu::_execInc(T& field) {
+    _updateNZ(uint8_t(field = (field + 1) & 0xff));
+}
+
+template<typename T>
+__forceinline void Emu::_execDec(T& field) {
+    _updateNZ(uint8_t(field = (field - 1) & 0xff));
+}
+
 __forceinline void Emu::_execAdc() {
     // See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
     _m_hi = _m_lo >> 5                         // m_7
@@ -514,3 +560,13 @@ __forceinline void Emu::_execEor() { _updateNZ(m_r_a ^= _m_lo); };
 __forceinline void Emu::_execOra() { _updateNZ(m_r_a |= _m_lo); };
 
 __forceinline void Emu::_execLd(uint8_t& reg) { _updateNZ(reg = (uint8_t)_m_lo); }
+
+__forceinline void Emu::_redrZpg() { _m_hi = fetchArg(); }
+__forceinline void Emu::_redrAbs() { _m_hi = _hilo(); }
+__forceinline void Emu::_storeReg(const uint8_t& reg) { m_mem->writeb(_m_hi, reg); }
+
+__forceinline void Emu::_redmZpg()  { _redrZpg(); _m_lo = m_mem->readb(_m_hi); }
+__forceinline void Emu::_redmZpgX() { _m_lo = m_mem->readb(_m_hi = (fetchArg() + m_r_x)); }
+__forceinline void Emu::_redmAbs()  { _redrAbs(); _m_lo = m_mem->readb(_m_hi); }
+__forceinline void Emu::_redmAbsX() { _m_lo = m_mem->readb(_m_hi = (_hilo() + m_r_x)); }
+__forceinline void Emu::_storeMem() { m_mem->writeb(_m_hi, (uint8_t)_m_lo); }

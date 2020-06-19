@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <set>
 
+#define LOG_EXECUTION
+
+#ifdef LOG_EXECUTION
+#include <fstream>
+#endif
+
 #include "inputs.hpp"
 
 class Memory;
@@ -44,7 +50,8 @@ public:
     bool m_nmi_request = false;
     bool m_irq_request = false;
 
-    Emu() {}
+    Emu();
+    ~Emu();
 
     bool toggleBreakpoint(uint16_t address);
     bool isBreakpoint(uint16_t address);
@@ -66,6 +73,10 @@ public:
     uint8_t getImmediateArg(uint16_t addr, int offset);
 
 private:
+    #ifdef LOG_EXECUTION
+    std::ofstream logOut;
+    #endif
+
     Mode m_mode = Mode::RESET;
 
     std::set<uint16_t> m_breakpoints;
@@ -103,8 +114,8 @@ private:
     __forceinline void     _compare(const uint8_t& reg);
     __forceinline void     _push(const uint8_t& value);
     __forceinline uint8_t  _pop();
-    __forceinline void     _store(const uint8_t& reg);
 
+    /* Helpers that modify Accumulator */
     __forceinline void     _readImd();
     __forceinline void     _readZpg();
     __forceinline void     _readZpgX();
@@ -121,4 +132,21 @@ private:
     __forceinline void     _execEor();
     __forceinline void     _execOra();
     __forceinline void     _execLd(uint8_t& reg);
+
+    /* Helpers that modify memory inplace */
+    __forceinline void     _redmZpg();
+    __forceinline void     _redmZpgX();
+    __forceinline void     _redmAbs();
+    __forceinline void     _redmAbsX();
+    __forceinline void     _storeMem();
+
+    template<typename T>
+    __forceinline void     _execInc(T& field);
+    template<typename T>
+    __forceinline void     _execDec(T& field);
+
+    /* Helpers that store register contents */
+    __forceinline void     _redrZpg();
+    __forceinline void     _redrAbs();
+    __forceinline void     _storeReg(const uint8_t& reg);
 };
