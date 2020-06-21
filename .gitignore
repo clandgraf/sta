@@ -1,6 +1,7 @@
 assets/
 imgui.ini
 settings.json
+cpu.log
 
 # Visual Studio
 Debug/
