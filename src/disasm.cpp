@@ -9,6 +9,7 @@
 #include "emu.hpp"
 #include "rom.hpp"
 #include "mem.hpp"
+#include "ppu.hpp"
 #include "cpu_opcodes.hpp"
 #include "cpu_mnemonics.hpp"
 
@@ -64,9 +65,9 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     int bufIdx = 0;
     if (translateToCartSpace(address)) {
         m_emu.m_cart->translate_cpu(address, cartBank, cartAddress);
-        _DISASM_APPEND_("%02x:%04x : ", cartBank, cartAddress);
+        _DISASM_APPEND_("%02X:%04X  ", cartBank, cartAddress);
     } else {
-        _DISASM_APPEND_("   %04x : ", address);
+        _DISASM_APPEND_("%04X  ", address);
     }
 
     static uint8_t args[2];
@@ -74,7 +75,7 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     switch (opc_addressingMode) {
     case Opcode::Undefined:
     case Opcode::Implicit:
-        _DISASM_APPEND_("%02x       : ", opc);
+        _DISASM_APPEND_("%02X        ", opc);
         _DISASM_APPEND_(Opcode::mnemonics[opc]);
         break;
     case Opcode::IndirectX:
@@ -85,7 +86,7 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     case Opcode::ZeroPageY:
     case Opcode::Immediate:
         arg0 = m_emu.getImmediateArg(address, 0);
-        _DISASM_APPEND_("%02x %02x    : ", opc, arg0);
+        _DISASM_APPEND_("%02X %02X     ", opc, arg0);
         _DISASM_APPEND_(Opcode::mnemonics[opc]);
         _DISASM_APPEND_(" ");
         _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][0], arg0);
@@ -96,7 +97,7 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     case Opcode::Indirect: {
         arg0 = m_emu.getImmediateArg(address, 0);
         arg1 = m_emu.getImmediateArg(address, 1);
-        _DISASM_APPEND_("%02x %02x %02x : ", opc, arg0, arg1);
+        _DISASM_APPEND_("%02X %02X %02X  ", opc, arg0, arg1);
         _DISASM_APPEND_(Opcode::mnemonics[opc]);
         _DISASM_APPEND_(" ");
         uint16_t opcAddress = arg1 << 8 | arg0;
@@ -121,6 +122,27 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     }
 
     return buf;
+}
+
+void Disassembler::logState(std::ostream& os) {
+    std::string opcode = disasmNextOpcode();
+
+    os
+        << std::setfill(' ') << std::left
+        << std::setw(47) << opcode
+
+        << std::uppercase << std::hex
+        << std::right << std::setfill('0')
+        << " A:" << std::setw(2) << int(m_emu.m_r_a)
+        << " X:" << std::setw(2) << int(m_emu.m_r_x)
+        << " Y:" << std::setw(2) << int(m_emu.m_r_y)
+        << " P:" << std::setw(2) << int(m_emu.getProcStatus(true) & ~0x10)
+        << " SP:" << std::setw(2) << int(m_emu.m_sp)
+        << std::dec
+        << std::setfill(' ')
+        << " PPU:" << std::setw(3) << int(m_emu.m_ppu->m_sl_cycle) << "," << std::setw(3) << int(m_emu.m_ppu->m_scanline)
+        << " CYC:" << std::setw(0) << m_emu.getCycleCount()
+        << "\n";
 }
 
 const char* Disassembler::disasmNextOpcode(bool* end, uint8_t* next) {

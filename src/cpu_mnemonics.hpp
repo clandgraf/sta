@@ -26,17 +26,17 @@ namespace Opcode {
 
     const char* paramPatterns[][3] = {
         { nullptr,        nullptr, nullptr        },
-        { "$%02x%02x",    "%s",    "%02x:%04x"    },
-        { "$%02x%02x, X", "%s, X", "%02x:%04x, X" },
-        { "$%02x%02x, Y", "%s, Y", "%02x:%04x, Y" },
-        { "($%02x%02)",   "(%s)",  "(%02x:%04x)"  },
-        { "($%02x, X)",   nullptr, nullptr        },
-        { "($%02x), Y",   nullptr, nullptr        },
+        { "$%02X%02X",    "%s",    "%02X:%04X"    },
+        { "$%02X%02X, X", "%s, X", "%02X:%04X, X" },
+        { "$%02X%02X, Y", "%s, Y", "%02X:%04X, Y" },
+        { "($%02X%02X)",  "(%s)",  "(%02X:%04X)"  },
+        { "($%02X, X)",   nullptr, nullptr        },
+        { "($%02X), Y",   nullptr, nullptr        },
         { "%d",           nullptr, nullptr        },
-        { "$%02x",        nullptr, nullptr        },
-        { "$%02x, X",     nullptr, nullptr        },
-        { "$%02x, Y",     nullptr, nullptr        },
-        { "#$%02x",       nullptr, nullptr        },
+        { "$%02X",        nullptr, nullptr        },
+        { "$%02X, X",     nullptr, nullptr        },
+        { "$%02X, Y",     nullptr, nullptr        },
+        { "#$%02X",       nullptr, nullptr        },
     };
 
     const char* mnemonics[0x100] = {

@@ -8,17 +8,27 @@
 
 #include "cpu_opcodes.hpp"
 
+#ifdef LOG_EXECUTION
+#include "disasm.hpp"
+#endif
+
 Emu::Emu() {
     #ifdef LOG_EXECUTION
-    logOut.open("cpu.log");
+    m_logOut.open("cpu.log");
     #endif
 }
 
 Emu::~Emu() {
     #ifdef LOG_EXECUTION
-    logOut.close();
+    m_logOut.close();
     #endif
 }
+
+#ifdef LOG_EXECUTION
+void Emu::setDisassembler(Disassembler* disassembler) {
+    m_disassembler = disassembler;
+}
+#endif
 
 void Emu::init(Cart* cart) {
     if (m_mem) { delete m_mem; m_mem = nullptr; }
@@ -58,7 +68,7 @@ uint8_t Emu::getImmediateArg(int offset) { return m_mem->readb(m_pc + offset); }
 uint8_t Emu::getImmediateArg(uint16_t addr, int offset) { return m_mem->readb(addr + 1 + offset); }
 
 uint8_t Emu::getProcStatus(bool setBrk) {
-    uint8_t v = 0x16;  // Bit 5 is always set, see https://wiki.nesdev.com/w/index.php/Status_flags#The_B_flag
+    uint8_t v = 16;  // Bit 5 is always set, see https://wiki.nesdev.com/w/index.php/Status_flags#The_B_flag
     if (m_f_carry)    v |= 1;
     if (m_f_zero)     v |= 2;
     if (m_f_irq)      v |= 4;
@@ -82,11 +92,11 @@ uint8_t Emu::setProcStatus(uint8_t v) {
 void Emu::reset() {
     // Enter Reset Mode
     m_mode = Mode::RESET;
-    //m_cyclesLeft = 9;
+    // XXX m_cyclesLeft = 9;
     m_cyclesLeft = 7;
 
     // TODO do in exec_reset
-    m_f_irq = false;
+    m_f_irq = true;
     m_f_decimal = false;
 
     // -- Non CPU Stuff
@@ -113,24 +123,14 @@ void Emu::fetch() {
     m_lastCycleFetched = true;
 
     #ifdef LOG_EXECUTION
-    logOut << std::hex 
-           << std::setfill('0') 
-           << std::setw(4) << m_nextOpcodeAddress
-           << " A:"  << std::setw(2) << int(m_r_a)
-           << " X:"  << std::setw(2) << int(m_r_x)
-           << " Y:"  << std::setw(2) << int(m_r_y)
-           << " P:"  << std::setw(2) << int(getProcStatus(false))
-           << " SP:" << std::setw(2) << int(m_sp)
-           << std::dec
-           << std::setfill(' ')
-           << " PPU:" << std::setw(3) << int(m_ppu->m_sl_cycle) << "," << std::setw(3) << int(m_ppu->m_scanline)
-           << " CYC:" << std::setw(0) << m_cycleCount
-           << "\n";
-    logOut.flush();
+    m_disassembler->logState(m_logOut);
+    m_logOut.flush();
     #endif
 }
 
 void Emu::requestInterrupt(uint16_t vector) {
+    m_interruptInCycle = true;
+
     m_nextOpcodeAddress = m_pc;
     m_nextOpcode = OPC_BRK;
     m_cyclesLeft = OPC_CYCLES[m_nextOpcode];
@@ -168,8 +168,11 @@ void Emu::execReset() {
         m_pc |= m_mem->readb(RESET_VECTOR + 1) << 8;
         break;
     case 0: // C8  
-        //m_pc = 0xc000;          
-        m_mode = Mode::EXEC;
+        m_mode = Mode::EXEC;        
+
+        // XXX Entry point for CPU Test
+        m_pc = 0xc000;
+      
         fetch();
         break;
     }
@@ -197,7 +200,9 @@ void Emu::stepScanline() {
 
 void Emu::stepFrame() {
     bool currentFrame = m_ppu->m_f_odd_frame;
-    while (m_ppu->m_f_odd_frame == currentFrame && m_mode != Mode::RESET) {
+
+    // If we get a reset in between we want to interrupt stepping.
+    while (m_ppu->m_f_odd_frame == currentFrame) {
         if (stepCycle()) {
             break;
         }
@@ -205,8 +210,10 @@ void Emu::stepFrame() {
 }
 
 bool Emu::stepCycle() {
-    bool breakpointHit = false;
+    bool breakExecution = false;
 
+    m_errorInCycle = false;
+    m_interruptInCycle = false;
     m_lastCycleFetched = false;
 
     switch (m_mode) {
@@ -253,15 +260,19 @@ bool Emu::stepCycle() {
         break;
     }
 
-    m_ppu->run(3);
+    if (m_mode != Mode::RESET) // XXX Golden Log setup
+        m_ppu->run(3);
 
     // We are at the start of a new opcode and have hit a breakpoint
-    if (m_lastCycleFetched && m_breakpoints.find(m_nextOpcodeAddress) != m_breakpoints.end()) {
+    if (m_lastCycleFetched && m_breakpoints.find(m_nextOpcodeAddress) != m_breakpoints.end()
+        || (m_interruptInCycle && m_breakOnInterrupt)
+        || m_errorInCycle) {
+        
         m_isStepping = true;
-        breakpointHit = true;
+        breakExecution = true;
     }
 
-    return breakpointHit;
+    return breakExecution;
 }
 
 void Emu::execOpcode() {
@@ -442,7 +453,7 @@ void Emu::execOpcode() {
 
     default:
         LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
-        reset();
+        m_errorInCycle = true;
         break;
     }
 }

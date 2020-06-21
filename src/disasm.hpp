@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <map>
+#include <ostream>
 
 class Emu;
 
@@ -27,9 +28,12 @@ public:
     Disassembler(Emu& emu) : m_emu(emu) {}
 
     const char* disasmOpcode(uint16_t address, bool* end = nullptr, uint8_t* next = nullptr);
+
+    void logState(std::ostream& os);
+
     const char* disasmNextOpcode(bool* end = nullptr, uint8_t* next = nullptr);
-    std::shared_ptr<DisasmSegment> disasmSegment(uint16_t addr);
-    std::shared_ptr<DisasmSegment> continueSegment(std::shared_ptr<DisasmSegment> segment);
+    DisasmSegmentSptr disasmSegment(uint16_t addr);
+    DisasmSegmentSptr continueSegment(DisasmSegmentSptr segment);
 
     void refresh();
 

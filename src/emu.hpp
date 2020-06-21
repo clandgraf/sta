@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <set>
 
-#define LOG_EXECUTION
-
 #ifdef LOG_EXECUTION
 #include <fstream>
 #endif
@@ -14,6 +12,9 @@
 class Memory;
 class Cart;
 class PPU;
+#ifdef LOG_EXECUTION
+class Disassembler;
+#endif
 
 uint16_t constexpr NMI_VECTOR = 0xfffa;    // Address where NMI starts
 uint16_t constexpr RESET_VECTOR = 0xfffc;  // Address where execution starts
@@ -50,8 +51,14 @@ public:
     bool m_nmi_request = false;
     bool m_irq_request = false;
 
+    bool m_breakOnInterrupt = false;
+
     Emu();
     ~Emu();
+
+    #ifdef LOG_EXECUTION
+    void setDisassembler(Disassembler* disassembler);
+    #endif
 
     bool toggleBreakpoint(uint16_t address);
     bool isBreakpoint(uint16_t address);
@@ -72,9 +79,12 @@ public:
     uint8_t getImmediateArg(int offset); 
     uint8_t getImmediateArg(uint16_t addr, int offset);
 
+    uint8_t getProcStatus(bool setBrk);
+
 private:
     #ifdef LOG_EXECUTION
-    std::ofstream logOut;
+    std::ofstream m_logOut;
+    Disassembler* m_disassembler;
     #endif
 
     Mode m_mode = Mode::RESET;
@@ -90,7 +100,9 @@ private:
     uint16_t m_intVector = IRQ_VECTOR;  // When interrupt occurs, we store the vector here (either NMI or IRQ/BRK)
     bool m_isInterrupt = false;         // True, when BRK is executed from interrupt
 
-    uint8_t getProcStatus(bool setBrk);
+    bool m_errorInCycle = false;  // Set if error occurs in cycle. Will go into stepping mode.
+    bool m_interruptInCycle = false;  // Set if interrupt occurs in cycle. Will go into stepping mode if break on interrupt is set.
+
     uint8_t setProcStatus(uint8_t value);
 
     // CPU Initialization after RESET

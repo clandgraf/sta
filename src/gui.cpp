@@ -114,11 +114,15 @@ static void renderMenuBar(Emu& emu, Disassembler& disasm) {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Disassembler")) {
+        if (ImGui::BeginMenu("Debugger")) {
             if (ImGui::MenuItem("Refresh Pattern Table", nullptr)) {
                 if (emu.isInitialized()) {
                     refreshPatternTable(emu);
                 }
+            }
+
+            if (ImGui::MenuItem("Break on Interrupts"), nullptr, emu.m_breakOnInterrupt) {
+                emu.m_breakOnInterrupt = !emu.m_breakOnInterrupt;
             }
 
             if (ImGui::MenuItem("Absolute Labels", nullptr, disasm.m_showAbsoluteLabels)) {
