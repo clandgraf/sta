@@ -34,7 +34,6 @@ int main(int ac, char ** av) {
             emu.init(cart);
         }
     }
-    emu.m_breakOnInterrupt = Settings::get("break-on-interrupt", false);
 
     Disassembler disasm(emu);
     #ifdef LOG_EXECUTION
@@ -58,7 +57,8 @@ int main(int ac, char ** av) {
     }
 
     Gui::teardownUi();
-    Settings::set("break-on-interrupt", emu.m_breakOnInterrupt);
+    emu.writeSettings();
+    disasm.writeSettings();
     Settings::write();
     return EXIT_SUCCESS;
 }

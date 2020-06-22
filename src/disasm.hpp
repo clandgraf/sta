@@ -25,7 +25,9 @@ class Disassembler {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
 public:
-    Disassembler(Emu& emu) : m_emu(emu) {}
+    Disassembler(Emu& emu);
+
+    void writeSettings();
 
     const char* disasmOpcode(uint16_t address, bool* end = nullptr, uint8_t* next = nullptr);
 

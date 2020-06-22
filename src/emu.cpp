@@ -13,6 +13,8 @@
 #endif
 
 Emu::Emu() {
+    m_breakOnInterrupt = Settings::get("emulator/break-on-interrupt", false);
+
     #ifdef LOG_EXECUTION
     m_logOut.open("cpu.log");
     #endif
@@ -22,6 +24,10 @@ Emu::~Emu() {
     #ifdef LOG_EXECUTION
     m_logOut.close();
     #endif
+}
+
+void Emu::writeSettings() {
+    Settings::set("emulator/break-on-interrupt", false);
 }
 
 #ifdef LOG_EXECUTION

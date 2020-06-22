@@ -56,6 +56,8 @@ public:
     Emu();
     ~Emu();
 
+    void writeSettings();
+
     #ifdef LOG_EXECUTION
     void setDisassembler(Disassembler* disassembler);
     #endif

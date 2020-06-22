@@ -47,6 +47,16 @@ static bool isFlowBreaking(uint8_t opcode) {
     return false;
 }
 
+Disassembler::Disassembler(Emu& emu) : m_emu(emu) {
+    m_translateCartSpace = Settings::get("disassembler/translate-cart-space", true);
+    m_showAbsoluteLabels = Settings::get("disassembler/show-absolute-labels", true);
+}
+
+void Disassembler::writeSettings() {
+    Settings::set("disassembler/translate-cart-space", m_translateCartSpace);
+    Settings::set("disassembler/show-absolute-labels", m_showAbsoluteLabels);
+}
+
 bool Disassembler::translateToCartSpace(uint16_t address) const { 
     return m_translateCartSpace && Memory::isCartSpace(address); 
 }
