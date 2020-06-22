@@ -1,0 +1,47 @@
+E4 1110 0100
+A5 1010 0101
+
+Carry: Should be Unset
+Overflow: Should be Set
+
+
+lo 0 0111 1111
+a  0 0111 1111
+             1
+   0 1111 1111
+
+
+001
+
+
+--------------------------------
+
+
+P=25 => 0010 0101
+
+Carry Set
+Overflow Not Set
+
+Exec 7f + 80 + 1 => 1 00
+
+Expected:
+  A = 00
+  P = 27   0010 0111
+
+  Carry Set
+  Overflow Not Set
+
+Got:
+  A = 00
+  P = 26   0010 0110
+
+a   0 0111 1111
+lo  0 1000 0000
+
+idx got  10
+
+
+------------------------------------
+
+
+CEAD RTI

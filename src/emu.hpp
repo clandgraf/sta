@@ -141,6 +141,7 @@ private:
     __forceinline void     _readIndY();
 
     __forceinline void     _execAdc();
+    __forceinline void     _execSbc();
     __forceinline void     _execAnd();
     __forceinline void     _execCmp();
     __forceinline void     _execEor();

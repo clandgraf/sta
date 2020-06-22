@@ -432,6 +432,15 @@ void Emu::execOpcode() {
     case OPC_ADC_IND_X: _readIndX(); _execAdc(); break;
     case OPC_ADC_IND_Y: _readIndY(); _execAdc(); break;
 
+    case OPC_SBC_IMD:   _readImd();  _execSbc(); break;
+    case OPC_SBC_ABS:   _readAbs();  _execSbc(); break;
+    case OPC_SBC_ABS_X: _readAbsX(); _execSbc(); break;
+    case OPC_SBC_ABS_Y: _readAbsY(); _execSbc(); break;
+    case OPC_SBC_ZPG:   _readZpg();  _execSbc(); break;
+    case OPC_SBC_ZPG_X: _readZpgX(); _execSbc(); break;
+    case OPC_SBC_IND_X: _readIndX(); _execSbc(); break;
+    case OPC_SBC_IND_Y: _readIndY(); _execSbc(); break;
+
     case OPC_AND_IMD:   _readImd();  _execAnd(); break;
     case OPC_AND_ABS:   _readAbs();  _execAnd(); break;
     case OPC_AND_ABS_X: _readAbsX(); _execAnd(); break;
@@ -562,17 +571,16 @@ __forceinline void Emu::_execDec(T& field) {
 }
 
 __forceinline void Emu::_execAdc() {
-    // See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
-    _m_hi = _m_lo & 0x80 >> 5                // m_7
-          | m_r_a & 0x80 >> 6                // n_7
-          | ((_m_lo & m_r_a & 0x40) >> 6);   // c_6
-    if (m_f_carry) {
-        m_r_a += 1;
-    }
-    m_f_carry = ADC_CARRY_LUT[_m_hi];
-    m_f_overflow = ADC_OVERFLOW_LUT[_m_hi];
-    _updateNZ(m_r_a += _m_lo);
+    //// See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
+    _m_hi = _m_lo + m_r_a + (m_f_carry ? 1 : 0);
+    m_f_carry    = _m_hi > 0xff;
+    m_f_overflow = (_m_lo ^ _m_hi) & (m_r_a ^ _m_hi) & 0x80;
+    _updateNZ(m_r_a = uint8_t(_m_hi));
 };
+__forceinline void Emu::_execSbc() {
+    _m_lo = (~_m_lo) & 0xff;
+    _execAdc();
+}
 __forceinline void Emu::_execAnd() { _updateNZ(m_r_a &= _m_lo); }
 __forceinline void Emu::_execCmp() { _compare(m_r_a); };
 __forceinline void Emu::_execEor() { _updateNZ(m_r_a ^= _m_lo); };
