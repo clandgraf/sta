@@ -145,6 +145,7 @@ private:
     __forceinline void     _execCmp();
     __forceinline void     _execEor();
     __forceinline void     _execOra();
+    __forceinline void     _execBit();
     __forceinline void     _execLd(uint8_t& reg);
 
     /* Helpers that modify memory inplace */

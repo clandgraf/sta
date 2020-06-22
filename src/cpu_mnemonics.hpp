@@ -24,19 +24,23 @@ namespace Opcode {
         0, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1,
     };
 
+    #define _X8   "%02X"
+    #define _X16  "%04X"
+    #define _S    "%s"
+
     const char* paramPatterns[][3] = {
-        { nullptr,        nullptr, nullptr        },
-        { "$%02X%02X",    "%s",    "%02X:%04X"    },
-        { "$%02X%02X, X", "%s, X", "%02X:%04X, X" },
-        { "$%02X%02X, Y", "%s, Y", "%02X:%04X, Y" },
-        { "($%02X%02X)",  "(%s)",  "(%02X:%04X)"  },
-        { "($%02X, X)",   nullptr, nullptr        },
-        { "($%02X), Y",   nullptr, nullptr        },
-        { "%d",           nullptr, nullptr        },
-        { "$%02X",        nullptr, nullptr        },
-        { "$%02X, X",     nullptr, nullptr        },
-        { "$%02X, Y",     nullptr, nullptr        },
-        { "#$%02X",       nullptr, nullptr        },
+        { nullptr,        nullptr,    nullptr        },
+        { "$" _X8 _X8,    _S,         _X8 ":" _X16   },
+        { "$%02X%02X, X", "%s, X",    "%02X:%04X, X" },
+        { "$%02X%02X, Y", "%s, Y",    "%02X:%04X, Y" },
+        { "($%02X%02X)",  "(" _S ")", "(%02X:%04X)"  },
+        { "($%02X, X)",   nullptr,    nullptr        },
+        { "($%02X), Y",   nullptr,    nullptr        },
+        { "%d",           "$" _X16,   nullptr        },
+        { "$%02X",        nullptr,    nullptr        },
+        { "$%02X, X",     nullptr,    nullptr        },
+        { "$%02X, Y",     nullptr,    nullptr        },
+        { "#$%02X",       nullptr,    nullptr        },
     };
 
     const char* mnemonics[0x100] = {

@@ -16,6 +16,7 @@ uint8_t constexpr OPC_ORA_ABS_Y = 0x19;
 uint8_t constexpr OPC_ORA_ABS_X = 0x1d;
 uint8_t constexpr OPC_JSR = 0x20;
 uint8_t constexpr OPC_AND_IND_X = 0x21;
+uint8_t constexpr OPC_BIT_ZPG = 0x24;
 uint8_t constexpr OPC_AND_ZPG = 0x25;
 uint8_t constexpr OPC_PLP = 0x28;
 uint8_t constexpr OPC_AND_IMD = 0x29;

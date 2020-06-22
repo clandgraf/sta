@@ -39,8 +39,9 @@ public:
 
     void refresh();
 
-    bool m_translateCartSpace = true;  // Translate Addresses into Cartridge Space if applicable
-    bool m_showAbsoluteLabels = true;  // Show Labels for Absolute Addressing
+    bool m_translateCartSpace = true;       // Translate Addresses into Cartridge Space if applicable
+    bool m_showAbsoluteLabels = true;       // Show Labels for Absolute Addressing
+    bool m_absoluteBranchAddresses = true;  // Display absolute Branch Addresses
 
 private:
     Emu& m_emu;

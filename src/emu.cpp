@@ -289,7 +289,7 @@ void Emu::execOpcode() {
 
     case OPC_PHP: _push(getProcStatus(true)); break;
     case OPC_PHA: _push(m_r_a); break;
-    case OPC_PLP: _updateNZ(setProcStatus(_pop())); break;
+    case OPC_PLP: setProcStatus(_pop()); break;
     case OPC_PLA: _updateNZ(m_r_a = _pop()); break;
 
         /* Branching */
@@ -358,6 +358,8 @@ void Emu::execOpcode() {
         _m_hi = ((uint16_t(m_mem->readb(_m_lo + 1)) << 8) | m_mem->readb(_m_lo)) + m_r_y;
         m_mem->writeb(_m_hi, m_r_a);
         break;
+
+    case OPC_BIT_ZPG:   _readZpg(); _execBit(); break;
 
     case OPC_STA_ZPG:   _redrZpg(); _storeReg(m_r_a); break;
     case OPC_STA_ABS:   _redrAbs(); _storeReg(m_r_a); break;
@@ -561,9 +563,9 @@ __forceinline void Emu::_execDec(T& field) {
 
 __forceinline void Emu::_execAdc() {
     // See http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html: Addition on the 6502
-    _m_hi = _m_lo >> 5                         // m_7
-        | m_r_a & 0x80 >> 6               // n_7
-        | ((_m_lo & m_r_a & 0x40) >> 6);     // c_6
+    _m_hi = _m_lo & 0x80 >> 5                // m_7
+          | m_r_a & 0x80 >> 6                // n_7
+          | ((_m_lo & m_r_a & 0x40) >> 6);   // c_6
     if (m_f_carry) {
         m_r_a += 1;
     }
@@ -575,6 +577,11 @@ __forceinline void Emu::_execAnd() { _updateNZ(m_r_a &= _m_lo); }
 __forceinline void Emu::_execCmp() { _compare(m_r_a); };
 __forceinline void Emu::_execEor() { _updateNZ(m_r_a ^= _m_lo); };
 __forceinline void Emu::_execOra() { _updateNZ(m_r_a |= _m_lo); };
+__forceinline void Emu::_execBit() { 
+    m_f_negative = _m_lo & 0b10000000;
+    m_f_overflow = _m_lo & 0b01000000;
+    m_f_zero = (_m_lo & m_r_a) == 0;
+}
 
 __forceinline void Emu::_execLd(uint8_t& reg) { _updateNZ(reg = (uint8_t)_m_lo); }
 

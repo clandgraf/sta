@@ -50,11 +50,13 @@ static bool isFlowBreaking(uint8_t opcode) {
 Disassembler::Disassembler(Emu& emu) : m_emu(emu) {
     m_translateCartSpace = Settings::get("disassembler/translate-cart-space", true);
     m_showAbsoluteLabels = Settings::get("disassembler/show-absolute-labels", true);
+    m_absoluteBranchAddresses = Settings::get("disassembler/absolute-branch-addresses", true);
 }
 
 void Disassembler::writeSettings() {
     Settings::set("disassembler/translate-cart-space", m_translateCartSpace);
     Settings::set("disassembler/show-absolute-labels", m_showAbsoluteLabels);
+    Settings::set("disassembler/absolute-branch-addresses", m_absoluteBranchAddresses);
 }
 
 bool Disassembler::translateToCartSpace(uint16_t address) const { 
@@ -62,6 +64,20 @@ bool Disassembler::translateToCartSpace(uint16_t address) const {
 }
 
 #define _DISASM_APPEND_(...) (bufIdx += snprintf(&buf[bufIdx], BUFLEN - bufIdx, __VA_ARGS__))
+#define _DISASM_OP0_ { \
+    _DISASM_APPEND_("%02X        ", opc);\
+    _DISASM_APPEND_(Opcode::mnemonics[opc]); }
+#define _DISASM_OP1_ { \
+    arg0 = m_emu.getImmediateArg(address, 0); \
+    _DISASM_APPEND_("%02X %02X     ", opc, arg0); \
+    _DISASM_APPEND_(Opcode::mnemonics[opc]); \
+    _DISASM_APPEND_(" "); }
+#define _DISASM_OP2_ { \
+    arg0 = m_emu.getImmediateArg(address, 0); \
+    arg1 = m_emu.getImmediateArg(address, 1); \
+    _DISASM_APPEND_("%02X %02X %02X  ", opc, arg0, arg1); \
+    _DISASM_APPEND_(Opcode::mnemonics[opc]); \
+    _DISASM_APPEND_(" "); }
 
 const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* next) {
     static uint8_t cartBank;
@@ -85,31 +101,28 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     switch (opc_addressingMode) {
     case Opcode::Undefined:
     case Opcode::Implicit:
-        _DISASM_APPEND_("%02X        ", opc);
-        _DISASM_APPEND_(Opcode::mnemonics[opc]);
+        _DISASM_OP0_;
         break;
+    case Opcode::Relative:
+        if (m_absoluteBranchAddresses) {
+            _DISASM_OP1_;
+            _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][1], address + opc_ac + 1 + arg0);
+            break;
+        }
     case Opcode::IndirectX:
     case Opcode::IndirectY:
-    case Opcode::Relative:
     case Opcode::ZeroPage:
     case Opcode::ZeroPageX:
     case Opcode::ZeroPageY:
     case Opcode::Immediate:
-        arg0 = m_emu.getImmediateArg(address, 0);
-        _DISASM_APPEND_("%02X %02X     ", opc, arg0);
-        _DISASM_APPEND_(Opcode::mnemonics[opc]);
-        _DISASM_APPEND_(" ");
+        _DISASM_OP1_;
         _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][0], arg0);
         break;
     case Opcode::Absolute:
     case Opcode::AbsoluteX:
     case Opcode::AbsoluteY:
     case Opcode::Indirect: {
-        arg0 = m_emu.getImmediateArg(address, 0);
-        arg1 = m_emu.getImmediateArg(address, 1);
-        _DISASM_APPEND_("%02X %02X %02X  ", opc, arg0, arg1);
-        _DISASM_APPEND_(Opcode::mnemonics[opc]);
-        _DISASM_APPEND_(" ");
+        _DISASM_OP2_;
         uint16_t opcAddress = arg1 << 8 | arg0;
         if (m_showAbsoluteLabels && inbuiltLabels[opcAddress]) {
             _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][1], inbuiltLabels[opcAddress]);
