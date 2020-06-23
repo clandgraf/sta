@@ -86,7 +86,7 @@ public:
 private:
     #ifdef LOG_EXECUTION
     std::ofstream m_logOut;
-    Disassembler* m_disassembler;
+    Disassembler* m_disassembler = nullptr;
     #endif
 
     Mode m_mode = Mode::RESET;
@@ -117,8 +117,8 @@ private:
     uint8_t fetchArg();
 
     // cycle primitives
-    uint16_t _m_hi;
-    uint16_t _m_lo;
+    uint16_t _m_hi = 0;
+    uint16_t _m_lo = 0;
 
     __forceinline void     _toHilo(const uint16_t& value);
     __forceinline uint16_t _fromHilo();
@@ -158,12 +158,24 @@ private:
     template<typename T>
     __forceinline void     _execAsl(T& field);
     template<typename T>
+    __forceinline void     _execLsr(T& field);
+    template<typename T>
+    __forceinline void     _execRol(T& field);
+    template<typename T>
+    __forceinline void     _execRor(T& field);
+    template<typename T>
     __forceinline void     _execInc(T& field);
     template<typename T>
     __forceinline void     _execDec(T& field);
 
     /* Helpers that store register contents */
     __forceinline void     _redrZpg();
+    __forceinline void     _redrZpgX();
+    __forceinline void     _redrZpgY();
     __forceinline void     _redrAbs();
+    __forceinline void     _redrAbsX();
+    __forceinline void     _redrAbsY();
+    __forceinline void     _redrIndX();
+    __forceinline void     _redrIndY();
     __forceinline void     _storeReg(const uint8_t& reg);
 };

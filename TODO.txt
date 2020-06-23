@@ -1,3 +1,6 @@
+
+- cpu fix zero page addressing: wraps on zero page ( _m_lo = (fetchArg() + m_r_x) & 0xff; )
+
 - add reverse translation "cpu_memory -> cart_bank:memory"
   - use in disasm
 - read symbol files and annotate disassembly with labels 
