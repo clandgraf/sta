@@ -328,6 +328,12 @@ void Emu::execOpcode() {
         _m_hi = _pop();
         m_pc = _fromHilo() + 1;
         break;
+    case OPC_RTI:
+        setProcStatus(_pop());
+        _m_lo = _pop();
+        _m_hi = _pop();
+        m_pc = _fromHilo();
+        break;
 
     /* Arithmetic */
     case OPC_LSR:
@@ -469,7 +475,10 @@ void Emu::execOpcode() {
     case OPC_ORA_IND_Y: _readIndY(); _execOra(); break;
 
     default:
-        LOG_ERR << "Unhandled opcode at " << std::hex << int(m_nextOpcodeAddress) << ": " << int(m_nextOpcode) << "\n";
+        LOG_ERR << "Unhandled opcode at " 
+                << std::hex << std::setfill('0') << std::setw(4) << int(m_nextOpcodeAddress) 
+                << std::hex << std::setfill('0') << std::setw(2) << ": "
+                << int(m_nextOpcode) << "\n";
         m_errorInCycle = true;
         break;
     }
@@ -589,6 +598,14 @@ __forceinline void Emu::_execBit() {
     m_f_negative = _m_lo & 0b10000000;
     m_f_overflow = _m_lo & 0b01000000;
     m_f_zero = (_m_lo & m_r_a) == 0;
+}
+
+template<typename T>
+__forceinline void Emu::_execAsl(T& field) {
+    m_f_carry = field & 0x80;
+    field <<= 1;
+    field &= 0xff;
+    updateNZ(field);
 }
 
 __forceinline void Emu::_execLd(uint8_t& reg) { _updateNZ(reg = (uint8_t)_m_lo); }

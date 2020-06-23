@@ -139,7 +139,6 @@ private:
     __forceinline void     _readAbsY();
     __forceinline void     _readIndX();
     __forceinline void     _readIndY();
-
     __forceinline void     _execAdc();
     __forceinline void     _execSbc();
     __forceinline void     _execAnd();
@@ -156,6 +155,8 @@ private:
     __forceinline void     _redmAbsX();
     __forceinline void     _storeMem();
 
+    template<typename T>
+    __forceinline void     _execAsl(T& field);
     template<typename T>
     __forceinline void     _execInc(T& field);
     template<typename T>
