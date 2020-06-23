@@ -4,6 +4,7 @@
 
 uint8_t constexpr OPC_BRK = 0x00;
 uint8_t constexpr OPC_ORA_IND_X = 0x01;
+uint8_t constexpr _OPC_NOP_ZPG__0 = 0x04;
 uint8_t constexpr OPC_ORA_ZPG = 0x05;
 uint8_t constexpr OPC_ASL_ZPG = 0x06;
 uint8_t constexpr OPC_PHP = 0x08;
@@ -40,6 +41,7 @@ uint8_t constexpr OPC_AND_ABS_X = 0x3d;
 uint8_t constexpr OPC_ROL_ABS_X = 0x3e;
 uint8_t constexpr OPC_RTI = 0x40;
 uint8_t constexpr OPC_EOR_IND_X = 0x41;
+uint8_t constexpr _OPC_NOP_ZPG__1 = 0x44;
 uint8_t constexpr OPC_EOR_ZPG = 0x45;
 uint8_t constexpr OPC_LSR_ZPG = 0x46;
 uint8_t constexpr OPC_PHA = 0x48;
@@ -58,6 +60,7 @@ uint8_t constexpr OPC_EOR_ABS_X = 0x5d;
 uint8_t constexpr OPC_LSR_ABS_X = 0x5e;
 uint8_t constexpr OPC_RTS = 0x60;
 uint8_t constexpr OPC_ADC_IND_X = 0x61;
+uint8_t constexpr _OPC_NOP_ZPG__2 = 0x64;
 uint8_t constexpr OPC_ADC_ZPG = 0x65;
 uint8_t constexpr OPC_ROR_ZPG = 0x66;
 uint8_t constexpr OPC_PLA = 0x68;
@@ -74,11 +77,14 @@ uint8_t constexpr OPC_SEI = 0x78;
 uint8_t constexpr OPC_ADC_ABS_Y = 0x79;
 uint8_t constexpr OPC_ADC_ABS_X = 0x7d;
 uint8_t constexpr OPC_ROR_ABS_X = 0x7e;
+uint8_t constexpr _OPC_NOP_IMD__0 = 0x80;
 uint8_t constexpr OPC_STA_IND_X = 0x81;
+uint8_t constexpr _OPC_NOP_IMD__1 = 0x82;
 uint8_t constexpr OPC_STY_ZPG = 0x84;
 uint8_t constexpr OPC_STA_ZPG = 0x85;
 uint8_t constexpr OPC_STX_ZPG = 0x86;
 uint8_t constexpr OPC_DEY = 0x88;
+uint8_t constexpr _OPC_NOP_IMD__2 = 0x89;
 uint8_t constexpr OPC_TXA = 0x8a;
 uint8_t constexpr OPC_STY_ABS = 0x8c;
 uint8_t constexpr OPC_STA_ABS = 0x8d;
@@ -117,6 +123,7 @@ uint8_t constexpr OPC_LDA_ABS_X = 0xbd;
 uint8_t constexpr OPC_LDX_ABS_Y = 0xbe;
 uint8_t constexpr OPC_CPY_IMD = 0xc0;
 uint8_t constexpr OPC_CMP_IND_X = 0xc1;
+uint8_t constexpr _OPC_NOP_IMD__3 = 0xc2;
 uint8_t constexpr OPC_CPY_ZPG = 0xc4;
 uint8_t constexpr OPC_CMP_ZPG = 0xc5;
 uint8_t constexpr OPC_DEC_ZPG = 0xc6;
@@ -136,6 +143,7 @@ uint8_t constexpr OPC_CMP_ABS_X = 0xdd;
 uint8_t constexpr OPC_DEC_ABS_X = 0xde;
 uint8_t constexpr OPC_CPX_IMD = 0xe0;
 uint8_t constexpr OPC_SBC_IND_X = 0xe1;
+uint8_t constexpr _OPC_NOP_IMD__4 = 0xe2;
 uint8_t constexpr OPC_CPX_ZPG = 0xe4;
 uint8_t constexpr OPC_SBC_ZPG = 0xe5;
 uint8_t constexpr OPC_INC_ZPG = 0xe6;
@@ -158,13 +166,13 @@ const int OPC_CYCLES[0x100] = {
 
     /*      0  1  2  3  4  5  6  7    8  9  a  b  c  d  e  f */
 
-    /* 0 */ 7, 6, 0, 0, 0, 3, 5, 0,   3, 2, 2, 0, 0, 4, 6, 0,
+    /* 0 */ 7, 6, 0, 0, 3, 3, 5, 0,   3, 2, 2, 0, 0, 4, 6, 0,
     /* 1 */ 2, 5, 0, 0, 0, 4, 6, 0,   2, 4, 0, 0, 0, 4, 7, 0,
     /* 2 */ 6, 6, 0, 0, 3, 3, 5, 0,   4, 2, 2, 0, 4, 4, 6, 0,
     /* 3 */ 2, 5, 0, 0, 0, 4, 6, 0,   2, 4, 0, 0, 0, 4, 7, 0,
-    /* 4 */ 6, 6, 0, 0, 0, 3, 5, 0,   3, 2, 2, 0, 3, 4, 6, 0,
+    /* 4 */ 6, 6, 0, 0, 3, 3, 5, 0,   3, 2, 2, 0, 3, 4, 6, 0,
     /* 5 */ 2, 5, 0, 0, 0, 4, 6, 0,   2, 4, 0, 0, 0, 4, 7, 0,
-    /* 6 */ 6, 6, 0, 0, 0, 3, 5, 0,   4, 2, 2, 0, 5, 4, 6, 0,
+    /* 6 */ 6, 6, 0, 0, 3, 3, 5, 0,   4, 2, 2, 0, 5, 4, 6, 0,
     /* 7 */ 2, 5, 0, 0, 0, 4, 6, 0,   2, 4, 0, 0, 0, 4, 7, 0,
 
     /* 8 */ 0, 6, 0, 0, 3, 3, 3, 0,   2, 0, 2, 0, 4, 4, 4, 0,

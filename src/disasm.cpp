@@ -221,6 +221,8 @@ DisasmSegmentSptr Disassembler::disasmSegment(uint16_t addr) {
             mergeSegments(segment, nextSegment->second);
             m_disassembly.erase(addr);
             end = true;
+        } else if (addr >= 0xffff) {
+            end = true;
         }
 
     } while (!end);

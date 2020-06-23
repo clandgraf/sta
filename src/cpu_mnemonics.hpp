@@ -44,44 +44,45 @@ namespace Opcode {
     };
 
     const char* mnemonics[0x100] = {
-        //          0      1      2      3      4      5      6      7        8      9      a        b      c      d      e      f
-        /* 0 */    "BRK", "ORA", "???", "???", "???", "ORA", "ASL", "???",   "PHP", "ORA", "ASL A", "???", "???", "ORA", "ASL", "???",
-        /* 1 */    "BPL", "ORA", "???", "???", "???", "ORA", "ASL", "???",   "CLC", "ORA", "",      "???", "???", "ORA", "ASL", "???",
-        /* 2 */    "JSR", "AND", "???", "???", "BIT", "AND", "ROL", "???",   "PLP", "AND", "ROL A", "???", "BIT", "AND", "ROL", "???",
-        /* 3 */    "BMI", "AND", "???", "???", "???", "AND", "ROL", "???",   "SEC", "AND", "",      "???", "???", "AND", "ROL", "???",
-        /* 4 */    "RTI", "EOR", "???", "???", "???", "EOR", "LSR", "???",   "PHA", "EOR", "LSR A", "???", "JMP", "EOR", "LSR", "???",
-        /* 5 */    "BVC", "EOR", "???", "???", "???", "EOR", "LSR", "???",   "CLI", "EOR", "",      "???", "???", "EOR", "LSR", "???",
-        /* 6 */    "RTS", "ADC", "???", "???", "???", "ADC", "ROR", "???",   "PLA", "ADC", "ROR A", "???", "JMP", "ADC", "ROR", "???",
-        /* 7 */    "BVS", "ADC", "???", "???", "???", "ADC", "ROR", "???",   "SEI", "ADC", "",      "???", "???", "ADC", "ROR", "???",
+        //          0       1      2       3      4      5       6      7        8      9       a        b      c      d      e      f
+        /* 0 */    "BRK",  "ORA", "???",  "???", "*NOP", "ORA", "ASL", "???",   "PHP", "ORA",  "ASL A", "???", "???", "ORA", "ASL", "???",
+        /* 1 */    "BPL",  "ORA", "???",  "???", "???",  "ORA", "ASL", "???",   "CLC", "ORA",  "???",   "???", "???", "ORA", "ASL", "???",
+        /* 2 */    "JSR",  "AND", "???",  "???", "BIT",  "AND", "ROL", "???",   "PLP", "AND",  "ROL A", "???", "BIT", "AND", "ROL", "???",
+        /* 3 */    "BMI",  "AND", "???",  "???", "???",  "AND", "ROL", "???",   "SEC", "AND",  "???",   "???", "???", "AND", "ROL", "???",
+        /* 4 */    "RTI",  "EOR", "???",  "???", "*NOP", "EOR", "LSR", "???",   "PHA", "EOR",  "LSR A", "???", "JMP", "EOR", "LSR", "???",
+        /* 5 */    "BVC",  "EOR", "???",  "???", "???",  "EOR", "LSR", "???",   "CLI", "EOR",  "???",   "???", "???", "EOR", "LSR", "???",
+        /* 6 */    "RTS",  "ADC", "???",  "???", "*NOP", "ADC", "ROR", "???",   "PLA", "ADC",  "ROR A", "???", "JMP", "ADC", "ROR", "???",
+        /* 7 */    "BVS",  "ADC", "???",  "???", "???",  "ADC", "ROR", "???",   "SEI", "ADC",  "???",   "???", "???", "ADC", "ROR", "???",
 
-        /* 8 */    "???", "STA", "???", "???", "STY", "STA", "STX", "???",   "DEY", "???", "TXA",   "???", "STY", "STA", "STX", "???",
-        /* 9 */    "BCC", "STA", "???", "???", "STY", "STA", "STX", "???",   "TYA", "STA", "TXS",   "???", "???", "STA", "???", "???",
-        /* A */    "LDY", "LDA", "LDX", "???", "LDY", "LDA", "LDX", "???",   "TAY", "LDA", "TAX",   "???", "LDY", "LDA", "LDX", "???",
-        /* B */    "BCS", "LDA", "???", "???", "LDY", "LDA", "LDX", "???",   "CLV", "LDA", "TSX",   "???", "???", "LDA", "LDX", "???",
-        /* C */    "CPY", "CMP", "???", "???", "CPY", "CMP", "DEC", "???",   "INY", "CMP", "DEX",   "???", "CPY", "CMP", "DEC", "???",
-        /* D */    "BNE", "CMP", "???", "???", "???", "CMP", "DEC", "???",   "CLD", "CMP", "???",   "???", "???", "CMP", "DEC", "???",
-        /* E */    "CPX", "SBC", "???", "???", "CPX", "SBC", "INC", "???",   "INX", "SBC", "NOP",   "???", "CPX", "SBC", "INC", "???",
-        /* F */    "BEQ", "SBC", "???", "???", "???", "SBC", "INC", "???",   "SED", "SBC", "???",   "???", "???", "SBC", "INC", "???",
+        /* 8 */    "*NOP", "STA", "*NOP", "???", "STY",  "STA", "STX", "???",   "DEY", "*NOP", "TXA",   "???", "STY", "STA", "STX", "???",
+        /* 9 */    "BCC",  "STA", "???",  "???", "STY",  "STA", "STX", "???",   "TYA", "STA",  "TXS",   "???", "???", "STA", "???", "???",
+        /* A */    "LDY",  "LDA", "LDX",  "???", "LDY",  "LDA", "LDX", "???",   "TAY", "LDA",  "TAX",   "???", "LDY", "LDA", "LDX", "???",
+        /* B */    "BCS",  "LDA", "???",  "???", "LDY",  "LDA", "LDX", "???",   "CLV", "LDA",  "TSX",   "???", "???", "LDA", "LDX", "???",
+        /* C */    "CPY",  "CMP", "???",  "???", "CPY",  "CMP", "DEC", "???",   "INY", "CMP",  "DEX",   "???", "CPY", "CMP", "DEC", "???",
+        /* D */    "BNE",  "CMP", "???",  "???", "???",  "CMP", "DEC", "???",   "CLD", "CMP",  "???",   "???", "???", "CMP", "DEC", "???",
+        /* E */    "CPX",  "SBC", "???",  "???", "CPX",  "SBC", "INC", "???",   "INX", "SBC",  "NOP",   "???", "CPX", "SBC", "INC", "???",
+        /* F */    "BEQ",  "SBC", "???",  "???", "???",  "SBC", "INC", "???",   "SED", "SBC",  "???",   "???", "???", "SBC", "INC", "???",
     };
 
     static AddressingMode addressingModes[0x100] = {
-        Implicit, IndirectX,Undefined,Undefined, Undefined,ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Undefined,Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
-        Absolute, IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
-        Implicit, IndirectX,Undefined,Undefined, Undefined,ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
-        Implicit, IndirectX,Undefined,Undefined, Undefined,ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Indirect, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
+        //          0         1         2         3          4         5         6          7             8        9          a         b         c        d            e        f
+        /* 0 */  Implicit, IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Undefined,Absolute,  Absolute,  Undefined,
+        /* 1 */  Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
+        /* 2 */  Absolute, IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
+        /* 3 */  Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
+        /* 4 */  Implicit, IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
+        /* 5 */  Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
+        /* 6 */  Implicit, IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Indirect, Absolute,  Absolute,  Undefined,
+        /* 7 */  Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
 
-        Undefined,IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Undefined, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageY,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, Undefined,AbsoluteX, Undefined, Undefined,
-        Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageY,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, AbsoluteX,AbsoluteX, AbsoluteY, Undefined,
-        Immediate,IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
-        Immediate,IndirectX,Undefined,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
+        /* 8 */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
+        /* 9 */  Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageY,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, Undefined,AbsoluteX, Undefined, Undefined,
+        /* A */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
+        /* B */  Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageY,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, AbsoluteX,AbsoluteX, AbsoluteY, Undefined,
+        /* C */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
+        /* D */  Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
+        /* E */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
+        /* F */  Relative, IndirectY,Undefined,Undefined, Undefined,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Undefined,Undefined, Undefined,AbsoluteX, AbsoluteX, Undefined,
     };
 
 };

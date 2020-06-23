@@ -23,12 +23,14 @@ uint8_t Memory::readb(uint16_t addr) {
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
-        LOG_ERR << "Access to APU/IO\n";
+        LOG_ERR << "readb(" << std::hex << std::setw(4) << std::setfill('0') <<  addr << ")" 
+                << "Access to APU/IO\n";
         exit(1);
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {
-        LOG_ERR << "Access to Test Mode registers\n";
+        LOG_ERR << "readb(" << std::hex << std::setw(4) << std::setfill('0') << addr << ")" 
+                << "Access to Test Mode registers\n";
         exit(1);
     }
     // Access Cartridge CPU Bus

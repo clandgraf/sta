@@ -121,7 +121,7 @@ static void renderMenuBar(Emu& emu, Disassembler& disasm) {
                 }
             }
 
-            if (ImGui::MenuItem("Break on Interrupts"), nullptr, emu.m_breakOnInterrupt) {
+            if (ImGui::MenuItem("Break on Interrupts", nullptr, emu.m_breakOnInterrupt)) {
                 emu.m_breakOnInterrupt = !emu.m_breakOnInterrupt;
             }
 

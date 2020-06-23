@@ -12,6 +12,8 @@
 #include "disasm.hpp"
 #endif
 
+namespace sm = StreamManipulators;
+
 Emu::Emu() {
     m_breakOnInterrupt = Settings::get("emulator/break-on-interrupt", false);
 
@@ -98,8 +100,11 @@ uint8_t Emu::setProcStatus(uint8_t v) {
 void Emu::reset() {
     // Enter Reset Mode
     m_mode = Mode::RESET;
-    // XXX m_cyclesLeft = 9;
+#ifdef NESTEST_SETUP
     m_cyclesLeft = 7;
+#else
+    m_cyclesLeft = 9;
+#endif
 
     // TODO do in exec_reset
     m_f_irq = true;
@@ -176,8 +181,9 @@ void Emu::execReset() {
     case 0: // C8  
         m_mode = Mode::EXEC;        
 
-        // XXX Entry point for CPU Test
+#ifdef NESTEST_SETUP
         m_pc = 0xc000;
+#endif
       
         fetch();
         break;
@@ -266,8 +272,13 @@ bool Emu::stepCycle() {
         break;
     }
 
-    if (m_mode != Mode::RESET) // XXX Golden Log setup
+    // TODO Should start PPU after Reset?
+#ifdef NESTEST_SETUP
+    if (m_mode != Mode::RESET) 
         m_ppu->run(3);
+#else
+    m_ppu->run(3);
+#endif
 
     // We are at the start of a new opcode and have hit a breakpoint
     if (m_lastCycleFetched && m_breakpoints.find(m_nextOpcodeAddress) != m_breakpoints.end()
@@ -284,8 +295,16 @@ bool Emu::stepCycle() {
 void Emu::execOpcode() {
     switch (m_nextOpcode) {
 
-    case OPC_NOP:
-        break;
+    case OPC_NOP:                     break;
+    case _OPC_NOP_ZPG__0:
+    case _OPC_NOP_ZPG__1:
+    case _OPC_NOP_ZPG__2: _readZpg(); break;
+
+    case _OPC_NOP_IMD__0:
+    case _OPC_NOP_IMD__1:
+    case _OPC_NOP_IMD__2:
+    case _OPC_NOP_IMD__3:
+    case _OPC_NOP_IMD__4: _readImd(); break;
 
     case OPC_PHP: _push(getProcStatus(true)); break;
     case OPC_PHA: _push(m_r_a); break;
@@ -309,6 +328,7 @@ void Emu::execOpcode() {
         _push(m_pc & 0xff);
         _push(getProcStatus(!m_isInterrupt));
         m_pc = m_mem->readb(m_intVector);
+        m_pc |= uint16_t(m_mem->readb(m_intVector + 1)) << 8;
         if (m_isInterrupt) { m_f_irq = true; }
         // Reset Interrupt Variables
         m_intVector = IRQ_VECTOR;
@@ -316,6 +336,11 @@ void Emu::execOpcode() {
         break;
     case OPC_JMP:
         m_pc = _hilo();
+        break;
+    case OPC_JMP_IND:
+        m_pc = m_mem->readb(_hilo());
+        _m_lo += 1;
+        m_pc |= uint16_t(m_mem->readb(_fromHilo())) << 8;
         break;
     case OPC_JSR:
         _toHilo(m_pc + 1);
@@ -496,9 +521,9 @@ void Emu::execOpcode() {
 
     default:
         LOG_ERR << "Unhandled opcode at " 
-                << std::hex << std::setfill('0') << std::setw(4) << int(m_nextOpcodeAddress) 
-                << std::hex << std::setfill('0') << std::setw(2) << ": "
-                << int(m_nextOpcode) << "\n";
+                << sm::hex(m_nextOpcodeAddress) 
+                << ":"
+                << sm::hex(m_nextOpcode) << "\n";
         m_errorInCycle = true;
         break;
     }
@@ -509,7 +534,7 @@ __forceinline void Emu::_toHilo(const uint16_t& value) {
     _m_hi = value >> 8;
 }
 
-__forceinline uint16_t Emu::_fromHilo() { return _m_hi << 8 | _m_lo; }
+__forceinline uint16_t Emu::_fromHilo() { return _m_hi << 8 | (_m_lo & 0x00ff); }
 
 __forceinline uint16_t Emu::_hilo() {
     _m_lo = fetchArg();
@@ -573,13 +598,13 @@ __forceinline void Emu::_readAbsY() {
 }
 __forceinline void Emu::_readIndX() {
     _m_lo = fetchArg() + m_r_x;
-    _m_hi = m_mem->readb(_m_lo + 1);
-    _m_lo = m_mem->readb(_m_lo);
+    _m_hi = m_mem->readb((_m_lo + 1) & 0xff);
+    _m_lo = m_mem->readb(_m_lo & 0xff);
     _m_lo = m_mem->readb(_fromHilo());
 }
 __forceinline void Emu::_readIndY() {
     _m_lo = fetchArg();
-    _m_hi = m_mem->readb(_m_lo + 1);
+    _m_hi = m_mem->readb((_m_lo + 1) & 0xff);
     _m_lo = m_mem->readb(_m_lo);
     _m_lo = _fromHilo();
     _m_hi = _m_lo + m_r_y;

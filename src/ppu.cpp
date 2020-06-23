@@ -2,6 +2,9 @@
 
 #include "emu.hpp"
 #include "ppu.hpp"
+#include "util.hpp"
+
+namespace sm = StreamManipulators;
 
 void PPU::reset() {
     m_cycleCount = 0;
@@ -53,7 +56,9 @@ uint8_t PPU::read_register(uint8_t reg) {
     case PPUSTATUS: return readPPUSTATUS();
     }
 
-    std::cerr << "Not implemented\n";
+    LOG_ERR << "PPU::read_register(" 
+            << sm::hex(reg) 
+            << "): Not implemented\n";
 
     return 0;
 }
@@ -62,6 +67,12 @@ void PPU::write_register(uint8_t reg, uint8_t value) {
     switch (reg) {
     case PPUCTRL: writePPUCTRL(value); break;
     }
+
+    LOG_ERR << "PPU::write_register(" 
+            << sm::hex(reg)
+            << ", " 
+            << sm::hex(value) 
+            << "): Not implemented\n";
 }
 
 uint8_t PPU::readPPUSTATUS() {

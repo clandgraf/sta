@@ -28,6 +28,26 @@ uint8_t* readFile(const std::filesystem::path& path) {
     return data;
 }
 
+namespace sm = StreamManipulators;
+
+sm::HexOutput::HexOutput(int value, int width) 
+    : m_value(value), m_width(width) {}
+
+
+void sm::HexOutput::print(std::ostream& out) const {
+    out << "0x" 
+        << std::hex << std::setw(m_width) << std::setfill('0')
+        << m_value;
+}
+
+sm::HexOutput sm::hex(uint8_t value) {
+    return {value, 2};
+}
+
+sm::HexOutput sm::hex(uint16_t value) {
+    return {value, 4};
+}
+
 using json = nlohmann::json;
 
 json Settings::object;
