@@ -9,6 +9,11 @@
 #define LOG_ERR (std::cerr << "[ERROR] "<< __FILE__ << ":" << __LINE__ << " ")
 #define LOG_MSG (std::cerr << "[INFO]  "<< __FILE__ << ":" << __LINE__ << " ")
 
+namespace CliArguments {
+    bool flag(int ac, char** av, const char* param);
+    char* value(int ac, char** av, const char* param);
+}
+
 template<class T>
 auto operator<<(std::ostream& os, T const& t) -> decltype(t.print(os), os)
 {

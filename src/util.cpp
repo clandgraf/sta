@@ -1,5 +1,32 @@
 #include "util.hpp"
 
+#include <cstring>
+
+#include "clargs.hpp"
+
+static int _cliIndex(int ac, char** av, const char* param) {
+    for (int i = 1; i < ac; i++) {
+        if (strcmp(av[i], param) == 0) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+bool CliArguments::flag(int ac, char** av, const char* param) {
+    return _cliIndex(ac, av, param) > 0;
+}
+
+char* CliArguments::value(int ac, char** av, const char* param) {
+    int i = _cliIndex(ac, av, param) + 1;
+    if (i < ac && i > 1) {
+        return av[i];
+    }
+
+    return nullptr;
+}
+
 uint8_t* readFile(std::ifstream& file, size_t* length) {
     file.seekg(0, file.end);
     size_t len = file.tellg();
