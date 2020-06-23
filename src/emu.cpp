@@ -295,16 +295,37 @@ bool Emu::stepCycle() {
 void Emu::execOpcode() {
     switch (m_nextOpcode) {
 
-    case OPC_NOP:                     break;
-    case _OPC_NOP_ZPG__0:
-    case _OPC_NOP_ZPG__1:
-    case _OPC_NOP_ZPG__2: _readZpg(); break;
+    case OPC_NOP:
+    case _OPC_NOP__0:
+    case _OPC_NOP__1:
+    case _OPC_NOP__2:
+    case _OPC_NOP__3:
+    case _OPC_NOP__4:
+    case _OPC_NOP__5:       break;
+
+    case _OPC_NOP_ABS__0:   _readAbs(); break;
 
     case _OPC_NOP_IMD__0:
     case _OPC_NOP_IMD__1:
     case _OPC_NOP_IMD__2:
     case _OPC_NOP_IMD__3:
-    case _OPC_NOP_IMD__4: _readImd(); break;
+    case _OPC_NOP_IMD__4:   _readImd(); break;
+
+    case _OPC_NOP_ZPG__0:
+    case _OPC_NOP_ZPG__1:
+    case _OPC_NOP_ZPG__2:   _readZpg(); break;
+
+    case _OPC_NOP_ZPG_X__0:
+    case _OPC_NOP_ZPG_X__1:
+    case _OPC_NOP_ZPG_X__2:
+    case _OPC_NOP_ZPG_X__3:
+    case _OPC_NOP_ZPG_X__4: _readZpgX(); break;
+    
+    case _OPC_NOP_ABS_X__0:
+    case _OPC_NOP_ABS_X__1:
+    case _OPC_NOP_ABS_X__2:
+    case _OPC_NOP_ABS_X__3:
+    case _OPC_NOP_ABS_X__4: _readAbsX(); break;
 
     case OPC_PHP: _push(getProcStatus(true)); break;
     case OPC_PHA: _push(m_r_a); break;
