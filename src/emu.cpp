@@ -29,7 +29,7 @@ Emu::~Emu() {
 }
 
 void Emu::writeSettings() {
-    Settings::set("emulator/break-on-interrupt", false);
+    Settings::set("emulator/break-on-interrupt", m_breakOnInterrupt);
 }
 
 #ifdef LOG_EXECUTION
