@@ -2,8 +2,6 @@
 
 #include <cstring>
 
-#include "clargs.hpp"
-
 static int _cliIndex(int ac, char** av, const char* param) {
     for (int i = 1; i < ac; i++) {
         if (strcmp(av[i], param) == 0) {
