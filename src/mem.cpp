@@ -4,10 +4,11 @@
 #include "mem.hpp"
 #include "rom.hpp"
 #include "ppu.hpp"
+#include "emu.hpp"
 #include "util.hpp"
 
-Memory::Memory(Cart* cart, PPU* ppu)
-    : m_cart(cart), m_ppu(ppu)
+Memory::Memory(Emu* emu, Cart* cart, PPU* ppu)
+    : m_emu(emu), m_cart(cart), m_ppu(ppu)
 {}
 
 uint8_t Memory::readb(uint16_t addr) {
@@ -20,6 +21,10 @@ uint8_t Memory::readb(uint16_t addr) {
     else if (addr < 0x4000) {
         uint8_t addr_lo = addr & 0b00000111;
         return m_ppu->read_register(addr_lo);
+    }
+    // OAM DMA
+    else if (addr == 0x4014) {
+        LOG_ERR << "readb on OAMDMA\n";
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
@@ -51,6 +56,10 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     else if (addr < 0x4000) {
         uint8_t addr_lo = addr & 0b00000111;
         m_ppu->write_register(addr_lo, value);
+    }
+    // OAM DMA
+    else if (addr == 0x4014) {
+        m_emu->startDMA(value);
     }
     // APU/IO Registers
     else if (addr < 0x4018) {

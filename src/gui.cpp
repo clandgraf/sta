@@ -181,24 +181,36 @@ static void renderRomInfo(Emu& emu) {
     }
 }
 
+static void ImGui_AttachTooltip(const char* str) {
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::TextUnformatted(str);
+        ImGui::EndTooltip();
+    }
+}
+
 static void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
             if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
                 emu.m_isStepping = false;
             }
+            ImGui_AttachTooltip("Continue");
             ImGui::SameLine();
             if (ImGui::Button(ICON_MD_SKIP_NEXT)) {
                 emu.stepOperation();
             }
+            ImGui_AttachTooltip("Step Operation");
             ImGui::SameLine();
             if (ImGui::Button(ICON_MD_ARROW_FORWARD)) {
                 emu.stepScanline();
             }
+            ImGui_AttachTooltip("Step Scanline");
             ImGui::SameLine();
             if (ImGui::Button(ICON_MD_CAMERA)) {
                 emu.stepFrame();
             }
+            ImGui_AttachTooltip("Step Frame");
 
             ImGui::PushFont(monoFont);
             ImGui::Text("CPU Cycles: %d", emu.getCycleCount());

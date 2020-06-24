@@ -27,6 +27,7 @@ public:
         CYCLES,  // Additional cycles
         RESET,
         INTERRUPT,
+        DMA,
     };
 
     bool m_isStepping = true;
@@ -68,6 +69,7 @@ public:
     void init(Cart* _cart);
     bool isInitialized();
     void reset();
+    void startDMA(uint8_t page);
     void stepOperation();
     void stepScanline();
     void stepFrame();
@@ -93,15 +95,23 @@ private:
 
     std::set<uint16_t> m_breakpoints;
     
+    /* Cycles and Opcodes */
     int8_t m_cyclesLeft = 0;  // How many Cycles does the current instruction still have
     uint16_t m_nextOpcodeAddress = 0;
     uint8_t m_nextOpcode = 0;  // The opcode that is now executed
     uint8_t m_lastCycleFetched = false;  // Did a fetch occur in the last cycle, used to step by opcode
     unsigned long m_cycleCount = 0;
 
+    /* Interrupts */
     uint16_t m_intVector = IRQ_VECTOR;  // When interrupt occurs, we store the vector here (either NMI or IRQ/BRK)
     bool m_isInterrupt = false;         // True, when BRK is executed from interrupt
 
+    /* DMA */
+    int16_t m_dmaCycle = 0;
+    uint16_t m_dmaPage = 0;
+    void execDma();
+
+    /* Emulator Flow Control */
     bool m_errorInCycle = false;  // Set if error occurs in cycle. Will go into stepping mode.
     bool m_interruptInCycle = false;  // Set if interrupt occurs in cycle. Will go into stepping mode if break on interrupt is set.
 

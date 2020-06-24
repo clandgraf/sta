@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "defs.hpp"
+
 class Cart;
 class Emu;
 
@@ -13,6 +15,27 @@ uint8_t constexpr OAMDATA   = 0x4;
 uint8_t constexpr PPUSCROLL = 0x5;
 uint8_t constexpr PPUADDR   = 0x6;
 uint8_t constexpr PPUDATA   = 0x7;
+
+PACK(
+    union OamEntry {
+        struct {
+            uint8_t y;
+            uint8_t tileIndex;
+            union {
+                uint8_t attributes;
+                struct {
+                    unsigned int palette: 2;
+                    unsigned int __unused: 3;
+                    unsigned int priority: 1;
+                    unsigned int hflip: 1;
+                    unsigned int vflip : 1;
+                };
+            };
+            uint8_t x;
+        };
+        uint8_t fields[4];
+    };
+)
 
 class PPU {
 public:
@@ -50,4 +73,7 @@ private:
     void writePPUCTRL(uint8_t value);
 
     unsigned long m_cycleCount = 0;
+
+    OamEntry m_oam[64];
+    OamEntry m_soam[8];
 };

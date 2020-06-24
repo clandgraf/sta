@@ -45,7 +45,7 @@ void Emu::init(Cart* cart) {
 
     m_cart = cart;
     m_ppu = new PPU(this, m_cart);
-    m_mem = new Memory(m_cart, m_ppu);
+    m_mem = new Memory(this, m_cart, m_ppu);
 
     reset();
 }
@@ -119,6 +119,30 @@ void Emu::reset() {
     m_irq_request = false;
     m_intVector = IRQ_VECTOR;
     m_isInterrupt = false;
+}
+
+void Emu::startDMA(uint8_t page) {
+    m_dmaCycle = -1;
+    m_dmaPage = page;
+}
+
+void Emu::execDma() {
+    if (m_dmaCycle >= 512) {
+        m_mode = Mode::EXEC;
+        return;
+    } 
+
+    if (m_dmaCycle >= 0) {
+        bool isWrite = m_dmaCycle % 2;  // Alternatingly ...
+        if (isWrite) {
+            m_mem->writeb(OAMDATA, _m_lo);   // ... write to OAM
+        } else {
+            uint8_t oamAddress = m_dmaCycle / 2;  // ... or read from DMA page
+            _m_lo = m_mem->readb(uint16_t(m_dmaPage) << 8 | oamAddress);
+        }
+    }
+
+    m_dmaCycle++;
 }
 
 uint8_t Emu::fetchArg() {
@@ -238,6 +262,9 @@ bool Emu::stepCycle() {
                     // Opcode uses additional cycles
                     m_mode = Mode::CYCLES;
                 }
+            } else if (m_dmaCycle < 0) {
+                // Instruction's write has triggered OAMDMA
+                m_mode = Mode::DMA;
             } else if (m_nmi_request) {
                 requestInterrupt(NMI_VECTOR);
                 m_nmi_request = false;
@@ -248,14 +275,15 @@ bool Emu::stepCycle() {
                 fetch();
             }
         }
-
         break;
 
     case Mode::CYCLES:
         m_cycleCount++;
         if (--m_cyclesLeft == 0) {
             m_mode = Mode::EXEC;
-            if (m_nmi_request) {
+            if (m_dmaCycle < 0) {
+                m_mode = Mode::DMA;
+            } else if (m_nmi_request) {
                 requestInterrupt(NMI_VECTOR);
                 m_nmi_request = false;
             } else if (m_irq_request) {
@@ -265,6 +293,10 @@ bool Emu::stepCycle() {
                 fetch();
             }
         }
+        break;
+
+    case Mode::DMA:
+        execDma();
         break;
 
     case Mode::RESET:
