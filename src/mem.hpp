@@ -4,6 +4,7 @@
 #define NES_MEM_H_
 
 #include <cstdint>
+#include <memory>
 
 class Cart;
 class PPU;
@@ -13,7 +14,7 @@ class Memory {
 public:
     static bool isCartSpace(uint16_t addr);
 
-    Memory(Emu*, Cart*, PPU*);
+    Memory(Emu&, std::shared_ptr<Cart>, PPU*);
 
     uint8_t readb(uint16_t addr);
     void writeb(uint16_t addr, uint8_t value);
@@ -21,9 +22,10 @@ public:
     uint8_t m_internalRam[0x800];
 
 private:
-    Cart* m_cart;
+    Emu& m_emu;
+
+    std::shared_ptr<Cart> m_cart;
     PPU* m_ppu;
-    Emu* m_emu;
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <miniz.h>
+#include <memory>
 #include "rom.hpp"
 
 namespace fs = std::filesystem;
@@ -42,7 +43,7 @@ uint8_t* nesFromZip(const fs::path& p, size_t& len) {
     return data;
 }
 
-Cart* Cart::fromFile(const fs::path& p) {
+Cart::Sptr Cart::fromFile(const fs::path& p) {
     LOG_MSG << "Loading " << p << "\n";
 
     uint8_t* data;
@@ -65,7 +66,7 @@ Cart* Cart::fromFile(const fs::path& p) {
         return nullptr;
     }
 
-    return new Cart(data);
+    return std::make_shared<Cart>(data);
 }
 
 Cart::Cart(uint8_t* data) {

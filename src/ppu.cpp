@@ -28,7 +28,7 @@ void PPU::run(unsigned int cycles) {
         if (m_scanline == 241 && m_sl_cycle == 1) {
             m_f_vblank = true;
             if (m_f_vblank_nmi) {
-                m_emu->m_nmi_request = true;
+                m_emu.m_nmi_request = true;
             }
         }
 

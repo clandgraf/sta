@@ -41,7 +41,9 @@ struct ines_header {
 
 class Cart {
 public:
-    static Cart* fromFile(const std::filesystem::path& p);
+    using Sptr = std::shared_ptr<Cart>;
+
+    static Sptr fromFile(const std::filesystem::path& p);
 
     union {
         uint8_t* m_data;

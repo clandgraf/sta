@@ -39,7 +39,7 @@ public:
     };
     )
 
-    PPU(Emu* emu, Cart* cart) : m_emu(emu), m_cart(cart) {}
+    PPU(Emu& emu) : m_emu(emu) {}
 
     unsigned long getCycleCount() const { return m_cycleCount; }
 
@@ -65,8 +65,7 @@ public:
     bool m_f_vblank = false;
 
 private:
-    Emu* m_emu;
-    Cart* m_cart;
+    Emu& m_emu;
 
     uint8_t readPPUSTATUS();
 

@@ -30,7 +30,7 @@ int main(int ac, char ** av) {
 
     Emu emu;
     if (romPath) {
-        Cart* cart = Cart::fromFile(fs::path{romPath});
+        Cart::Sptr cart = Cart::fromFile(fs::path{romPath});
         if (cart) {
             emu.init(cart);
         }

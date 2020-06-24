@@ -274,7 +274,7 @@ static void renderOpenRomDialog(Emu& emu) {
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui_FileBrowser(selectedFile)) {
-            Cart* cart = Cart::fromFile(selectedFile);
+            Cart::Sptr cart = Cart::fromFile(selectedFile);
             if (cart) {
                 emu.init(cart);
                 open = false;

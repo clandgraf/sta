@@ -38,14 +38,13 @@ void Emu::setDisassembler(Disassembler* disassembler) {
 }
 #endif
 
-void Emu::init(Cart* cart) {
+void Emu::init(Cart::Sptr cart) {
     if (m_mem) { delete m_mem; m_mem = nullptr; }
-    if (m_cart) { delete m_cart; m_cart = nullptr; }
     if (m_ppu) { delete m_ppu; m_ppu = nullptr; }
 
     m_cart = cart;
-    m_ppu = new PPU(this, m_cart);
-    m_mem = new Memory(this, m_cart, m_ppu);
+    m_ppu = new PPU(*this);
+    m_mem = new Memory(*this, m_cart, m_ppu);
 
     reset();
 }

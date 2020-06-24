@@ -7,7 +7,7 @@
 #include "emu.hpp"
 #include "util.hpp"
 
-Memory::Memory(Emu* emu, Cart* cart, PPU* ppu)
+Memory::Memory(Emu& emu, Cart::Sptr cart, PPU* ppu)
     : m_emu(emu), m_cart(cart), m_ppu(ppu)
 {}
 
@@ -60,17 +60,15 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     }
     // OAM DMA
     else if (addr == 0x4014) {
-        m_emu->startDMA(value);
+        m_emu.startDMA(value);
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
         LOG_ERR << "ERROR: Access to APU/IO\n";
-        exit(1);
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {
         LOG_ERR << "ERROR:  Access to Test Mode registers\n";
-        exit(1);
     }
     // Access Cartridge CPU Bus
     else {

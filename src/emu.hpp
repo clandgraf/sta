@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <set>
+#include <memory>
 
 #ifdef LOG_EXECUTION
 #include <fstream>
@@ -33,7 +34,7 @@ public:
     bool m_isStepping = true;
 
     Memory* m_mem = nullptr;
-    Cart* m_cart = nullptr;
+    std::shared_ptr<Cart> m_cart = nullptr;
     PPU* m_ppu = nullptr;
 
     uint16_t m_pc = 0x0000;
@@ -66,7 +67,7 @@ public:
     bool toggleBreakpoint(uint16_t address);
     bool isBreakpoint(uint16_t address);
 
-    void init(Cart* _cart);
+    void init(std::shared_ptr<Cart> _cart);
     bool isInitialized();
     void reset();
     void startDMA(uint8_t page);
