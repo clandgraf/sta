@@ -7,27 +7,29 @@
 class Cart;
 class Emu;
 
-uint8_t constexpr PPUCTRL   = 0x0;
-uint8_t constexpr PPUMASK   = 0x1;
-uint8_t constexpr PPUSTATUS = 0x2;
-uint8_t constexpr OAMADDR   = 0x3;
-uint8_t constexpr OAMDATA   = 0x4;
-uint8_t constexpr PPUSCROLL = 0x5;
-uint8_t constexpr PPUADDR   = 0x6;
-uint8_t constexpr PPUDATA   = 0x7;
+class PPU {
+public:
+    static uint8_t constexpr PPUCTRL = 0x0;
+    static uint8_t constexpr PPUMASK = 0x1;
+    static uint8_t constexpr PPUSTATUS = 0x2;
+    static uint8_t constexpr OAMADDR = 0x3;
+    static uint8_t constexpr OAMDATA = 0x4;
+    static uint8_t constexpr PPUSCROLL = 0x5;
+    static uint8_t constexpr PPUADDR = 0x6;
+    static uint8_t constexpr PPUDATA = 0x7;
 
-PACK(
-    union OamEntry {
+    PACK(
+        union OamEntry {
         struct {
             uint8_t y;
             uint8_t tileIndex;
             union {
                 uint8_t attributes;
                 struct {
-                    unsigned int palette: 2;
-                    unsigned int __unused: 3;
-                    unsigned int priority: 1;
-                    unsigned int hflip: 1;
+                    unsigned int palette : 2;
+                    unsigned int __unused : 3;
+                    unsigned int priority : 1;
+                    unsigned int hflip : 1;
                     unsigned int vflip : 1;
                 };
             };
@@ -35,10 +37,8 @@ PACK(
         };
         uint8_t fields[4];
     };
-)
+    )
 
-class PPU {
-public:
     PPU(Emu* emu, Cart* cart) : m_emu(emu), m_cart(cart) {}
 
     unsigned long getCycleCount() const { return m_cycleCount; }

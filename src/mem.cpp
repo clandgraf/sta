@@ -25,18 +25,19 @@ uint8_t Memory::readb(uint16_t addr) {
     // OAM DMA
     else if (addr == 0x4014) {
         LOG_ERR << "readb on OAMDMA\n";
+        return 0;
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
         LOG_ERR << "readb(" << std::hex << std::setw(4) << std::setfill('0') <<  addr << ")" 
                 << "Access to APU/IO\n";
-        exit(1);
+        return 0;
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {
         LOG_ERR << "readb(" << std::hex << std::setw(4) << std::setfill('0') << addr << ")" 
                 << "Access to Test Mode registers\n";
-        exit(1);
+        return 0;
     }
     // Access Cartridge CPU Bus
     else {

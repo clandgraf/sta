@@ -122,6 +122,7 @@ void Emu::reset() {
 }
 
 void Emu::startDMA(uint8_t page) {
+    // TODO Additional Cycle on odd cpu cycles??
     m_dmaCycle = -1;
     m_dmaPage = page;
 }
@@ -135,7 +136,7 @@ void Emu::execDma() {
     if (m_dmaCycle >= 0) {
         bool isWrite = m_dmaCycle % 2;  // Alternatingly ...
         if (isWrite) {
-            m_mem->writeb(OAMDATA, _m_lo);   // ... write to OAM
+            m_mem->writeb(PPU::OAMDATA, uint8_t(_m_lo));   // ... write to OAM
         } else {
             uint8_t oamAddress = m_dmaCycle / 2;  // ... or read from DMA page
             _m_lo = m_mem->readb(uint16_t(m_dmaPage) << 8 | oamAddress);
@@ -351,13 +352,15 @@ void Emu::execOpcode() {
     case _OPC_NOP_ZPG_X__1:
     case _OPC_NOP_ZPG_X__2:
     case _OPC_NOP_ZPG_X__3:
-    case _OPC_NOP_ZPG_X__4: _readZpgX(); break;
+    case _OPC_NOP_ZPG_X__4:
+    case _OPC_NOP_ZPG_X__5: _readZpgX(); break;
     
     case _OPC_NOP_ABS_X__0:
     case _OPC_NOP_ABS_X__1:
     case _OPC_NOP_ABS_X__2:
     case _OPC_NOP_ABS_X__3:
-    case _OPC_NOP_ABS_X__4: _readAbsX(); break;
+    case _OPC_NOP_ABS_X__4:
+    case _OPC_NOP_ABS_X__5: _readAbsX(); break;
 
     case OPC_PHP: _push(getProcStatus(true)); break;
     case OPC_PHA: _push(m_r_a); break;
