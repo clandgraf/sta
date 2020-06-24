@@ -33,9 +33,9 @@ public:
 
     bool m_isStepping = true;
 
-    Memory* m_mem = nullptr;
+    std::unique_ptr<Memory> m_mem = nullptr;
     std::shared_ptr<Cart> m_cart = nullptr;
-    PPU* m_ppu = nullptr;
+    std::shared_ptr<PPU> m_ppu = nullptr;
 
     uint16_t m_pc = 0x0000;
     uint8_t m_sp = 0x00;

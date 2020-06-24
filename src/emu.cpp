@@ -38,13 +38,10 @@ void Emu::setDisassembler(Disassembler* disassembler) {
 }
 #endif
 
-void Emu::init(Cart::Sptr cart) {
-    if (m_mem) { delete m_mem; m_mem = nullptr; }
-    if (m_ppu) { delete m_ppu; m_ppu = nullptr; }
-
+void Emu::init(std::shared_ptr<Cart> cart) {
     m_cart = cart;
-    m_ppu = new PPU(*this);
-    m_mem = new Memory(*this, m_cart, m_ppu);
+    m_ppu = std::make_shared<PPU>(*this);
+    m_mem = std::make_unique<Memory>(*this, m_cart, m_ppu);
 
     reset();
 }

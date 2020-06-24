@@ -14,7 +14,7 @@ class Memory {
 public:
     static bool isCartSpace(uint16_t addr);
 
-    Memory(Emu&, std::shared_ptr<Cart>, PPU*);
+    Memory(Emu&, std::shared_ptr<Cart>, std::shared_ptr<PPU>);
 
     uint8_t readb(uint16_t addr);
     void writeb(uint16_t addr, uint8_t value);
@@ -25,7 +25,7 @@ private:
     Emu& m_emu;
 
     std::shared_ptr<Cart> m_cart;
-    PPU* m_ppu;
+    std::shared_ptr<PPU> m_ppu;
 };
 
 #endif

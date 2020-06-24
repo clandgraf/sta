@@ -7,7 +7,7 @@
 #include "emu.hpp"
 #include "util.hpp"
 
-Memory::Memory(Emu& emu, Cart::Sptr cart, PPU* ppu)
+Memory::Memory(Emu& emu, std::shared_ptr<Cart> cart, std::shared_ptr<PPU> ppu)
     : m_emu(emu), m_cart(cart), m_ppu(ppu)
 {}
 

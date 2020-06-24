@@ -43,7 +43,7 @@ uint8_t* nesFromZip(const fs::path& p, size_t& len) {
     return data;
 }
 
-Cart::Sptr Cart::fromFile(const fs::path& p) {
+std::shared_ptr<Cart> Cart::fromFile(const fs::path& p) {
     LOG_MSG << "Loading " << p << "\n";
 
     uint8_t* data;
