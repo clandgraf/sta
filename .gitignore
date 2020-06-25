@@ -4,6 +4,4 @@ settings.json
 cpu.log
 
 # Visual Studio
-Debug/
-x64/
-.vs/
+build
