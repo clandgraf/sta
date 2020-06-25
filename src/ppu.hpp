@@ -38,7 +38,7 @@ public:
             uint8_t fields[4];
         };
 
-        union Controller {
+        union CtrlV {
             struct {
                 unsigned int baseNtAddress: 2;  // bit 0-1
                 unsigned int vramIncrement: 1;  // bit 2
@@ -49,6 +49,29 @@ public:
                 unsigned int vblankNmi: 1;      // bit 7
             };
             uint8_t field;
+
+            CtrlV(uint8_t value) : field(value) {}
+        };
+
+        union ScrollV {
+            struct {
+                unsigned int fineScroll: 3;
+                unsigned int coarseScroll: 5;
+            };
+            uint8_t field;
+
+            ScrollV(uint8_t value) : field(value) {}
+        };
+
+        union T {
+            struct {
+                unsigned int coarseScrollX : 5;
+                unsigned int coarseScrollY : 5;
+                unsigned int baseNtAddress : 2;
+                unsigned int fineScrollY : 3;
+                unsigned int __unused: 1;
+            };
+            Word word;
         };
     )
 
@@ -56,8 +79,8 @@ public:
 
     unsigned long getCycleCount() const { return m_cycleCount; }
 
-    uint8_t read_register(uint8_t reg);
-    void write_register(uint8_t reg, uint8_t value);
+    uint8_t readRegister(uint8_t reg);
+    void writeRegister(uint8_t reg, uint8_t value);
     
     void reset();
     void run(unsigned int cycles);
@@ -66,6 +89,8 @@ public:
     uint16_t m_sl_cycle = 0;
 
     bool m_f_odd_frame = false;
+
+    bool m_f_vblank_nmi = false;
 
     // PPUMASK Flags
     bool m_f_sprites_enable = false;
@@ -77,7 +102,10 @@ public:
 private:
     Emu& m_emu;
 
-    uint8_t readPPUSTATUS();
+    uint8_t readStatus();
+    void writeCtrl(CtrlV);
+    void writeScroll(ScrollV);
+    void writeAddr(uint8_t);
 
     unsigned long m_cycleCount = 0;
 
@@ -86,10 +114,9 @@ private:
 
     bool m_ignoreWrites = true;
 
-    bool m_r_addressLatch = false;
-
-    Controller m_r_ppuctrl;
-
-    uint16_t   m_r_t = 0x0000;
+    bool       m_r_addressLatch = false;
+    uint8_t    m_r_addressIncrement = 1;
+    T          m_r_t;
     uint16_t   m_r_v = 0x0000;
+    uint8_t    m_r_x;
 };

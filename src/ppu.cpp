@@ -35,7 +35,8 @@ void PPU::reset() {
     m_sl_cycle = 0;
     m_f_odd_frame = false;
 
-    m_r_ppuctrl.field = 0;
+    m_f_vblank_nmi = 0;
+    m_r_t.word.field = 0;
     
     // Initialize PPUMASK to 0
     m_f_sprites_enable = false;
@@ -51,7 +52,7 @@ void PPU::run(unsigned int cycles) {
         
         if (m_scanline == 241 && m_sl_cycle == 1) {
             m_f_vblank = true;
-            if (m_r_ppuctrl.vblankNmi) {
+            if (m_f_vblank_nmi) {
                 m_emu.m_nmi_request = true;
             }
         }
@@ -81,9 +82,9 @@ void PPU::run(unsigned int cycles) {
     }
 }
 
-uint8_t PPU::read_register(uint8_t reg) {
+uint8_t PPU::readRegister(uint8_t reg) {
     switch (reg) {
-    case PPUSTATUS: return readPPUSTATUS();
+    case PPUSTATUS: return readStatus();
     }
 
     LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
@@ -94,9 +95,11 @@ uint8_t PPU::read_register(uint8_t reg) {
     return 0;
 }
 
-void PPU::write_register(uint8_t reg, uint8_t value) {
+void PPU::writeRegister(uint8_t reg, uint8_t value) {
     switch (reg) {
-    case PPUCTRL: CHECK_WRITE; m_r_ppuctrl.field = value; break;
+    case PPUCTRL:   CHECK_WRITE; writeCtrl(value); break;
+    case PPUSCROLL: CHECK_WRITE; writeScroll(value); break;
+    case PPUADDR:   CHECK_WRITE; writeAddr(value); break;
     }
 
     LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
@@ -107,7 +110,37 @@ void PPU::write_register(uint8_t reg, uint8_t value) {
             << "): Not implemented\n";
 }
 
-uint8_t PPU::readPPUSTATUS() {
+void PPU::writeCtrl(CtrlV v) {
+    m_f_vblank_nmi = v.vblankNmi;
+    m_r_t.baseNtAddress = v.baseNtAddress;
+    m_r_addressIncrement = v.vramIncrement ? 32 : 1;
+    // TODO More fields
+}
+
+void PPU::writeScroll(ScrollV v) {
+    if (m_r_addressLatch) {
+        m_r_addressLatch = !m_r_addressLatch;
+        m_r_t.coarseScrollY = v.coarseScroll;
+        m_r_t.fineScrollY = v.fineScroll;
+    } else {
+        m_r_addressLatch = !m_r_addressLatch;
+        m_r_x = v.fineScroll;
+        m_r_t.coarseScrollX = v.coarseScroll;
+    }
+}
+
+void PPU::writeAddr(uint8_t v) {
+    if (m_r_addressLatch) {
+        m_r_addressLatch = !m_r_addressLatch;
+        m_r_t.word.hi = v & 0x3f;
+        m_r_v = m_r_t.word.field;
+    } else {
+        m_r_addressLatch = !m_r_addressLatch;
+        m_r_t.word.lo = v;
+    }
+}
+
+uint8_t PPU::readStatus() {
     uint8_t v = 0;
     if (m_f_vblank) { v |= 0b10000000; }
     // TODO add missing flags

@@ -20,7 +20,7 @@ uint8_t Memory::readb(uint16_t addr) {
     // PPU Registers, mirrored
     else if (addr < 0x4000) {
         uint8_t addr_lo = addr & 0b00000111;
-        return m_ppu->read_register(addr_lo);
+        return m_ppu->readRegister(addr_lo);
     }
     // OAM DMA
     else if (addr == 0x4014) {
@@ -56,7 +56,7 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     }
     else if (addr < 0x4000) {
         uint8_t addr_lo = addr & 0b00000111;
-        m_ppu->write_register(addr_lo, value);
+        m_ppu->writeRegister(addr_lo, value);
     }
     // OAM DMA
     else if (addr == 0x4014) {
