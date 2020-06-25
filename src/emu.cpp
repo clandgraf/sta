@@ -232,10 +232,9 @@ void Emu::stepScanline() {
 }
 
 void Emu::stepFrame() {
-    bool currentFrame = m_ppu->m_f_odd_frame;
+    bool currentFrame = m_ppu->isOddFrame();
 
-    // If we get a reset in between we want to interrupt stepping.
-    while (m_ppu->m_f_odd_frame == currentFrame) {
+    while (m_ppu->isOddFrame() == currentFrame) {
         if (stepCycle()) {
             break;
         }

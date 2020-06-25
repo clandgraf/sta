@@ -18,7 +18,7 @@ namespace sm = StreamManipulators;
 // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
 #define CHECK_WRITE { \
     if (m_ignoreWrites) { \
-        if (m_cycleCount >= 88974) { \
+        if (m_cycleCount >= WARMUP_CYCLES) { \
             m_ignoreWrites = false; \
         } else { \
             LOG_ERR << "Write ignored at cycle " << m_cycleCount; \
@@ -33,7 +33,7 @@ void PPU::reset() {
     m_cycleCount = 0;
     m_scanline = 0;
     m_sl_cycle = 0;
-    m_f_odd_frame = false;
+    m_f_oddFrame = false;
 
     m_f_vblank_nmi = 0;
     m_r_t.word.field = 0;
@@ -48,24 +48,25 @@ void PPU::reset() {
 void PPU::run(unsigned int cycles) {
     for (unsigned int i = 0; i < cycles; i++) {
         
-        // Here be rendering
+        // TODO Here be rendering
         
+        // Update Status Flags and raise NMI
         if (m_scanline == 241 && m_sl_cycle == 1) {
-            m_f_vblank = true;
+            m_f_statusVblank = true;
             if (m_f_vblank_nmi) {
                 m_emu.m_nmi_request = true;
             }
         }
 
         if (m_scanline == 261 && m_sl_cycle == 1) {
-            m_f_vblank = false;
-            // TODO clear sprite 0
-            // TODO clear overflow
+            m_f_statusVblank = false;
+            m_f_statusOverflow = false;
+            m_f_statusSprZero = false;
         }
 
         // Update Counters for next scanline
         ++m_sl_cycle;
-        bool skipTick = (m_f_odd_frame && m_scanline == 261 && (m_f_background_enable || m_f_sprites_enable));
+        bool skipTick = (m_f_oddFrame && m_scanline == 261 && (m_f_background_enable || m_f_sprites_enable));
         bool nextScanline = m_sl_cycle >= (skipTick ? 340 : 341);
         // Next Scanline
         if (nextScanline) {
@@ -74,7 +75,7 @@ void PPU::run(unsigned int cycles) {
             // Next Frame
             if (m_scanline >= 262) {
                 m_scanline = 0;
-                m_f_odd_frame = !m_f_odd_frame;
+                m_f_oddFrame = !m_f_oddFrame;
             }
         }
         
@@ -96,6 +97,8 @@ uint8_t PPU::readRegister(uint8_t reg) {
 }
 
 void PPU::writeRegister(uint8_t reg, uint8_t value) {
+    m_r_status.field = value;
+
     switch (reg) {
     case PPUCTRL:   CHECK_WRITE; writeCtrl(value); break;
     case PPUSCROLL: CHECK_WRITE; writeScroll(value); break;
@@ -141,12 +144,12 @@ void PPU::writeAddr(uint8_t v) {
 }
 
 uint8_t PPU::readStatus() {
-    uint8_t v = 0;
-    if (m_f_vblank) { v |= 0b10000000; }
-    // TODO add missing flags
+    m_r_status.vblank   = m_f_statusVblank;
+    m_r_status.overflow = m_f_statusOverflow;
+    m_r_status.sprZero  = m_f_statusSprZero;
 
-    m_f_vblank = false;
+    m_f_statusVblank = false;
     m_r_addressLatch = false;
 
-    return v;
+    return m_r_status.field;
 }

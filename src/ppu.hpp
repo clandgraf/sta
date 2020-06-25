@@ -8,6 +8,9 @@ class Cart;
 class Emu;
 
 class PPU {
+private:
+    static unsigned int constexpr WARMUP_CYCLES = 88974;
+
 public:
     static uint8_t constexpr PPUCTRL = 0x0;
     static uint8_t constexpr PPUMASK = 0x1;
@@ -63,6 +66,16 @@ public:
             ScrollV(uint8_t value) : field(value) {}
         };
 
+        union StatusV {
+            struct {
+                unsigned int __unused: 5;
+                unsigned int overflow: 1;
+                unsigned int sprZero: 1;
+                unsigned int vblank: 1;
+            };
+            uint8_t field;
+        };
+
         union T {
             struct {
                 unsigned int coarseScrollX : 5;
@@ -88,16 +101,13 @@ public:
     uint16_t m_scanline = 261;
     uint16_t m_sl_cycle = 0;
 
-    bool m_f_odd_frame = false;
+    __forceinline bool isOddFrame() { return m_f_oddFrame; }
 
     bool m_f_vblank_nmi = false;
 
     // PPUMASK Flags
-    bool m_f_sprites_enable = false;
-    bool m_f_background_enable = false;
-
-    // PPUSTATUS Flags
-    bool m_f_vblank = false;
+    bool m_f_sprEnable = false;
+    bool m_f_bkgEnable = false;
 
 private:
     Emu& m_emu;
@@ -112,7 +122,17 @@ private:
     OamEntry m_oam[64];
     OamEntry m_soam[8];
 
-    bool m_ignoreWrites = true;
+    bool m_ignoreWrites = true;  // true until the PPU is write-ready, after WARMUP_CYCLES cycles
+    bool m_f_oddFrame  = false;  // indicates wether we are on an even or odd frame
+
+    //// Status Register
+    // This stores the value last written to a PPU register
+    // We use this to simulate unset bits on read, see https://wiki.nesdev.com/w/index.php/PPU_registers#PPUSTATUS
+    // On Read we update bits 5-7
+    StatusV    m_r_status;
+    bool       m_f_statusVblank = false;
+    bool       m_f_statusOverflow = false;
+    bool       m_f_statusSprZero = false;
 
     bool       m_r_addressLatch = false;
     uint8_t    m_r_addressIncrement = 1;
