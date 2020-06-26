@@ -173,6 +173,7 @@ static void renderMenuBar(Emu& emu, Disassembler& disasm) {
 static void renderRomInfo(Emu& emu) {
     if (emu.isInitialized() && showRomInfo) {
         if (ImGui::Begin("ROM Info", &showRomInfo)) {
+            ImGui::Text("File: %s", emu.m_cart->m_name.c_str());
             ImGui::Text("Mapper: %d, %s", emu.m_cart->m_mapperId, mappers[emu.m_cart->m_mapperId]);
             ImGui::Text("PRG ROM #: %d", emu.m_cart->prg_size());
             ImGui::Text(emu.m_cart->m_useChrRam ? "CHR RAM #: %d" : "CHR ROM #: %d", emu.m_cart->chr_size());

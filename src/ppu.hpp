@@ -10,6 +10,7 @@ class Emu;
 class PPU {
 private:
     static unsigned int constexpr WARMUP_CYCLES = 88974;
+    static uint8_t constexpr RENDERING_ENABLED = 0b00011000;
 
 public:
     static uint8_t constexpr PPUCTRL = 0x0;
@@ -54,6 +55,22 @@ public:
             uint8_t field;
 
             CtrlV(uint8_t value) : field(value) {}
+        };
+
+        union MaskV {
+            struct {
+                unsigned int greyscale: 1;
+                unsigned int bkgEnableLeft: 1;
+                unsigned int sprEnableLeft: 1;
+                unsigned int bkgEnable: 1;
+                unsigned int sprEnable: 1;
+                unsigned int emphRed: 1;
+                unsigned int emphGreen: 1;
+                unsigned int emphBlue: 1;
+            };
+            uint8_t field;
+
+            MaskV(uint8_t value) : field(value) {}
         };
 
         union ScrollV {
@@ -103,12 +120,6 @@ public:
 
     __forceinline bool isOddFrame() { return m_f_oddFrame; }
 
-    bool m_f_vblank_nmi = false;
-
-    // PPUMASK Flags
-    bool m_f_sprEnable = false;
-    bool m_f_bkgEnable = false;
-
 private:
     Emu& m_emu;
 
@@ -124,6 +135,10 @@ private:
 
     bool m_ignoreWrites = true;  // true until the PPU is write-ready, after WARMUP_CYCLES cycles
     bool m_f_oddFrame  = false;  // indicates wether we are on an even or odd frame
+
+    bool m_f_vblankNmi = false;
+
+    MaskV      m_r_mask = 0;
 
     //// Status Register
     // This stores the value last written to a PPU register

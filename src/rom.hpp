@@ -26,22 +26,28 @@ typedef uint8_t chr_bank[CHR_BANK_SIZE];
 typedef uint8_t trainer_bank[TRAINER_BANK_SIZE];
 
 PACK(
-struct ines_header {
-    uint8_t magic[4];
-    uint8_t prg_size;
-    uint8_t chr_size;
-    uint8_t flags_6;
-    uint8_t flags_7;
-    uint8_t prg_ram_size;
-    uint8_t flags_9;
-    uint8_t flags_10;
-    uint8_t zero[5];
-};
+    struct Flags6 {
+        unsigned int mirroring: 1;
+    };
+
+    struct ines_header {
+        uint8_t magic[4];
+        uint8_t prg_size;
+        uint8_t chr_size;
+        uint8_t flags_6;
+        uint8_t flags_7;
+        uint8_t prg_ram_size;
+        uint8_t flags_9;
+        uint8_t flags_10;
+        uint8_t zero[5];
+    };
 )
 
 class Cart {
 public:
     static std::shared_ptr<Cart> fromFile(const std::filesystem::path& p);
+
+    const std::string m_name;
 
     union {
         uint8_t* m_data;
@@ -57,7 +63,7 @@ public:
     // play choice inst-rom
     // play choice p-rom
 
-    Cart(uint8_t*);
+    Cart(uint8_t*, std::string file = "<none>");
     ~Cart();
 
     inline uint8_t prg_size() const { return m_header->prg_size; }

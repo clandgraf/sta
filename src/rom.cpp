@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 constexpr uint8_t FLAG_TRAINER = 1 << 2;
 
-uint8_t* nesFromZip(const fs::path& p, size_t& len) {
+uint8_t* nesFromZip(const fs::path& p, size_t& len, std::string& out_name) {
     LOG_MSG << "Unzipping " << p << "\n";
 
     mz_zip_archive zip;
@@ -29,6 +29,7 @@ uint8_t* nesFromZip(const fs::path& p, size_t& len) {
         fs::path p(pStat.m_filename);
         if (p.extension() == ".nes") {
             LOG_MSG << "Found ROM " << pStat.m_filename << "\n";
+            out_name = pStat.m_filename;
             break;
         }
     }
@@ -45,11 +46,12 @@ uint8_t* nesFromZip(const fs::path& p, size_t& len) {
 
 std::shared_ptr<Cart> Cart::fromFile(const fs::path& p) {
     LOG_MSG << "Loading " << p << "\n";
-
+    
+    std::string name;
     uint8_t* data;
     size_t len;
     if (p.extension() == ".zip") {
-        data = nesFromZip(p, len);
+        data = nesFromZip(p, len, name);
         if (data == nullptr) {
             return nullptr;
         }
@@ -57,6 +59,8 @@ std::shared_ptr<Cart> Cart::fromFile(const fs::path& p) {
         std::ifstream in(p, std::ifstream::binary);
         data = readFile(in, &len);
         in.close();
+
+        name = p.filename().string();
     }
     
     // Check if we have a valid .nes rom
@@ -66,12 +70,10 @@ std::shared_ptr<Cart> Cart::fromFile(const fs::path& p) {
         return nullptr;
     }
 
-    return std::make_shared<Cart>(data);
+    return std::make_shared<Cart>(data, name);
 }
 
-Cart::Cart(uint8_t* data) {
-    m_data = data;
-
+Cart::Cart(uint8_t* data, std::string name) : m_data(data), m_name(name) {
     // Now go through each entity in image and setup cart struct
     uint8_t* cart_off = m_data;
     cart_off += 0x10;  // After header

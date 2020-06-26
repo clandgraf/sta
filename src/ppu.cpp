@@ -21,7 +21,9 @@ namespace sm = StreamManipulators;
         if (m_cycleCount >= WARMUP_CYCLES) { \
             m_ignoreWrites = false; \
         } else { \
-            LOG_ERR << "Write ignored at cycle " << m_cycleCount; \
+            LOG_ERR << "Write ignored at cycle " << m_cycleCount << ": (" << sm::hex(reg) \
+                    << ", " << sm::hex(value) \
+                    << ")\n"; \
             return; \
         } \
     } \
@@ -35,12 +37,9 @@ void PPU::reset() {
     m_sl_cycle = 0;
     m_f_oddFrame = false;
 
-    m_f_vblank_nmi = 0;
+    m_f_vblankNmi = 0;
     m_r_t.word.field = 0;
-    
-    // Initialize PPUMASK to 0
-    m_f_sprites_enable = false;
-    m_f_background_enable = false;
+    m_r_mask.field = 0; 
 
     m_r_addressLatch = false;
 }
@@ -53,7 +52,7 @@ void PPU::run(unsigned int cycles) {
         // Update Status Flags and raise NMI
         if (m_scanline == 241 && m_sl_cycle == 1) {
             m_f_statusVblank = true;
-            if (m_f_vblank_nmi) {
+            if (m_f_vblankNmi) {
                 m_emu.m_nmi_request = true;
             }
         }
@@ -66,7 +65,9 @@ void PPU::run(unsigned int cycles) {
 
         // Update Counters for next scanline
         ++m_sl_cycle;
-        bool skipTick = (m_f_oddFrame && m_scanline == 261 && (m_f_background_enable || m_f_sprites_enable));
+        bool skipTick = m_f_oddFrame 
+                      && m_scanline == 261 
+                      && (m_r_mask.field & RENDERING_ENABLED);
         bool nextScanline = m_sl_cycle >= (skipTick ? 340 : 341);
         // Next Scanline
         if (nextScanline) {
@@ -103,18 +104,23 @@ void PPU::writeRegister(uint8_t reg, uint8_t value) {
     case PPUCTRL:   CHECK_WRITE; writeCtrl(value); break;
     case PPUSCROLL: CHECK_WRITE; writeScroll(value); break;
     case PPUADDR:   CHECK_WRITE; writeAddr(value); break;
+    case PPUMASK:   CHECK_WRITE; m_r_mask.field = value; break;
+    case PPUDATA:   {
+        break;
     }
-
-    LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
-            << " PPU::write_register(" 
+    default:
+        LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
+            << " PPU::write_register("
             << sm::hex(reg)
-            << ", " 
-            << sm::hex(value) 
+            << ", "
+            << sm::hex(value)
             << "): Not implemented\n";
+        break;
+    }
 }
 
 void PPU::writeCtrl(CtrlV v) {
-    m_f_vblank_nmi = v.vblankNmi;
+    m_f_vblankNmi = v.vblankNmi;
     m_r_t.baseNtAddress = v.baseNtAddress;
     m_r_addressIncrement = v.vramIncrement ? 32 : 1;
     // TODO More fields
