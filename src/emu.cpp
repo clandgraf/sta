@@ -169,7 +169,7 @@ void Emu::requestInterrupt(uint16_t vector) {
     m_intVector = vector;
     m_isInterrupt = true;
 
-    m_pc++;
+    // m_pc++;
     m_lastCycleFetched = true;
 }
 
@@ -374,7 +374,9 @@ void Emu::execOpcode() {
 
         /* Jumps/Returns */
     case OPC_BRK:
-        fetchArg();
+        if (!m_isInterrupt) {
+            fetchArg();
+        }
         _push(m_pc >> 8);
         _push(m_pc & 0xff);
         _push(getProcStatus(!m_isInterrupt));
