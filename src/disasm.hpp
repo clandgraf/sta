@@ -37,6 +37,7 @@ public:
     DisasmSegmentSptr disasmSegment(uint16_t addr);
     DisasmSegmentSptr continueSegment(DisasmSegmentSptr segment);
 
+    void clear();
     void refresh();
 
     bool m_translateCartSpace = true;       // Translate Addresses into Cartridge Space if applicable

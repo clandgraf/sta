@@ -28,6 +28,8 @@ static std::map<int, const char*> inbuiltLabels = {
     {0x2006, "PPUADDR"},
     {0x2007, "PPUDATA"},
     {0x4014, "OAMDMA"},
+    {0x4016, "CONTROLLER1"},
+    {0x4917, "CONTROLLER2"}
 };
 
 // Branching, Jumps and Returns end an analysis segment
@@ -106,7 +108,13 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     case Opcode::Relative:
         if (m_absoluteBranchAddresses) {
             _DISASM_OP1_;
-            _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][1], address + opc_ac + 1 + arg0);
+            uint16_t absoluteAddress = address + opc_ac + 1 + arg0;
+            if (translateToCartSpace(absoluteAddress)) {
+                m_emu.m_cart->translate_cpu(absoluteAddress, cartBank, cartAddress);
+                _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][2], cartBank, cartAddress);
+            } else {
+                _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][1], absoluteAddress);
+            }
             break;
         }
     case Opcode::IndirectX:
@@ -241,4 +249,8 @@ void Disassembler::refresh() {
             line.second.repr = disasmOpcode(line.second.offset);
         }
     }
+}
+
+void Disassembler::clear() {
+    m_disassembly.clear();
 }

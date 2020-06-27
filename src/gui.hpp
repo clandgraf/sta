@@ -9,7 +9,7 @@ namespace Gui {
     extern bool isWindowClosing();
     extern void pollEvents();
     extern void runFrame(Emu&);
-    extern void runUi(Emu&, Disassembler&);
+    extern void runUi(Emu&);
     extern void swapBuffers();
     extern void teardownUi();
 }

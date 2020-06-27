@@ -23,6 +23,10 @@ uint16_t constexpr IRQ_VECTOR = 0xfffe;    // Address where IRQ/BRK starts
 
 class Emu {
 public:
+    std::unique_ptr<Disassembler> m_disassembler;
+
+    bool m_logState = false;
+
     enum class Mode {
         EXEC,
         CYCLES,  // Additional cycles
@@ -60,10 +64,6 @@ public:
 
     void writeSettings();
 
-    #ifdef LOG_EXECUTION
-    void setDisassembler(Disassembler* disassembler);
-    #endif
-
     bool toggleBreakpoint(uint16_t address);
     bool isBreakpoint(uint16_t address);
 
@@ -87,10 +87,7 @@ public:
     uint8_t getProcStatus(bool setBrk);
 
 private:
-    #ifdef LOG_EXECUTION
     std::ofstream m_logOut;
-    Disassembler* m_disassembler = nullptr;
-    #endif
 
     Mode m_mode = Mode::RESET;
 
@@ -127,7 +124,8 @@ private:
     void fetch();
     uint8_t fetchArg();
 
-    // cycle primitives
+    // ------------------- cycle primitives ------------------
+
     uint16_t _m_hi = 0;
     uint16_t _m_lo = 0;
 

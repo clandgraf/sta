@@ -36,11 +36,6 @@ int main(int ac, char ** av) {
         }
     }
 
-    Disassembler disasm(emu);
-    #ifdef LOG_EXECUTION
-    emu.setDisassembler(&disasm);
-    #endif
-
     if (!Gui::initUi(fullscreen)) {
         return EXIT_FAILURE;
     }
@@ -49,7 +44,7 @@ int main(int ac, char ** av) {
         Gui::pollEvents();
 
         if (emu.m_isStepping || !emu.isInitialized()) {
-            Gui::runUi(emu, disasm);
+            Gui::runUi(emu);
         } else {
             Gui::runFrame(emu);
         }
@@ -59,7 +54,6 @@ int main(int ac, char ** av) {
 
     Gui::teardownUi();
     emu.writeSettings();
-    disasm.writeSettings();
     Settings::write();
     return EXIT_SUCCESS;
 }

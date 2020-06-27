@@ -5,41 +5,29 @@
 #include "rom.hpp"
 #include "ppu.hpp"
 #include "util.hpp"
-
 #include "cpu_opcodes.hpp"
-
-#ifdef LOG_EXECUTION
 #include "disasm.hpp"
-#endif
 
 namespace sm = StreamManipulators;
 
 Emu::Emu() {
     m_breakOnInterrupt = Settings::get("emulator/break-on-interrupt", false);
-
-    #ifdef LOG_EXECUTION
     m_logOut.open("cpu.log");
-    #endif
+    m_disassembler = std::make_unique<Disassembler>(*this);
 }
 
 Emu::~Emu() {
-    #ifdef LOG_EXECUTION
     m_logOut.close();
-    #endif
 }
 
 void Emu::writeSettings() {
     Settings::set("emulator/break-on-interrupt", m_breakOnInterrupt);
+    m_disassembler->writeSettings();
 }
-
-#ifdef LOG_EXECUTION
-void Emu::setDisassembler(Disassembler* disassembler) {
-    m_disassembler = disassembler;
-}
-#endif
 
 void Emu::init(std::shared_ptr<Cart> cart) {
     m_cart = cart;
+    m_disassembler->clear();
     m_ppu = std::make_shared<PPU>(*this, m_cart);
     m_mem = std::make_unique<Memory>(*this, m_cart, m_ppu);
 
@@ -154,10 +142,10 @@ void Emu::fetch() {
     m_pc++;
     m_lastCycleFetched = true;
 
-    #ifdef LOG_EXECUTION
-    m_disassembler->logState(m_logOut);
-    m_logOut.flush();
-    #endif
+    if (m_logState) {
+        m_disassembler->logState(m_logOut);
+        m_logOut.flush();
+    }
 }
 
 void Emu::requestInterrupt(uint16_t vector) {
@@ -374,9 +362,7 @@ void Emu::execOpcode() {
 
         /* Jumps/Returns */
     case OPC_BRK:
-        if (!m_isInterrupt) {
-            fetchArg();
-        }
+        if (!m_isInterrupt) { fetchArg(); }
         _push(m_pc >> 8);
         _push(m_pc & 0xff);
         _push(getProcStatus(!m_isInterrupt));

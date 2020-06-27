@@ -92,7 +92,7 @@ static void initPatternTable() {
     Gui::uploadTextureData(patternTableTexture, 256, 128, data);
 }
 
-static void renderMenuBar(Emu& emu, Disassembler& disasm) {
+static void renderMenuBar(Emu& emu) {
     bool openRom = false;
 
     if (ImGui::BeginMainMenuBar()) {
@@ -115,6 +115,10 @@ static void renderMenuBar(Emu& emu, Disassembler& disasm) {
         }
 
         if (ImGui::BeginMenu("Debugger")) {
+            if (ImGui::MenuItem("Log State", nullptr, emu.m_logState)) {
+                emu.m_logState = !emu.m_logState;
+            }
+
             if (ImGui::MenuItem("Refresh Pattern Table", nullptr)) {
                 if (emu.isInitialized()) {
                     refreshPatternTable(emu);
@@ -125,14 +129,14 @@ static void renderMenuBar(Emu& emu, Disassembler& disasm) {
                 emu.m_breakOnInterrupt = !emu.m_breakOnInterrupt;
             }
 
-            if (ImGui::MenuItem("Absolute Labels", nullptr, disasm.m_showAbsoluteLabels)) {
-                disasm.m_showAbsoluteLabels = !disasm.m_showAbsoluteLabels;
-                disasm.refresh();
+            if (ImGui::MenuItem("Absolute Labels", nullptr, emu.m_disassembler->m_showAbsoluteLabels)) {
+                emu.m_disassembler->m_showAbsoluteLabels = !emu.m_disassembler->m_showAbsoluteLabels;
+                emu.m_disassembler->refresh();
             }
 
-            if (ImGui::MenuItem("Display Cartridge Addresses", nullptr, disasm.m_translateCartSpace)) {
-                disasm.m_translateCartSpace = !disasm.m_translateCartSpace;
-                disasm.refresh();
+            if (ImGui::MenuItem("Display Cartridge Addresses", nullptr, emu.m_disassembler->m_translateCartSpace)) {
+                emu.m_disassembler->m_translateCartSpace = !emu.m_disassembler->m_translateCartSpace;
+                emu.m_disassembler->refresh();
             }
 
             ImGui::EndMenu();
@@ -292,12 +296,12 @@ static void renderOpenRomDialog(Emu& emu) {
 static int16_t lastOpcode = -1;
 static std::string disassembledLine{""};
 
-static void renderDisassembly(Emu& emu, Disassembler& disasm) {
+static void renderDisassembly(Emu& emu) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
     if (emu.getMode() != Emu::Mode::RESET) {
         uint16_t address = emu.getOpcodeAddress();
-        DisasmSegmentSptr segment = disasm.disasmSegment(address);
+        DisasmSegmentSptr segment = emu.m_disassembler->disasmSegment(address);
 
         if (ImGui::Begin("Disassembly", &showDisassembly)) {
             ImGui::PushFont(monoFont);
@@ -322,7 +326,7 @@ static void renderDisassembly(Emu& emu, Disassembler& disasm) {
             ImGui::PopFont();
 
             if (ImGui::Button("continue...")) {
-                disasm.continueSegment(segment);
+                emu.m_disassembler->continueSegment(segment);
             }
         }
         ImGui::End();
@@ -354,7 +358,7 @@ void Gui::runFrame(Emu& emu) {
     }
 }
 
-void Gui::runUi(Emu& emu, Disassembler& disasm) {
+void Gui::runUi(Emu& emu) {
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -370,12 +374,12 @@ void Gui::runUi(Emu& emu, Disassembler& disasm) {
 
     // ImGui::ShowDemoWindow();
 
-    renderMenuBar(emu, disasm);
+    renderMenuBar(emu);
     renderOpenRomDialog(emu);
     renderEmuState(emu);
     renderRomInfo(emu);
     renderMemoryView(emu);
-    renderDisassembly(emu, disasm);
+    renderDisassembly(emu);
     renderPatternTable();
     ImGui::PopFont();
 
