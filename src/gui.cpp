@@ -95,11 +95,16 @@ static void initPatternTable() {
 
 static void renderMenuBar(Emu& emu) {
     bool openRom = false;
+    bool setupControllers = false;
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open")) {
                 openRom = true;
+            }
+
+            if (ImGui::MenuItem("Setup Controllers")) {
+                setupControllers = true;
             }
             
             if (ImGui::MenuItem("Reset")) {
@@ -176,6 +181,10 @@ static void renderMenuBar(Emu& emu) {
 
     if (openRom) {
         ImGui::OpenPopup("Open ROM");
+    }
+
+    if (setupControllers) {
+        ImGui::OpenPopup("Setup Controllers");
     }
 }
 
@@ -295,6 +304,18 @@ static void renderOpenRomDialog(Emu& emu) {
     }
 }
 
+static void renderSetupControllersDialog() {
+    bool open = true;
+    if (ImGui::BeginPopupModal("Setup Controllers", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
+        
+
+        if (!open) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+}
+
 static int16_t lastOpcode = -1;
 static std::string disassembledLine{""};
 
@@ -336,31 +357,35 @@ static void renderDisassembly(Emu& emu) {
 }
 
 static void renderPatternTable() {
-    if (ImGui::Begin("Pattern Table", &showPatternTable)) {
-        ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(512, 256));
+    if (showPatternTable) {
+        if (ImGui::Begin("Pattern Table", &showPatternTable)) {
+            ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(512, 256));
+        }
+        ImGui::End();
     }
-    ImGui::End();
 }
 
 static void renderControls(EmuInputs& inputs) {
-    if (ImGui::Begin("Controls", &showControls)) {
-        ImGui::Checkbox("Up", &(inputs.d_up));
-        ImGui::SameLine();
-        ImGui::Checkbox("Left", &(inputs.d_left));
-        ImGui::SameLine();
-        ImGui::Checkbox("A", &(inputs.btn_a));
-        ImGui::SameLine();
-        ImGui::Checkbox("Start", &(inputs.start));
+    if (showControls) {
+        if (ImGui::Begin("Controls", &showControls)) {
+            ImGui::Checkbox("Up", &(inputs.d_up));
+            ImGui::SameLine();
+            ImGui::Checkbox("Left", &(inputs.d_left));
+            ImGui::SameLine();
+            ImGui::Checkbox("A", &(inputs.btn_a));
+            ImGui::SameLine();
+            ImGui::Checkbox("Start", &(inputs.start));
 
-        ImGui::Checkbox("Down", &(inputs.d_down));
-        ImGui::SameLine();
-        ImGui::Checkbox("Right", &(inputs.d_right));
-        ImGui::SameLine();
-        ImGui::Checkbox("B", &(inputs.btn_b));
-        ImGui::SameLine();
-        ImGui::Checkbox("Select", &(inputs.select));
+            ImGui::Checkbox("Down", &(inputs.d_down));
+            ImGui::SameLine();
+            ImGui::Checkbox("Right", &(inputs.d_right));
+            ImGui::SameLine();
+            ImGui::Checkbox("B", &(inputs.btn_b));
+            ImGui::SameLine();
+            ImGui::Checkbox("Select", &(inputs.select));
+        }
+        ImGui::End();
     }
-    ImGui::End();
 }
 
 static void renderFrame() {
@@ -401,6 +426,7 @@ void Gui::runUi(Emu& emu) {
 
     renderMenuBar(emu);
     renderOpenRomDialog(emu);
+    renderSetupControllersDialog();
     renderEmuState(emu);
     renderRomInfo(emu);
     renderMemoryView(emu);
@@ -453,6 +479,7 @@ bool Gui::initUi(bool fullscreen) {
     showEmuState = Settings::get("debugger-view-state", true);
     showDisassembly = Settings::get("debugger-view-disassembly", true);
     showRomInfo = Settings::get("debugger-view-rominfo", true);
+    showControls = Settings::get("debugger-view-controls", true);
 
     patternTableTexture = Gui::createTexture();
     initPatternTable();
@@ -472,6 +499,7 @@ void Gui::teardownUi() {
     Settings::set("debugger-view-state", showEmuState);
     Settings::set("debugger-view-disassembly", showDisassembly);
     Settings::set("debugger-view-rominfo", showRomInfo);
+    Settings::set("debugger-view-controls", showControls);
 
     teardownImGui();
     teardownWindow();
