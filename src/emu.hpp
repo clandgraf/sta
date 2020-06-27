@@ -58,6 +58,7 @@ public:
     bool m_irq_request = false;
 
     bool m_breakOnInterrupt = false;
+    bool m_breakOnRTS = false;
 
     Emu();
     ~Emu();
@@ -74,6 +75,7 @@ public:
     void stepOperation();
     void stepScanline();
     void stepFrame();
+    void stepOut();
     bool stepCycle();
 
     unsigned long getCycleCount() const { return m_cycleCount; }

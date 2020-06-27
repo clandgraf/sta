@@ -120,7 +120,7 @@ void Emu::execDma() {
     if (m_dmaCycle >= 0) {
         bool isWrite = m_dmaCycle % 2;  // Alternatingly ...
         if (isWrite) {
-            m_mem->writeb(PPU::OAMDATA, uint8_t(_m_lo));   // ... write to OAM
+            m_mem->writeb(0x2000 | PPU::OAMDATA, uint8_t(_m_lo));   // ... write to OAM
         } else {
             uint8_t oamAddress = m_dmaCycle / 2;  // ... or read from DMA page
             _m_lo = m_mem->readb(uint16_t(m_dmaPage) << 8 | oamAddress);
@@ -229,6 +229,18 @@ void Emu::stepFrame() {
     }
 }
 
+void Emu::stepOut() {
+    m_breakOnRTS = true;
+
+    while (true) {
+        if (stepCycle()) {
+            break;
+        }
+    }
+
+    m_breakOnRTS = false;
+}
+
 bool Emu::stepCycle() {
     bool breakExecution = false;
 
@@ -241,6 +253,10 @@ bool Emu::stepCycle() {
         m_cycleCount++;
         if (--m_cyclesLeft == 0) {
             execOpcode();
+            if (m_breakOnRTS && m_nextOpcode == OPC_RTS) {
+                breakExecution = true;
+            }
+
             if (m_cyclesLeft > 0) {
                 if (m_mode != Mode::RESET) {
                     // Opcode uses additional cycles

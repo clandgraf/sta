@@ -108,7 +108,7 @@ const char* Disassembler::disasmOpcode(uint16_t address, bool* end, uint8_t* nex
     case Opcode::Relative:
         if (m_absoluteBranchAddresses) {
             _DISASM_OP1_;
-            uint16_t absoluteAddress = address + opc_ac + 1 + arg0;
+            uint16_t absoluteAddress = address + opc_ac + 1 + int8_t(arg0);
             if (translateToCartSpace(absoluteAddress)) {
                 m_emu.m_cart->translate_cpu(absoluteAddress, cartBank, cartAddress);
                 _DISASM_APPEND_(Opcode::paramPatterns[opc_addressingMode][2], cartBank, cartAddress);

@@ -70,7 +70,7 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     else if (addr < 0x4018) {
         LOG_ERR << "writeb(" 
                 << sm::hex(addr) << ", " << sm::hex(value) 
-                << " Access to APU/IO\n";
+                << ") Access to APU/IO\n";
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {

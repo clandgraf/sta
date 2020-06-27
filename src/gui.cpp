@@ -38,6 +38,7 @@ static bool showMemoryView = true;
 static bool showRomInfo = true;
 static bool showDisassembly = true;
 static bool showPatternTable = true;
+static bool showControls = false;
 
 #include "gui_opengl.hpp"
 
@@ -164,6 +165,10 @@ static void renderMenuBar(Emu& emu) {
             if (ImGui::MenuItem("Memory", nullptr, showMemoryView)) {
                 showMemoryView = !showMemoryView;
             }
+
+            if (ImGui::MenuItem("Controls", nullptr, showControls)) {
+                showControls = !showControls;
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -194,28 +199,25 @@ static void ImGui_AttachTooltip(const char* str) {
     }
 }
 
+static void renderStateControl(const char* icon, const char* tooltip, std::function<void()> action) {
+    if (ImGui::Button(icon)) {
+        action();
+    }
+    ImGui_AttachTooltip(tooltip);
+}
+
 static void renderEmuState(Emu& emu) {
     if (emu.isInitialized() && showEmuState) {
         if (ImGui::Begin("Emu State", &showEmuState)) {
-            if (ImGui::Button(ICON_MD_PLAY_ARROW)) {
-                emu.m_isStepping = false;
-            }
-            ImGui_AttachTooltip("Continue");
+            renderStateControl(ICON_MD_PLAY_ARROW, "Continue", [&emu]{ emu.m_isStepping = false; });
             ImGui::SameLine();
-            if (ImGui::Button(ICON_MD_SKIP_NEXT)) {
-                emu.stepOperation();
-            }
-            ImGui_AttachTooltip("Step Operation");
+            renderStateControl(ICON_MD_ARROW_FORWARD, "Step Operation", [&emu]{ emu.stepOperation(); });
             ImGui::SameLine();
-            if (ImGui::Button(ICON_MD_ARROW_FORWARD)) {
-                emu.stepScanline();
-            }
-            ImGui_AttachTooltip("Step Scanline");
+            renderStateControl(ICON_MD_ARROW_UPWARD, "Step Out", [&emu] { emu.stepOut(); });
             ImGui::SameLine();
-            if (ImGui::Button(ICON_MD_CAMERA)) {
-                emu.stepFrame();
-            }
-            ImGui_AttachTooltip("Step Frame");
+            renderStateControl(ICON_MD_CAMERA, "Step Frame", [&emu] { emu.stepFrame(); });
+            ImGui::SameLine();
+            renderStateControl(ICON_MD_SKIP_NEXT, "Step Scanline", [&emu] { emu.stepScanline(); });
 
             ImGui::PushFont(monoFont);
             ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
@@ -340,6 +342,27 @@ static void renderPatternTable() {
     ImGui::End();
 }
 
+static void renderControls(EmuInputs& inputs) {
+    if (ImGui::Begin("Controls", &showControls)) {
+        ImGui::Checkbox("Up", &(inputs.d_up));
+        ImGui::SameLine();
+        ImGui::Checkbox("Left", &(inputs.d_left));
+        ImGui::SameLine();
+        ImGui::Checkbox("A", &(inputs.btn_a));
+        ImGui::SameLine();
+        ImGui::Checkbox("Start", &(inputs.start));
+
+        ImGui::Checkbox("Down", &(inputs.d_down));
+        ImGui::SameLine();
+        ImGui::Checkbox("Right", &(inputs.d_right));
+        ImGui::SameLine();
+        ImGui::Checkbox("B", &(inputs.btn_b));
+        ImGui::SameLine();
+        ImGui::Checkbox("Select", &(inputs.select));
+    }
+    ImGui::End();
+}
+
 static void renderFrame() {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -359,6 +382,8 @@ void Gui::runFrame(Emu& emu) {
 }
 
 void Gui::runUi(Emu& emu) {
+    static EmuInputs emuInputs;
+
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -381,6 +406,7 @@ void Gui::runUi(Emu& emu) {
     renderMemoryView(emu);
     renderDisassembly(emu);
     renderPatternTable();
+    renderControls(emuInputs);
     ImGui::PopFont();
 
     // Rendering

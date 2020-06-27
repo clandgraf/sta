@@ -1,5 +1,7 @@
 
-- cpu fix zero page addressing: wraps on zero page ( _m_lo = (fetchArg() + m_r_x) & 0xff; )
+- use full addresses for ppu registers
+
+- DONE? cpu fix zero page addressing: wraps on zero page ( _m_lo = (fetchArg() + m_r_x) & 0xff; )
 
 - fix "not implemented" on m_errorInCycle
 

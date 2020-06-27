@@ -43,6 +43,8 @@ void PPU::reset() {
     m_r_mask.field = 0; 
 
     m_r_addressLatch = false;
+
+    m_oamAddress = 0;
 }
 
 void PPU::run(unsigned int cycles) {
@@ -89,6 +91,7 @@ uint8_t PPU::readRegister(uint8_t reg) {
     switch (reg) {
     case PPUSTATUS: return readStatus();
     case PPUDATA:   return readData();
+    case OAMDATA:   return m_oam.data[m_oamAddress];
     default:
         LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
             << " PPU::read_register("
@@ -107,6 +110,8 @@ void PPU::writeRegister(uint8_t reg, uint8_t value) {
     case PPUADDR:   CHECK_WRITE; writeAddr(value); break;
     case PPUMASK:   CHECK_WRITE; m_r_mask.field = value; break;
     case PPUDATA:   writeData(value); break;
+    case OAMADDR:   m_oamAddress = value; break;
+    case OAMDATA:   m_oam.data[m_oamAddress++] = value; break;
     default:
         LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
             << " PPU::write_register("

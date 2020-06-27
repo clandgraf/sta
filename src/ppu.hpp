@@ -146,8 +146,16 @@ private:
 
     unsigned long m_cycleCount = 0;
 
-    OamEntry m_oam[64];
-    OamEntry m_soam[8];
+    uint8_t m_oamAddress;
+    union {
+        OamEntry sprites[64];
+        uint8_t data[256];
+    } m_oam;
+    
+    union {
+        OamEntry sprites[8];
+        uint8_t data[32];
+    } m_soam;
 
     bool m_ignoreWrites = true;  // true until the PPU is write-ready, after WARMUP_CYCLES cycles
     bool m_f_oddFrame  = false;  // indicates wether we are on an even or odd frame
