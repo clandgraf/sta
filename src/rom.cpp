@@ -4,9 +4,12 @@
 #include <iostream>
 #include <miniz.h>
 #include <memory>
+
 #include "rom.hpp"
+#include "util.hpp"
 
 namespace fs = std::filesystem;
+namespace sm = StreamManipulators;
 
 constexpr uint8_t FLAG_TRAINER = 1 << 2;
 
@@ -64,8 +67,7 @@ std::shared_ptr<Cart> Cart::fromFile(const fs::path& p) {
     }
     
     // Check if we have a valid .nes rom
-    uint32_t header = HEADER_AS_UINT32(((ines_header*)data)->magic);
-    if (INES_MAGIC != header) {
+    if (INES_MAGIC != ((InesHeader*)data)->magic) {
         LOG_ERR << "ROM is not a valid .nes rom\n";
         return nullptr;
     }
@@ -79,7 +81,7 @@ Cart::Cart(uint8_t* data, std::string name) : m_data(data), m_name(name) {
     cart_off += 0x10;  // After header
 
     // Cart has trainer?
-    if (m_header->flags_6 & FLAG_TRAINER) {
+    if (m_header->hasTrainer) {
         m_trainer = (trainer_bank*)cart_off;
         cart_off += TRAINER_BANK_SIZE;
     }
@@ -89,9 +91,9 @@ Cart::Cart(uint8_t* data, std::string name) : m_data(data), m_name(name) {
     cart_off += PRG_BANK_SIZE * this->prg_size();
 
     // CHR ROM, available?
-    if (m_header->chr_size != 0) {
+    if (m_header->chrSize != 0) {
         m_chrBanks = (chr_bank*)cart_off;
-        m_chrSize = m_header->chr_size;
+        m_chrSize = m_header->chrSize;
         cart_off += CHR_BANK_SIZE * this->chr_size();
     } else {
         // CHR RAM
@@ -101,7 +103,7 @@ Cart::Cart(uint8_t* data, std::string name) : m_data(data), m_name(name) {
     }
 
     // Setup mapper id from flags fields from hi nybble of flags 6, 7
-    m_mapperId = (m_header->flags_7 & 0xf0) | (m_header->flags_6 >> 4);
+    m_mapperId = (m_header->mapperHi << 4) | (m_header->mapperLo);
 }
 
 Cart::~Cart()
@@ -110,6 +112,15 @@ Cart::~Cart()
         delete[] m_chrBanks;
     }
     delete m_data;
+}
+
+const uint16_t nametableOffsets[2][4] = {
+    { 0x0000, 0x0000, 0x0400, 0x0400 },  // Horizontal
+    { 0x0000, 0x0400, 0x0000, 0x0400 },  // Vertical
+};
+
+uint16_t Cart::getNameTable(uint8_t index) {
+    return nametableOffsets[m_header->mirroring][index];
 }
 
 uint8_t Cart::readb_cpu(uint16_t addr)
@@ -173,4 +184,22 @@ uint8_t Cart::readb_ppu(uint16_t addr)
 
 uint8_t Cart::readb_ppu_nrom(uint16_t addr) {
     return this->chr(0)[addr];
+}
+
+void Cart::writeb_ppu(uint16_t addr, uint8_t value)
+{
+    if (m_mapperId == 0) {
+        return writeb_ppu_nrom(addr, value);
+    }
+
+    LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
+    exit(1);
+}
+
+void Cart::writeb_ppu_nrom(uint16_t addr, uint8_t value) {
+    if (m_useChrRam) {
+        chr(0)[addr] = value;
+    } else {
+        LOG_ERR << "Illegal write to CHR ROM @ " << sm::hex(addr) << "\n";
+    }
 }

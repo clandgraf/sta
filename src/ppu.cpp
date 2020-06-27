@@ -3,6 +3,7 @@
 #include "emu.hpp"
 #include "ppu.hpp"
 #include "util.hpp"
+#include "rom.hpp"
 
 /*
  * Notes:
@@ -87,14 +88,14 @@ void PPU::run(unsigned int cycles) {
 uint8_t PPU::readRegister(uint8_t reg) {
     switch (reg) {
     case PPUSTATUS: return readStatus();
-    }
-
-    LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
-            << " PPU::read_register(" 
-            << sm::hex(reg) 
+    case PPUDATA:   return readData();
+    default:
+        LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
+            << " PPU::read_register("
+            << sm::hex(reg)
             << "): Not implemented\n";
-
-    return 0;
+        return 0;
+    }
 }
 
 void PPU::writeRegister(uint8_t reg, uint8_t value) {
@@ -105,9 +106,7 @@ void PPU::writeRegister(uint8_t reg, uint8_t value) {
     case PPUSCROLL: CHECK_WRITE; writeScroll(value); break;
     case PPUADDR:   CHECK_WRITE; writeAddr(value); break;
     case PPUMASK:   CHECK_WRITE; m_r_mask.field = value; break;
-    case PPUDATA:   {
-        break;
-    }
+    case PPUDATA:   writeData(value); break;
     default:
         LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
             << " PPU::write_register("
@@ -141,12 +140,22 @@ void PPU::writeScroll(ScrollV v) {
 void PPU::writeAddr(uint8_t v) {
     if (m_r_addressLatch) {
         m_r_addressLatch = !m_r_addressLatch;
-        m_r_t.word.hi = v & 0x3f;
-        m_r_v = m_r_t.word.field;
+        m_r_t.word.lo = v;
     } else {
         m_r_addressLatch = !m_r_addressLatch;
-        m_r_t.word.lo = v;
+        m_r_t.word.hi = v & 0x3f;
+        m_r_v = m_r_t.word.field;
     }
+}
+
+void PPU::writeData(uint8_t v) {
+    writeVram(m_r_v, v);
+    m_r_v += m_r_addressIncrement;
+}
+
+uint8_t PPU::readData() {
+    return readVram(m_r_v);
+    m_r_v += m_r_addressIncrement;
 }
 
 uint8_t PPU::readStatus() {
@@ -158,4 +167,32 @@ uint8_t PPU::readStatus() {
     m_r_addressLatch = false;
 
     return m_r_status.field;
+}
+
+uint8_t PPU::readVram(uint16_t address) {
+    if (address < 0x2000) {
+        return m_cart->readb_ppu(address);
+    } else if (address < 0x3f00) {
+        NameTableAddress a = address;
+        return m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress];
+    } else if (address < 0x4000) {
+        // Palette
+    } else {
+        LOG_ERR << "Illegal VRAM Read @ " << sm::hex(address) << "\n";
+    }
+
+    return 0;
+}
+
+void PPU::writeVram(uint16_t address, uint8_t value) {
+    if (address < 0x2000) {
+        m_cart->writeb_ppu(address, value);
+    } else if (address < 0x3f00) {
+        NameTableAddress a = address;
+        m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress] = value;
+    } else if (address < 0x4000) {
+        // Palette
+    } else {
+        LOG_ERR << "Illegal VRAM Write @ " << sm::hex(address) << "\n";
+    }
 }

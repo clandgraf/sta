@@ -22,90 +22,99 @@ public:
     static uint8_t constexpr PPUADDR = 0x6;
     static uint8_t constexpr PPUDATA = 0x7;
 
-    PACK(
-        union OamEntry {
-            struct {
-                uint8_t y;
-                uint8_t tileIndex;
-                union {
-                    uint8_t attributes;
-                    struct {
-                        unsigned int palette : 2;
-                        unsigned int __unused : 3;
-                        unsigned int priority : 1;
-                        unsigned int hflip : 1;
-                        unsigned int vflip : 1;
-                    };
+    PACK(union OamEntry {
+        struct {
+            uint8_t y;
+            uint8_t tileIndex;
+            union {
+                uint8_t attributes;
+                struct {
+                    unsigned int palette : 2;
+                    unsigned int __unused : 3;
+                    unsigned int priority : 1;
+                    unsigned int hflip : 1;
+                    unsigned int vflip : 1;
                 };
-                uint8_t x;
             };
-            uint8_t fields[4];
+            uint8_t x;
         };
+        uint8_t fields[4];
+    });
 
-        union CtrlV {
-            struct {
-                unsigned int baseNtAddress: 2;  // bit 0-1
-                unsigned int vramIncrement: 1;  // bit 2
-                unsigned int sprPatternTbl: 1;  // bit 3
-                unsigned int bkgPatternTbl: 1;  // bit 4
-                unsigned int sprSize: 1;        // bit 5
-                unsigned int masterSlave: 1;    // bit 6
-                unsigned int vblankNmi: 1;      // bit 7
-            };
-            uint8_t field;
-
-            CtrlV(uint8_t value) : field(value) {}
+    PACK(union CtrlV {
+        struct {
+            unsigned int baseNtAddress: 2;  // bit 0-1
+            unsigned int vramIncrement: 1;  // bit 2
+            unsigned int sprPatternTbl: 1;  // bit 3
+            unsigned int bkgPatternTbl: 1;  // bit 4
+            unsigned int sprSize: 1;        // bit 5
+            unsigned int masterSlave: 1;    // bit 6
+            unsigned int vblankNmi: 1;      // bit 7
         };
+        uint8_t field;
 
-        union MaskV {
-            struct {
-                unsigned int greyscale: 1;
-                unsigned int bkgEnableLeft: 1;
-                unsigned int sprEnableLeft: 1;
-                unsigned int bkgEnable: 1;
-                unsigned int sprEnable: 1;
-                unsigned int emphRed: 1;
-                unsigned int emphGreen: 1;
-                unsigned int emphBlue: 1;
-            };
-            uint8_t field;
+        CtrlV(uint8_t value) : field(value) {}
+    });
 
-            MaskV(uint8_t value) : field(value) {}
+    PACK(union MaskV {
+        struct {
+            unsigned int greyscale: 1;
+            unsigned int bkgEnableLeft: 1;
+            unsigned int sprEnableLeft: 1;
+            unsigned int bkgEnable: 1;
+            unsigned int sprEnable: 1;
+            unsigned int emphRed: 1;
+            unsigned int emphGreen: 1;
+            unsigned int emphBlue: 1;
         };
+        uint8_t field;
 
-        union ScrollV {
-            struct {
-                unsigned int fineScroll: 3;
-                unsigned int coarseScroll: 5;
-            };
-            uint8_t field;
+        MaskV(uint8_t value) : field(value) {}
+    });
 
-            ScrollV(uint8_t value) : field(value) {}
+    PACK(union ScrollV {
+        struct {
+            unsigned int fineScroll: 3;
+            unsigned int coarseScroll: 5;
         };
+        uint8_t field;
 
-        union StatusV {
-            struct {
-                unsigned int __unused: 5;
-                unsigned int overflow: 1;
-                unsigned int sprZero: 1;
-                unsigned int vblank: 1;
-            };
-            uint8_t field;
+        ScrollV(uint8_t value) : field(value) {}
+    });
+
+    PACK(union StatusV {
+        struct {
+            unsigned int __unused: 5;
+            unsigned int overflow: 1;
+            unsigned int sprZero: 1;
+            unsigned int vblank: 1;
         };
+        uint8_t          field;
+    });
 
-        union T {
-            struct {
-                unsigned int coarseScrollX : 5;
-                unsigned int coarseScrollY : 5;
-                unsigned int baseNtAddress : 2;
-                unsigned int fineScrollY : 3;
-                unsigned int __unused: 1;
-            };
-            Word word;
+    PACK(union NameTableAddress {
+        struct {
+            unsigned int ntAddress: 10;
+            unsigned int ntIndex:    2;
+            unsigned int __unused:   4;
         };
-    )
+        uint16_t         field;
 
-    PPU(Emu& emu) : m_emu(emu) {}
+        NameTableAddress(uint16_t value) : field(value) {}
+    });
+
+    PACK(union T {
+        struct {
+            unsigned int coarseScrollX : 5;
+            unsigned int coarseScrollY : 5;
+            unsigned int baseNtAddress : 2;
+            unsigned int fineScrollY : 3;
+            unsigned int __unused: 1;
+        };
+        Word word;
+    });
+
+    PPU(Emu& emu, std::shared_ptr<Cart> cart) : m_emu(emu), m_cart(cart) {}
 
     unsigned long getCycleCount() const { return m_cycleCount; }
 
@@ -123,10 +132,17 @@ public:
 private:
     Emu& m_emu;
 
+    std::shared_ptr<Cart> m_cart;
+
+    uint8_t readVram(uint16_t address);
+    void writeVram(uint16_t address, uint8_t value);
+
     uint8_t readStatus();
+    uint8_t readData();
     void writeCtrl(CtrlV);
     void writeScroll(ScrollV);
     void writeAddr(uint8_t);
+    void writeData(uint8_t);
 
     unsigned long m_cycleCount = 0;
 
@@ -154,4 +170,6 @@ private:
     T          m_r_t;
     uint16_t   m_r_v = 0x0000;
     uint8_t    m_r_x;
+
+    uint8_t    m_vram[0x0800];
 };

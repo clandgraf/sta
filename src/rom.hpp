@@ -25,25 +25,36 @@ typedef uint8_t prg_bank[PRG_BANK_SIZE];
 typedef uint8_t chr_bank[CHR_BANK_SIZE];
 typedef uint8_t trainer_bank[TRAINER_BANK_SIZE];
 
-PACK(
-    struct Flags6 {
-        unsigned int mirroring: 1;
-    };
-
-    struct ines_header {
-        uint8_t magic[4];
-        uint8_t prg_size;
-        uint8_t chr_size;
-        uint8_t flags_6;
-        uint8_t flags_7;
-        uint8_t prg_ram_size;
-        uint8_t flags_9;
-        uint8_t flags_10;
-        uint8_t zero[5];
-    };
-)
-
 class Cart {
+    PACK(struct InesHeader {
+        uint32_t             magic;
+        uint8_t              prgSize;
+        uint8_t              chrSize;
+        union {
+            struct {
+                unsigned int mirroring : 1;
+                unsigned int hasPrgRam : 1;
+                unsigned int hasTrainer : 1;
+                unsigned int hasVram : 1;
+                unsigned int mapperLo : 4;
+            };
+            uint8_t          flags6;
+        };
+        union {
+            struct {
+                unsigned int isVsUnisystem : 1;
+                unsigned int isPlaychoice10 : 1;
+                unsigned int isHeader20 : 2;
+                unsigned int mapperHi : 4;
+            };
+            uint8_t          flags7;
+        };
+        uint8_t              prg_ram_size;
+        uint8_t              flags_9;
+        uint8_t              flags_10;
+        uint8_t              zero[5];
+    });
+
 public:
     static std::shared_ptr<Cart> fromFile(const std::filesystem::path& p);
 
@@ -51,7 +62,7 @@ public:
 
     union {
         uint8_t* m_data;
-        ines_header* m_header;
+        InesHeader* m_header;
     };
 
     uint8_t m_mapperId;
@@ -66,7 +77,7 @@ public:
     Cart(uint8_t*, std::string file = "<none>");
     ~Cart();
 
-    inline uint8_t prg_size() const { return m_header->prg_size; }
+    inline uint8_t prg_size() const { return m_header->prgSize; }
     inline uint8_t chr_size() const { return m_chrSize; }
 
     inline prg_bank& prg(uint8_t bank) const { return m_prgBanks[bank]; };
@@ -77,6 +88,9 @@ public:
     void writeb_cpu(uint16_t address, uint8_t value);
 
     uint8_t readb_ppu(uint16_t address);
+    void writeb_ppu(uint16_t address, uint8_t value);
+
+    uint16_t getNameTable(uint8_t index);
 
 private:
     uint8_t m_chrSize = 0;
@@ -86,6 +100,7 @@ private:
     void writeb_cpu_nrom(uint16_t address, uint8_t value);
 
     uint8_t readb_ppu_nrom(uint16_t address);
+    void writeb_ppu_nrom(uint16_t address, uint8_t value);
 };
 
 #endif

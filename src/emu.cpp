@@ -40,7 +40,7 @@ void Emu::setDisassembler(Disassembler* disassembler) {
 
 void Emu::init(std::shared_ptr<Cart> cart) {
     m_cart = cart;
-    m_ppu = std::make_shared<PPU>(*this);
+    m_ppu = std::make_shared<PPU>(*this, m_cart);
     m_mem = std::make_unique<Memory>(*this, m_cart, m_ppu);
 
     reset();
