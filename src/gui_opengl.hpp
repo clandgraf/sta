@@ -14,12 +14,6 @@ static const char* glsl_version = "#version 130";
 
 static GLFWwindow* window = nullptr;
 
-static EmuInputs inputs;
-
-EmuInputs getInputs() {
-    return inputs;
-}
-
 namespace Gui {
 
     using TextureType = unsigned int;
@@ -54,7 +48,7 @@ bool Gui::isWindowClosing() {
 }
 
 void Gui::pollEvents() {
-    inputs.escape = false;
+    Input::resetMenuRequest();
     return glfwPollEvents();
 }
 
@@ -64,6 +58,12 @@ bool isFullscreen() {
 
 void Gui::swapBuffers() {
     glfwSwapBuffers(window);
+}
+
+#include "keynames.hpp"
+
+const char* getKeyName(int scancode) {
+    return KEY_NAMES.at(scancode);
 }
 
 void toggleFullscreen() {
@@ -109,9 +109,7 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 void updateInputs(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        inputs.escape = true;
-    }
+    Input::dispatchInput(key, action == GLFW_PRESS);
 }
 
 bool initWindow(const char* title, bool fullscreen) {
@@ -166,6 +164,7 @@ bool initWindow(const char* title, bool fullscreen) {
         return false;
     }
 
+    Input::setScancode(GLFW_KEY_ESCAPE, Input::Menu);
     glfwSetKeyCallback(window, updateInputs);
 
     return true;

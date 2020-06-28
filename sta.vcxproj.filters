@@ -78,6 +78,9 @@
     <ClCompile Include="contrib\miniz\miniz.c">
       <Filter>Source Files\contrib\miniz</Filter>
     </ClCompile>
+    <ClCompile Include="src\inputs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\defs.hpp">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\inputs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\keynames.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

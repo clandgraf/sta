@@ -1,4 +1,5 @@
 #include <imgui.h>
+#include <sstream>
 
 #include "gui.hpp"
 #include "rom.hpp"
@@ -295,7 +296,6 @@ static void renderOpenRomDialog(Emu& emu) {
                 emu.init(cart);
                 open = false;
             }
-            
         }
         if (!open) {
             ImGui::CloseCurrentPopup();
@@ -304,12 +304,87 @@ static void renderOpenRomDialog(Emu& emu) {
     }
 }
 
-static void renderSetupControllersDialog() {
-    bool open = true;
-    if (ImGui::BeginPopupModal("Setup Controllers", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
-        
+struct ButtonWidgetIds {
+    std::string add;
+    std::string clear;
+};
 
-        if (!open) {
+static std::map<Input::ControllerDef, ButtonWidgetIds> buttonWidgetIds;
+
+static void renderControllerButtonPane(Input::ControllerDef button) {
+    ImGui::Text(Input::defToLabel.at(button)); 
+    ImGui::SameLine();
+    if (ImGui::Button(buttonWidgetIds[button].add.c_str())) {
+        Input::waitForInput(button);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(buttonWidgetIds[button].clear.c_str())) {
+        Input::clearButton(button);
+    }
+
+
+    const auto& scancodes = Input::getScancodes(button);
+    auto scancode = scancodes.begin();
+
+    if (scancode == scancodes.end()) {
+        ImGui::Text("None");
+    } else {
+        std::stringstream ss;
+        for (; scancode != scancodes.end(); scancode++) {
+            if (scancode != scancodes.begin())
+                ss << ", ";
+            const char * name = getKeyName(*scancode);
+            ss << name;
+        }
+
+        ImGui::Text(ss.str().c_str());
+    }
+}
+
+static void renderControllerSetupPane(const std::vector<Input::ControllerDef>& controller) {
+    auto it = controller.begin();
+    for (; it != controller.end(); it++) {
+        if (it != controller.begin())
+            ImGui::Separator();
+        renderControllerButtonPane(*it);
+    }
+}
+
+static void renderSetupControllersDialog() {
+    bool openSetup = true;
+    if (ImGui::BeginPopupModal("Setup Controllers", &openSetup, ImGuiWindowFlags_AlwaysAutoResize)) {
+        renderControllerSetupPane(Input::inputsGeneral);
+
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+        if (ImGui::BeginTabBar("Controllers", tab_bar_flags)) {
+            if (ImGui::BeginTabItem("Controller 1"))
+            {
+                renderControllerSetupPane(Input::inputsController0);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Controller 2"))
+            {
+                renderControllerSetupPane(Input::inputsController1);
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+
+        if (Input::getWaitingForInput() != Input::None) {
+            ImGui::OpenPopup("Waiting For Key");
+        }
+        bool openWaiting = true;
+        if (ImGui::BeginPopupModal("Waiting For Key", &openWaiting, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Press a key");
+
+            if (!openWaiting || Input::getWaitingForInput() == Input::None) {
+                ImGui::CloseCurrentPopup();
+                Input::waitForInput(Input::None);
+            }
+            ImGui::EndPopup();
+        }
+
+        if (!openSetup) {
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
@@ -365,24 +440,44 @@ static void renderPatternTable() {
     }
 }
 
-static void renderControls(EmuInputs& inputs) {
+static void renderControls(Input::Controller& input0, Input::Controller& input1) {
     if (showControls) {
         if (ImGui::Begin("Controls", &showControls)) {
-            ImGui::Checkbox("Up", &(inputs.d_up));
+            ImGui::Text("Controller 1");
+            ImGui::Checkbox("Up", &(input0.d_up));
             ImGui::SameLine();
-            ImGui::Checkbox("Left", &(inputs.d_left));
+            ImGui::Checkbox("Left", &(input0.d_left));
             ImGui::SameLine();
-            ImGui::Checkbox("A", &(inputs.btn_a));
+            ImGui::Checkbox("A", &(input0.btn_a));
             ImGui::SameLine();
-            ImGui::Checkbox("Start", &(inputs.start));
+            ImGui::Checkbox("Start", &(input0.start));
 
-            ImGui::Checkbox("Down", &(inputs.d_down));
+            ImGui::Checkbox("Down", &(input0.d_down));
             ImGui::SameLine();
-            ImGui::Checkbox("Right", &(inputs.d_right));
+            ImGui::Checkbox("Right", &(input0.d_right));
             ImGui::SameLine();
-            ImGui::Checkbox("B", &(inputs.btn_b));
+            ImGui::Checkbox("B", &(input0.btn_b));
             ImGui::SameLine();
-            ImGui::Checkbox("Select", &(inputs.select));
+            ImGui::Checkbox("Select", &(input0.select));
+
+            ImGui::Separator();
+
+            ImGui::Text("Controller 2");
+            ImGui::Checkbox("Up", &(input1.d_up));
+            ImGui::SameLine();
+            ImGui::Checkbox("Left", &(input1.d_left));
+            ImGui::SameLine();
+            ImGui::Checkbox("A", &(input1.btn_a));
+            ImGui::SameLine();
+            ImGui::Checkbox("Start", &(input1.start));
+
+            ImGui::Checkbox("Down", &(input1.d_down));
+            ImGui::SameLine();
+            ImGui::Checkbox("Right", &(input1.d_right));
+            ImGui::SameLine();
+            ImGui::Checkbox("B", &(input1.btn_b));
+            ImGui::SameLine();
+            ImGui::Checkbox("Select", &(input1.select));
         }
         ImGui::End();
     }
@@ -397,8 +492,8 @@ static void renderFrame() {
 }
 
 void Gui::runFrame(Emu& emu) {
-    EmuInputs inputs = getInputs();
-    if (inputs.escape) {
+    const Input::State& inputs = Input::getState();
+    if (inputs.openMenu) {
         emu.m_isStepping = true;
     } else {
         emu.stepFrame();
@@ -407,7 +502,8 @@ void Gui::runFrame(Emu& emu) {
 }
 
 void Gui::runUi(Emu& emu) {
-    static EmuInputs emuInputs;
+    static Input::Controller controller0;
+    static Input::Controller controller1;
 
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -432,7 +528,7 @@ void Gui::runUi(Emu& emu) {
     renderMemoryView(emu);
     renderDisassembly(emu);
     renderPatternTable();
-    renderControls(emuInputs);
+    renderControls(controller0, controller1);
     ImGui::PopFont();
 
     // Rendering
@@ -469,10 +565,21 @@ bool initImGUI(GLFWwindow* window) {
 }
 
 bool Gui::initUi(bool fullscreen) {
+    static char widgetIdBuffer[256];
+
     ImGui_FileBrowser_Init();
 
     if (!initWindow(WINDOW_TITLE, fullscreen)) {
         return false;
+    }
+
+    for (const auto& label: Input::defToString) {
+        std::string addLabel, clearLabel;
+        snprintf(widgetIdBuffer, 256, "Add##%s-add", label.second);
+        addLabel = widgetIdBuffer;
+        snprintf(widgetIdBuffer, 256, "Clear##%s-clear", label.second);
+        clearLabel = widgetIdBuffer;
+        buttonWidgetIds[label.first] = {addLabel, clearLabel};
     }
 
     showMemoryView = Settings::get("debugger-view-memory", true);
