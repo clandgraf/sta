@@ -2,6 +2,7 @@
 #include <unordered_set>
 
 #include "inputs.hpp"
+#include "util.hpp"
 
 namespace Input {
     static Input::State state;
@@ -77,4 +78,17 @@ const std::unordered_set<Input::Scancode>& Input::getScancodes(ControllerDef def
 
 void Input::resetMenuRequest() {
     state.openMenu = false;
+}
+
+void Input::loadSettings() {
+    
+}
+
+void Input::writeSettings() {
+    Settings::erase("keys");
+    for (auto entry: keyConfig) {
+        // TODO entry.first is interpreted as array index
+        Settings::setIn({"keys", std::to_string(entry.first)}, 
+                        defToString.at(entry.second));
+    }
 }

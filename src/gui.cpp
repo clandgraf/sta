@@ -608,6 +608,8 @@ void Gui::teardownUi() {
     Settings::set("debugger-view-rominfo", showRomInfo);
     Settings::set("debugger-view-controls", showControls);
 
+    Input::writeSettings();
+
     teardownImGui();
     teardownWindow();
 }

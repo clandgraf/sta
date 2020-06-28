@@ -4,6 +4,7 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <json.hpp>
 
 #define LOG_ERR (std::cerr << "[ERROR] "<< __FILE__ << ":" << __LINE__ << " ")
@@ -53,6 +54,17 @@ namespace Settings {
     void set(const char* str, const V& value) {
         object[str] = value;
     }
+
+    template<typename V>
+    void setIn(std::vector<std::string> path, const V& value) {
+        std::stringstream ss;
+        for (auto s: path)
+            ss << "/" << s;
+
+        object[nlohmann::json::json_pointer(ss.str())] = value;
+    }
+
+    void erase(const char* str);
 
     void read();
     void write();

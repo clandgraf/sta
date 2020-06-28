@@ -98,3 +98,9 @@ void Settings::write() {
     settingsFile << object;
     settingsFile.close();
 }
+
+void Settings::erase(const char* str) {
+    if (object.contains(str)) {
+        object.erase(str);
+    }
+}

@@ -132,4 +132,6 @@ namespace Input {
     const std::unordered_set<Scancode>& getScancodes(ControllerDef);
     const Input::State& getState();
     void resetMenuRequest();
+    void loadSettings();
+    void writeSettings();
 }
