@@ -42,6 +42,7 @@ void PPU::reset() {
     m_r_t.word.field = 0;
     m_r_mask.field = 0; 
 
+    m_r_dataReadBuffer = 0x00;
     m_r_addressLatch = false;
 
     m_oamAddress = 0;
@@ -159,8 +160,12 @@ void PPU::writeData(uint8_t v) {
 }
 
 uint8_t PPU::readData() {
-    return readVram(m_r_v);
-    m_r_v += m_r_addressIncrement;
+    m_r_dataReadBuffer = readVram(m_r_v, true);
+    return (
+        m_r_v < 0x3f00 ? 
+        m_r_dataReadBuffer : 
+        readVram(m_r_v)
+    );
 }
 
 uint8_t PPU::readStatus() {
@@ -174,10 +179,10 @@ uint8_t PPU::readStatus() {
     return m_r_status.field;
 }
 
-uint8_t PPU::readVram(uint16_t address) {
+uint8_t PPU::readVram(uint16_t address, bool ignorePalette) {
     if (address < 0x2000) {
         return m_cart->readb_ppu(address);
-    } else if (address < 0x3f00) {
+    } else if ((ignorePalette && address < 0x4000) || address < 0x3f00) {
         NameTableAddress a = address;
         return m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress];
     } else if (address < 0x4000) {

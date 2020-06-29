@@ -134,7 +134,7 @@ private:
 
     std::shared_ptr<Cart> m_cart;
 
-    uint8_t readVram(uint16_t address);
+    uint8_t readVram(uint16_t address, bool ignorePalette = false);
     void writeVram(uint16_t address, uint8_t value);
 
     uint8_t readStatus();
@@ -163,6 +163,13 @@ private:
     bool m_f_vblankNmi = false;
 
     MaskV      m_r_mask = 0;
+
+    //// Data Read Buffer
+    // When PPUDATA two things happen:
+    // 1. A Read Buffer is refreshed. This ignores Palette Data and updates the mirrored nametable part
+    // 2. a) If palette memory -> is accessed return memory directly
+    //    b) Else              -> return Read Buffer
+    uint8_t    m_r_dataReadBuffer = 0;
 
     //// Status Register
     // This stores the value last written to a PPU register
