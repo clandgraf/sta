@@ -49,8 +49,16 @@ void PPU::reset() {
 }
 
 void PPU::run(unsigned int cycles) {
+    uint8_t tmp8;
     for (unsigned int i = 0; i < cycles; i++) {
         
+        // Filling shift registers for bkg rendering
+        if (m_scanline < 240 || m_scanline == 261) {
+            switch (m_sl_cycle) {
+            //case 1: tmp8 = 
+            }
+        }
+
         // TODO Here be rendering
         
         // Update Status Flags and raise NMI
@@ -126,9 +134,12 @@ void PPU::writeRegister(uint8_t reg, uint8_t value) {
 
 void PPU::writeCtrl(CtrlV v) {
     m_f_vblankNmi = v.vblankNmi;
-    m_r_t.baseNtAddress = v.baseNtAddress;
+    m_f_sprSize = v.sprSize;
+    m_f_master = v.masterSlave;
+    m_bkgPatternTbl = v.bkgPatternTbl ? 0x1000 : 0x0000;
+    m_sprPatternTbl = v.sprPatternTbl ? 0x1000 : 0x0000;
     m_r_addressIncrement = v.vramIncrement ? 32 : 1;
-    // TODO More fields
+    m_r_t.baseNtAddress = v.baseNtAddress;
 }
 
 void PPU::writeScroll(ScrollV v) {

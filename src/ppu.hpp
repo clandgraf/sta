@@ -164,6 +164,11 @@ private:
 
     MaskV      m_r_mask = 0;
 
+    uint16_t m_sprPatternTbl;
+    uint16_t m_bkgPatternTbl;
+    bool m_f_sprSize;
+    bool m_f_master;
+
     //// Data Read Buffer
     // When PPUDATA two things happen:
     // 1. A Read Buffer is refreshed. This ignores Palette Data and updates the mirrored nametable part
