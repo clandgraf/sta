@@ -49,13 +49,41 @@ void PPU::reset() {
 }
 
 void PPU::run(unsigned int cycles) {
+    auto incScrollX = [&]() {
+        if (m_r_mask.bkgEnable || m_r_mask.sprEnable) {
+            if (m_r_v.coarseScrollX == 31) {
+                m_r_v.coarseScrollX = 0;
+                m_r_v.baseNtX = ~m_r_v.baseNtX;
+            } else {
+                m_r_v.coarseScrollX++;
+            }
+        }
+    };
+
     uint8_t tmp8;
     for (unsigned int i = 0; i < cycles; i++) {
         
         // Filling shift registers for bkg rendering
         if (m_scanline < 240 || m_scanline == 261) {
-            switch (m_sl_cycle) {
-            //case 1: tmp8 = 
+            if ((m_sl_cycle > 0 && m_sl_cycle < 257) 
+                || (m_sl_cycle > 320 && m_sl_cycle < 337)) {
+                
+                // Regular Fetches
+                switch ((m_sl_cycle - 1) % 8) {
+                    case 0: // Fetch Nametable Byte
+                        m_latch_ntByte = readVram(0x2000 
+                                                  | (m_r_v.word.field & 0xfff)); 
+                        break;  
+                    case 2: // Fetch Attribute Byte
+                        m_latch_atByte = readVram(0x23c0 
+                                                  | (m_r_v.baseNtAddress << 10) 
+                                                  | ((m_r_v.coarseScrollY >> 2) << 3)
+                                                  | (m_r_v.coarseScrollX >> 2)); 
+                        break; 
+                    case 4: break; // Fetch Lo Tile Byte
+                    case 6: break; // Fetch Hi Tile Byte
+                    case 7: incScrollX(); break; // Increase V horizontally
+                }
             }
         }
 
@@ -161,21 +189,21 @@ void PPU::writeAddr(uint8_t v) {
     } else {
         m_r_addressLatch = !m_r_addressLatch;
         m_r_t.word.hi = v & 0x3f;
-        m_r_v = m_r_t.word.field;
+        m_r_v.word.field = m_r_t.word.field;
     }
 }
 
 void PPU::writeData(uint8_t v) {
-    writeVram(m_r_v, v);
-    m_r_v += m_r_addressIncrement;
+    writeVram(m_r_v.word.field, v);
+    m_r_v.word.field += m_r_addressIncrement;
 }
 
 uint8_t PPU::readData() {
-    m_r_dataReadBuffer = readVram(m_r_v, true);
+    m_r_dataReadBuffer = readVram(m_r_v.word.field, true);
     return (
-        m_r_v < 0x3f00 ? 
+        m_r_v.word.field < 0x3f00 ? 
         m_r_dataReadBuffer : 
-        readVram(m_r_v)
+        readVram(m_r_v.word.field)
     );
 }
 

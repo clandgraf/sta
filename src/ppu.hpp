@@ -107,7 +107,13 @@ public:
         struct {
             unsigned int coarseScrollX : 5;
             unsigned int coarseScrollY : 5;
-            unsigned int baseNtAddress : 2;
+            union {
+                unsigned int baseNtAddress : 2;
+                struct {
+                    unsigned int baseNtX : 1;
+                    unsigned int baseNtY : 1;
+                };
+            };
             unsigned int fineScrollY : 3;
             unsigned int __unused: 1;
         };
@@ -188,8 +194,18 @@ private:
     bool       m_r_addressLatch = false;
     uint8_t    m_r_addressIncrement = 1;
     T          m_r_t;
-    uint16_t   m_r_v = 0x0000;
+    T          m_r_v;
     uint8_t    m_r_x;
 
     uint8_t    m_vram[0x0800];
+
+    // Rendering
+    
+    uint8_t    m_latch_ntByte;
+    uint8_t    m_latch_atByte;
+
+    uint16_t   m_shiftPatternHi;
+    uint16_t   m_shiftPatternLo;
+    uint8_t    m_shiftAttrHi;
+    uint8_t    m_shiftAttrLo;
 };
