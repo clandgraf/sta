@@ -94,6 +94,19 @@ void PPU::run(unsigned int cycles) {
             m_r_v.baseNtY       = m_r_t.baseNtY;
         }
     };
+    
+    auto loadShiftReg = [&](uint16_t& reg, uint8_t value) {
+        reg &= 0xff00;
+        reg |= value;  
+    };
+
+    auto loadShiftRegs = [&]() {
+        loadShiftReg(m_shiftPatternLo, m_latch_tileLo);
+        loadShiftReg(m_shiftPatternHi, m_latch_tileHi);
+
+        loadShiftReg(m_shiftAttrLo, m_latch_atByte & 0b01 ? 0xff : 0x00);
+        loadShiftReg(m_shiftAttrHi, m_latch_atByte & 0b10 ? 0xff : 0x00);
+    };
 
     for (unsigned int i = 0; i < cycles; i++) {
         
@@ -107,18 +120,30 @@ void PPU::run(unsigned int cycles) {
                 // Regular Fetches
                 switch ((m_sl_cycle - 1) % 8) {
                 case 0: // Fetch Nametable Byte
-                    m_latch_ntByte = readVram(0x2000 
-                                            | (m_r_v.word.field & 0xfff)); 
+                    loadShiftRegs();
+                    m_latch_ntByte = readVram(0x2000 | (m_r_v.word.field & 0xfff)); 
                     break;  
                 case 2: // Fetch Attribute Byte
                     m_latch_atByte = readVram(0x23c0 
                                             | (m_r_v.baseNtAddress << 10) 
                                             | ((m_r_v.coarseScrollY >> 2) << 3)
                                             | (m_r_v.coarseScrollX >> 2)); 
+                    // Index into attribute byte
+                    if (m_r_v.coarseScrollY & 0x02) m_latch_atByte >>= 4;
+                    if (m_r_v.coarseScrollX & 0x02) m_latch_atByte >>= 2;
+                    m_latch_atByte &= 0b11;
                     break;
                 case 4: // Fetch Lo Tile Byte
+                    m_latch_tileLo = readVram(m_bkgPatternTbl 
+                                            + ((uint16_t)m_latch_ntByte << 4) 
+                                            + m_r_v.fineScrollY 
+                                            + 0);
                     break; 
                 case 6: // Fetch Hi Tile Byte
+                    m_latch_tileHi = readVram(m_bkgPatternTbl 
+                                            + ((uint16_t)m_latch_ntByte << 4) 
+                                            + m_r_v.fineScrollY 
+                                            + 8);
                     break; 
                 case 7: // Increase V horizontally
                     incScrollX(); 
@@ -135,8 +160,7 @@ void PPU::run(unsigned int cycles) {
             }
 
             if (m_sl_cycle == 338 || m_sl_cycle == 340) {
-                m_latch_ntByte = readVram(0x2000
-                    | (m_r_v.word.field & 0xfff));
+                m_latch_ntByte = readVram(0x2000 | (m_r_v.word.field & 0xfff));
             }
         }
 

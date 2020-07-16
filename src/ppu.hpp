@@ -206,9 +206,11 @@ private:
     
     uint8_t    m_latch_ntByte;
     uint8_t    m_latch_atByte;
+    uint8_t    m_latch_tileLo;
+    uint8_t    m_latch_tileHi;
 
     uint16_t   m_shiftPatternHi;
     uint16_t   m_shiftPatternLo;
-    uint8_t    m_shiftAttrHi;
-    uint8_t    m_shiftAttrLo;
+    uint16_t   m_shiftAttrHi;
+    uint16_t   m_shiftAttrLo;
 };
