@@ -50,7 +50,7 @@ void PPU::reset() {
 
 void PPU::run(unsigned int cycles) {
     auto incScrollX = [&]() {
-        if (m_r_mask.bkgEnable || m_r_mask.sprEnable) {
+        if (isRenderingEnabled()) {
             if (m_r_v.coarseScrollX == 31) {
                 m_r_v.coarseScrollX = 0;
                 m_r_v.baseNtX = ~m_r_v.baseNtX;
@@ -60,35 +60,94 @@ void PPU::run(unsigned int cycles) {
         }
     };
 
-    uint8_t tmp8;
+    auto incScrollY = [&]() {
+        if (isRenderingEnabled()) {
+            if (m_r_v.fineScrollY < 7) {
+                m_r_v.fineScrollY++;
+            } else {
+                m_r_v.fineScrollY = 0;
+                switch (m_r_v.coarseScrollY) {
+                case 29:
+                    m_r_v.baseNtY = ~m_r_v.baseNtY;
+                case 31:
+                    m_r_v.coarseScrollY = 0;
+                    break;
+                default:
+                    m_r_v.coarseScrollY++;
+                    break;
+                }
+            }
+        }
+    };
+
+    auto resScrollX = [&]() {
+        if (isRenderingEnabled()) {
+            m_r_v.coarseScrollX = m_r_t.coarseScrollX;
+            m_r_v.baseNtX       = m_r_t.baseNtX;
+        }
+    };
+
+    auto resScrollY = [&]() {
+        if (isRenderingEnabled()) {
+            m_r_v.fineScrollY   = m_r_t.fineScrollY;
+            m_r_v.coarseScrollY = m_r_t.coarseScrollY;
+            m_r_v.baseNtY       = m_r_t.baseNtY;
+        }
+    };
+
     for (unsigned int i = 0; i < cycles; i++) {
         
-        // Filling shift registers for bkg rendering
         if (m_scanline < 240 || m_scanline == 261) {
-            if ((m_sl_cycle > 0 && m_sl_cycle < 257) 
+        
+            // Filling latches for bkg rendering
+        
+            if ((m_sl_cycle > 0 && m_sl_cycle < 256)  // < 256 cuts of last case 7 (since this does incScrollY)
                 || (m_sl_cycle > 320 && m_sl_cycle < 337)) {
                 
                 // Regular Fetches
                 switch ((m_sl_cycle - 1) % 8) {
-                    case 0: // Fetch Nametable Byte
-                        m_latch_ntByte = readVram(0x2000 
-                                                  | (m_r_v.word.field & 0xfff)); 
-                        break;  
-                    case 2: // Fetch Attribute Byte
-                        m_latch_atByte = readVram(0x23c0 
-                                                  | (m_r_v.baseNtAddress << 10) 
-                                                  | ((m_r_v.coarseScrollY >> 2) << 3)
-                                                  | (m_r_v.coarseScrollX >> 2)); 
-                        break; 
-                    case 4: break; // Fetch Lo Tile Byte
-                    case 6: break; // Fetch Hi Tile Byte
-                    case 7: incScrollX(); break; // Increase V horizontally
+                case 0: // Fetch Nametable Byte
+                    m_latch_ntByte = readVram(0x2000 
+                                            | (m_r_v.word.field & 0xfff)); 
+                    break;  
+                case 2: // Fetch Attribute Byte
+                    m_latch_atByte = readVram(0x23c0 
+                                            | (m_r_v.baseNtAddress << 10) 
+                                            | ((m_r_v.coarseScrollY >> 2) << 3)
+                                            | (m_r_v.coarseScrollX >> 2)); 
+                    break;
+                case 4: // Fetch Lo Tile Byte
+                    break; 
+                case 6: // Fetch Hi Tile Byte
+                    break; 
+                case 7: // Increase V horizontally
+                    incScrollX(); 
+                    break; 
                 }
+            }
+
+            if (m_sl_cycle == 256) {
+                incScrollY();
+            }
+
+            if (m_sl_cycle == 257) {
+                resScrollX();
+            }
+
+            if (m_sl_cycle == 338 || m_sl_cycle == 340) {
+                m_latch_ntByte = readVram(0x2000
+                    | (m_r_v.word.field & 0xfff));
             }
         }
 
-        // TODO Here be rendering
-        
+        if (m_scanline == 261) {
+            
+            if (m_sl_cycle > 279 && m_sl_cycle < 305) {
+                resScrollY();
+            }
+
+        }
+
         // Update Status Flags and raise NMI
         if (m_scanline == 241 && m_sl_cycle == 1) {
             m_f_statusVblank = true;
@@ -103,18 +162,22 @@ void PPU::run(unsigned int cycles) {
             m_f_statusSprZero = false;
         }
 
+        // TODO Here be rendering
+
         // Update Counters for next scanline
-        ++m_sl_cycle;
-        bool skipTick = m_f_oddFrame 
-                      && m_scanline == 261 
-                      && (m_r_mask.field & RENDERING_ENABLED);
-        bool nextScanline = m_sl_cycle >= (skipTick ? 340 : 341);
-        // Next Scanline
-        if (nextScanline) {
+        if (++m_sl_cycle > 340) {
             m_sl_cycle = 0;
+            
+            bool skipTick = m_f_oddFrame
+                         && m_scanline == 261
+                         && isRenderingEnabled();
+            if (skipTick) {
+                m_sl_cycle++;
+            }
+
             m_scanline++;
             // Next Frame
-            if (m_scanline >= 262) {
+            if (m_scanline > 261) {
                 m_scanline = 0;
                 m_f_oddFrame = !m_f_oddFrame;
             }

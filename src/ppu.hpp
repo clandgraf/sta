@@ -136,6 +136,9 @@ public:
     __forceinline bool isOddFrame() { return m_f_oddFrame; }
 
 private:
+    
+    __forceinline bool isRenderingEnabled() { return m_r_mask.field & RENDERING_ENABLED; }
+
     Emu& m_emu;
 
     std::shared_ptr<Cart> m_cart;
