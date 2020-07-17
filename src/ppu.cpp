@@ -108,6 +108,13 @@ void PPU::run(unsigned int cycles) {
         loadShiftReg(m_shiftAttrHi, m_latch_atByte & 0b10 ? 0xff : 0x00);
     };
 
+    auto updateShiftRegs = [&]() {
+        m_shiftPatternLo <<= 1;
+        m_shiftPatternHi <<= 1;
+        m_shiftAttrLo <<= 1;
+        m_shiftAttrHi <<= 1;
+    };
+
     for (unsigned int i = 0; i < cycles; i++) {
         
         if (m_scanline < 240 || m_scanline == 261) {
@@ -186,7 +193,19 @@ void PPU::run(unsigned int cycles) {
             m_f_statusSprZero = false;
         }
 
-        // TODO Here be rendering
+        // Rendering a Pixel
+        if (m_r_mask.bkgEnable && m_scanline >= 0 && m_scanline < 240) {
+            if (m_sl_cycle > 0 && m_sl_cycle < 257) {
+                uint16_t bit = 0x8000 >> m_r_x;
+                
+                uint8_t value   = ((m_shiftPatternLo & bit) ? 0b01 : 0) 
+                                | ((m_shiftPatternHi & bit) ? 0b10 : 0);
+                uint8_t palette = ((m_shiftAttrLo & bit) ? 0b01 : 0)
+                                | ((m_shiftAttrHi & bit) ? 0b01 : 0);
+
+                // TODO Lookup from Palette Memory
+            }
+        }
 
         // Update Counters for next scanline
         if (++m_sl_cycle > 340) {
@@ -312,7 +331,7 @@ uint8_t PPU::readVram(uint16_t address, bool ignorePalette) {
         NameTableAddress a = address;
         return m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress];
     } else if (address < 0x4000) {
-        // Palette
+        // TODO Palette
     } else {
         LOG_ERR << "Illegal VRAM Read @ " << sm::hex(address) << "\n";
     }
@@ -327,7 +346,7 @@ void PPU::writeVram(uint16_t address, uint8_t value) {
         NameTableAddress a = address;
         m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress] = value;
     } else if (address < 0x4000) {
-        // Palette
+        // TODO Palette
     } else {
         LOG_ERR << "Illegal VRAM Write @ " << sm::hex(address) << "\n";
     }
