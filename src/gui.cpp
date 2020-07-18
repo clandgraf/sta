@@ -475,6 +475,10 @@ static void renderControls(Input::Controller& input0, Input::Controller& input1)
     }
 }
 
+void setPixel(unsigned int x, unsigned int y, unsigned int v) {
+    screenSurface->setPixel(x, y, Palette::DEFAULT[v]);
+}
+
 static void renderFrame() {
     int display_w, display_h;
     glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -482,6 +486,7 @@ static void renderFrame() {
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    screenSurface->upload();
     screenSurface->render();
 }
 

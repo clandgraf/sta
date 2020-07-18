@@ -23,7 +23,7 @@ namespace Gui {
         static const char* VertexShaderSource;
         static const char* FragmentShaderSource;
 
-        static unsigned int vbo, vao;
+        static unsigned int vbo, vao, ebo;
 
         static Program Program;
 

@@ -23,6 +23,8 @@ struct Palette {
 
     Palette(std::array<Color, 64>);
 
+    Color operator[](unsigned int v) const;
+
 private:
     std::array<Color, 64> m_data;
 };

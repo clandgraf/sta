@@ -80,6 +80,10 @@ Palette DEFAULT{
 
 Palette::Palette(std::array<Color, 64> colors) : m_data(colors) {}
 
+Palette::Color Palette::operator[](unsigned int v) const {
+    return m_data[v];
+}
+
 static int _cliIndex(int ac, char** av, const char* param) {
     for (int i = 1; i < ac; i++) {
         if (strcmp(av[i], param) == 0) {

@@ -210,6 +210,8 @@ void PPU::run(unsigned int cycles) {
                                | ((m_shiftAttrHi    & bit) ? 0b1000 : 0);
 
                 uint8_t value = readVram(palIdx);
+
+                // setPixel(m_sl_cycle - 1, m_scanline, value);
             }
         }
 
