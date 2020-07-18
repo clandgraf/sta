@@ -31,6 +31,7 @@
     <ClCompile Include="src\emu.cpp" />
     <ClCompile Include="src\gui.cpp" />
     <ClCompile Include="src\gui_filebrowser.cpp" />
+    <ClCompile Include="src\gui_opengl_surface.cpp" />
     <ClCompile Include="src\inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mem.cpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="src\gui.hpp" />
     <ClInclude Include="src\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui_opengl.hpp" />
+    <ClInclude Include="src\gui_opengl_surface.hpp" />
     <ClInclude Include="src\IconsMaterialDesign.h" />
     <ClInclude Include="src\inputs.hpp" />
     <ClInclude Include="src\keynames.hpp" />

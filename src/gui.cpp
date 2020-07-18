@@ -43,9 +43,11 @@ static bool showControls = false;
 
 #include "gui_opengl.hpp"
 
-static Gui::Texture patternTableTexture;
+static std::shared_ptr<Gui::Surface> patternTableSurface;
 
-uint8_t colors[4][3] = {
+static std::shared_ptr<Gui::Surface> screenSurface;
+
+Palette::Color colors[4] = {
     { 0xff, 0xff, 0xff },
     { 0xbb, 0xbb, 0xbb },
     { 0x77, 0x77, 0x77 },
@@ -53,10 +55,6 @@ uint8_t colors[4][3] = {
 };
 
 static void refreshPatternTable(Emu& emu) {
-    // 256 x 128
-
-    uint8_t* data = new uint8_t[2 /*tables*/ * 3 /*colors*/ * 128 * 128];
-
     for (int table = 0; table < 2; table++) {
         for (int tile = 0; tile < 256; tile++) {
             uint16_t offset = (table ? 0x1000 : 0) + tile * 0x10;
@@ -69,29 +67,23 @@ static void refreshPatternTable(Emu& emu) {
                     size_t textureX = ((table ? 128 : 0) + (tile % 16) * 8 + col);
                     size_t textureY = ((tile / 16) * 8 + row);
 
-                    size_t textureOff = (textureY * 256 + textureX) * 3;
-                    data[textureOff + 0] = colors[pxl][0];
-                    data[textureOff + 1] = colors[pxl][1];
-                    data[textureOff + 2] = colors[pxl][2];
+                    patternTableSurface->setPixel(textureX, textureY, colors[pxl]);
                 }
             }
         }
     }
 
-    Gui::uploadTextureData(patternTableTexture, 256, 128, data);
-    delete[] data;
+    patternTableSurface->upload();
 }
 
 static void initPatternTable() {
-    uint8_t* data = new uint8_t[2 /*tables*/ * 3 /*colors*/ * 128 * 128];
-
-    for (int i = 0; i < 2 * 128 * 128; i++) {
-        data[i * 3 + 0] = 0x00;
-        data[i * 3 + 1] = 0x00;
-        data[i * 3 + 2] = 0x00;
+    for (int y = 0; y < 128; y++) {
+        for (int x = 0; x < 2 * 128; x++) {
+            patternTableSurface->setPixel(x, y, {0, 0, 0});
+        }
     }
 
-    Gui::uploadTextureData(patternTableTexture, 256, 128, data);
+    patternTableSurface->upload();
 }
 
 static void renderMenuBar(Emu& emu) {
@@ -434,7 +426,7 @@ static void renderDisassembly(Emu& emu) {
 static void renderPatternTable() {
     if (showPatternTable) {
         if (ImGui::Begin("Pattern Table", &showPatternTable)) {
-            ImGui::Image((void*)(intptr_t)patternTableTexture, ImVec2(512, 256));
+            ImGui::Image((void*)(intptr_t)patternTableSurface->getTexture(), ImVec2(512, 256));
         }
         ImGui::End();
     }
@@ -489,6 +481,8 @@ static void renderFrame() {
     glViewport(0, 0, display_w, display_h);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    screenSurface->render();
 }
 
 void Gui::runFrame(Emu& emu) {
@@ -577,6 +571,8 @@ bool Gui::initUi(bool fullscreen) {
         return false;
     }
 
+    screenSurface = std::make_shared<Gui::Surface>(256, 240);
+
     for (const auto& label: Input::defToString) {
         std::string addLabel, clearLabel;
         snprintf(widgetIdBuffer, 256, "Add##%s-add", label.second);
@@ -592,7 +588,7 @@ bool Gui::initUi(bool fullscreen) {
     showRomInfo = Settings::get("debugger-view-rominfo", true);
     showControls = Settings::get("debugger-view-controls", true);
 
-    patternTableTexture = Gui::createTexture();
+    patternTableSurface = std::make_shared<Gui::Surface>(2 * 128, 128);
     initPatternTable();
 
     return initImGUI(window);
@@ -604,8 +600,6 @@ static void teardownImGui() {
 }
 
 void Gui::teardownUi() {
-    freeTexture(patternTableTexture);
-
     Settings::set("debugger-view-memory", showMemoryView);
     Settings::set("debugger-view-state", showEmuState);
     Settings::set("debugger-view-disassembly", showDisassembly);
@@ -615,5 +609,8 @@ void Gui::teardownUi() {
     Input::writeSettings();
 
     teardownImGui();
+    patternTableSurface = nullptr;
+    screenSurface = nullptr;
+    Surface::teardown();
     teardownWindow();
 }
