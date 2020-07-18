@@ -45,6 +45,9 @@ void PPU::reset() {
     m_r_dataReadBuffer = 0x00;
     m_r_addressLatch = false;
 
+    m_bkgPatternTbl = 0;
+    m_sprPatternTbl = 0;
+
     m_oamAddress = 0;
 }
 
@@ -118,12 +121,14 @@ void PPU::run(unsigned int cycles) {
     for (unsigned int i = 0; i < cycles; i++) {
         
         if (m_scanline < 240 || m_scanline == 261) {
-        
+
             // Filling latches for bkg rendering
         
             if ((m_sl_cycle > 0 && m_sl_cycle < 256)  // < 256 cuts of last case 7 (since this does incScrollY)
                 || (m_sl_cycle > 320 && m_sl_cycle < 337)) {
-                
+
+                updateShiftRegs();
+
                 // Regular Fetches
                 switch ((m_sl_cycle - 1) % 8) {
                 case 0: // Fetch Nametable Byte
@@ -163,6 +168,7 @@ void PPU::run(unsigned int cycles) {
             }
 
             if (m_sl_cycle == 257) {
+                loadShiftRegs();
                 resScrollX();
             }
 
@@ -198,12 +204,12 @@ void PPU::run(unsigned int cycles) {
             if (m_sl_cycle > 0 && m_sl_cycle < 257) {
                 uint16_t bit = 0x8000 >> m_r_x;
                 
-                uint8_t value   = ((m_shiftPatternLo & bit) ? 0b01 : 0) 
-                                | ((m_shiftPatternHi & bit) ? 0b10 : 0);
-                uint8_t palette = ((m_shiftAttrLo & bit) ? 0b01 : 0)
-                                | ((m_shiftAttrHi & bit) ? 0b01 : 0);
+                uint8_t palIdx = ((m_shiftPatternLo & bit) ? 0b0001 : 0) 
+                               | ((m_shiftPatternHi & bit) ? 0b0010 : 0)
+                               | ((m_shiftAttrLo    & bit) ? 0b0100 : 0)
+                               | ((m_shiftAttrHi    & bit) ? 0b1000 : 0);
 
-                // TODO Lookup from Palette Memory
+                uint8_t value = readVram(palIdx);
             }
         }
 
@@ -331,7 +337,14 @@ uint8_t PPU::readVram(uint16_t address, bool ignorePalette) {
         NameTableAddress a = address;
         return m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress];
     } else if (address < 0x4000) {
-        // TODO Palette
+        address &= 0x001F;
+        switch (address) {
+        case 0x00: case 0x04: case 0x08: case 0x0C:
+        case 0x10: case 0x14: case 0x18: case 0x1C:
+            return m_palette[0x00];
+        default:
+            return m_palette[address];
+        }
     } else {
         LOG_ERR << "Illegal VRAM Read @ " << sm::hex(address) << "\n";
     }
@@ -346,7 +359,16 @@ void PPU::writeVram(uint16_t address, uint8_t value) {
         NameTableAddress a = address;
         m_vram[m_cart->getNameTable(a.ntIndex) | a.ntAddress] = value;
     } else if (address < 0x4000) {
-        // TODO Palette
+        address &= 0x001F;
+        switch (address) {
+        case 0x00: case 0x04: case 0x08: case 0x0C:
+        case 0x10: case 0x14: case 0x18: case 0x1C:
+            m_palette[0x00] = value;
+            break;
+        default:
+            m_palette[address] = value;
+            break;
+        }
     } else {
         LOG_ERR << "Illegal VRAM Write @ " << sm::hex(address) << "\n";
     }

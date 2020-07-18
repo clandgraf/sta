@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "inputs.hpp"
+#include "util.hpp"
 
 static const char* glsl_version = "#version 130";
 
@@ -16,26 +17,132 @@ static GLFWwindow* window = nullptr;
 
 namespace Gui {
 
-    using TextureType = unsigned int;
+    using Texture = unsigned int;
 
-    TextureType createTexture() {
-        TextureType texture;
+    using Shader = unsigned int;
+
+    using Program = unsigned int;
+
+    Texture createTexture() {
+        Texture texture;
         glGenTextures(1, &texture);
         return texture;
     }
 
-    void freeTexture(TextureType texture) {
+    void freeTexture(Texture texture) {
         glDeleteTextures(1, &texture);
     }
 
-    void uploadTextureData(TextureType texture, int width, int height, const void* data) {
+    void uploadTextureData(Texture texture, int width, int height, const void* data) {
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     }
 
+    bool initShader(Shader& shader, unsigned int type, const char* source) {
+        shader = glCreateShader(type);
+        glShaderSource(shader, 1, &source, NULL);
+        glCompileShader(shader);
+
+        int  success;
+        char log[512];
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+        if (!success) {
+            glGetShaderInfoLog(shader, 512, NULL, log);
+            LOG_ERR << log << "\n";
+            return false;
+        }
+
+        return true;
+    }
+
+    bool initProgram(Program& program, std::vector<Shader> shaders) {
+        program = glCreateProgram();
+        for (const auto& shader: shaders) {
+            glAttachShader(program, shader);
+        }
+        glLinkProgram(program);
+        
+        int success;
+        char log[512];
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
+        if (!success) {
+            glGetProgramInfoLog(program, 512, NULL, log);
+            LOG_ERR << log << "\n";
+            return false;
+        }
+    
+        return true;
+    }
+
+    class Surface {
+
+    public:
+        static bool init() {
+            if (!initShader(VertexShader, GL_VERTEX_SHADER, VertexShaderSource)
+                || !initShader(FragmentShader, GL_FRAGMENT_SHADER, FragmentShaderSource)) {
+                return false;
+            }
+
+            return initProgram(Program, {VertexShader, FragmentShader});
+        }
+
+    private:
+        static const char* VertexShaderSource;
+        static const char* FragmentShaderSource;
+
+        static Shader VertexShader;
+        static Shader FragmentShader;
+        static Program Program;
+
+    public:
+        Surface(size_t width, size_t height) : m_width(m_width), m_height(height) {
+            m_data = new Palette::Color[m_width * m_height];
+            m_texture = createTexture();
+        }
+
+        ~Surface() {
+            freeTexture(m_texture);
+            delete[] m_data;
+        }
+
+        void setPixel(int x, int y, Palette::Color color) {
+            m_data[y * m_width + x] = color;
+        }
+
+        void render() {
+            uploadTextureData(m_texture, m_width, m_height, m_data);
+
+            
+        }
+
+    private:
+        size_t m_width;
+        size_t m_height;
+        Palette::Color* m_data;
+        Texture m_texture;
+    };
 }
+
+const char* Gui::Surface::VertexShaderSource =
+    "#version 330 core\n"
+    "layout(location = 0) in vec3 aPos;\n"
+    "void main() {\n"
+    "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\n";
+
+const char* Gui::Surface::FragmentShaderSource = 
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main() {\n"
+    "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\n";
+
+Gui::Shader Gui::Surface::VertexShader = 0;
+Gui::Shader Gui::Surface::FragmentShader = 0;
+Gui::Program Gui::Surface::Program = 0;
 
 void setWindowClosing(bool closing) {
     if (window) {

@@ -43,7 +43,7 @@ static bool showControls = false;
 
 #include "gui_opengl.hpp"
 
-static Gui::TextureType patternTableTexture;
+static Gui::Texture patternTableTexture;
 
 uint8_t colors[4][3] = {
     { 0xff, 0xff, 0xff },
@@ -570,6 +570,10 @@ bool Gui::initUi(bool fullscreen) {
     ImGui_FileBrowser_Init();
 
     if (!initWindow(WINDOW_TITLE, fullscreen)) {
+        return false;
+    }
+
+    if (!Surface::init()) {
         return false;
     }
 

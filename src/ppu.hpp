@@ -201,6 +201,7 @@ private:
     uint8_t    m_r_x;
 
     uint8_t    m_vram[0x0800];
+    uint8_t    m_palette[0x20];
 
     // Rendering
     
