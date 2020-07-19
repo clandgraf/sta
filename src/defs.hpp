@@ -16,12 +16,4 @@
 
 #define WINDOW_TITLE (APP_NAME VERSION)
 
-PACK(union Word {
-    struct {
-        uint8_t lo;
-        uint8_t hi;
-    };
-    uint16_t field;
-});
-
 #endif

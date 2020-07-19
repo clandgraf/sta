@@ -7,8 +7,8 @@
 #include <sstream>
 #include <json.hpp>
 
-#define LOG_ERR (std::cerr << "[ERROR] "<< __FILE__ << ":" << __LINE__ << " ")
-#define LOG_MSG (std::cerr << "[INFO]  "<< __FILE__ << ":" << __LINE__ << " ")
+#define LOG_ERR (std::cerr << "[ERROR] "<< __FILE__ << ":" << std::dec << __LINE__ << " ")
+#define LOG_MSG (std::cerr << "[INFO]  "<< __FILE__ << ":" << std::dec << __LINE__ << " ")
 
 struct Palette {
     struct Color {

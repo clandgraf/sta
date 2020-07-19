@@ -8,6 +8,7 @@ typedef void(*SetPixelFn)(unsigned int x, unsigned int y, unsigned int v);
 
 namespace Gui {
     extern bool initUi(bool fullscreen = false);
+    extern void setTitle(const char* title);
     extern bool isWindowClosing();
     extern void pollEvents();
     extern SetPixelFn getSetPixelFn();

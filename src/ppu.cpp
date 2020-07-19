@@ -123,7 +123,7 @@ void PPU::run(unsigned int cycles) {
     };
 
     for (unsigned int i = 0; i < cycles; i++) {
-        
+
         if (m_scanline < 240 || m_scanline == 261) {
 
             // Filling latches for bkg rendering

@@ -149,6 +149,10 @@ bool initWindow(const char* title, bool fullscreen) {
     return true;
 }
 
+void Gui::setTitle(const char* title) {
+    glfwSetWindowTitle(window, title);
+}
+
 void teardownWindow() {
     int width, height;
     glfwGetWindowSize(window, &width, &height);

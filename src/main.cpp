@@ -1,4 +1,5 @@
-﻿#include <cstdlib>
+﻿#include <GLFW/glfw3.h>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 
@@ -9,32 +10,6 @@
 #include "disasm.hpp"
 #include "util.hpp"
 
-PACK(union OamEntry {
-    struct {
-        uint8_t y;
-        uint8_t tileIndex;
-        union {
-            uint8_t attributes;
-            struct {
-                uint8_t palette : 2;
-                uint8_t __unused : 3;
-                uint8_t priority : 1;
-                uint8_t hflip : 1;
-                uint8_t vflip : 1;
-            };
-        };
-        uint8_t x;
-    };
-    uint8_t fields[4];
-});
-
-void test() {
-    LOG_ERR << sizeof(OamEntry) << "\n";
-
-    OamEntry e;
-    e.fields[0];
-}
-
 namespace fs = std::filesystem;
 namespace cli = CliArguments;
 
@@ -43,10 +18,6 @@ void printUsage(const char* prog) {
 }
 
 int main(int ac, char ** av) {
-
-    //test();
-    //return 0;
-
     const char* romPath = cli::value(ac, av, "--rom");
     bool fullscreen = cli::flag(ac, av, "--fullscreen");
     bool help = cli::flag(ac, av, "--help");
@@ -72,7 +43,22 @@ int main(int ac, char ** av) {
 
     emu.setPixelFn(Gui::getSetPixelFn());
 
+    double previousTime = glfwGetTime();
+    int frameCount = 0;
+    char buffer[64];
+
     while (!Gui::isWindowClosing()) {
+        double currentTime = glfwGetTime();
+        frameCount++;
+        if (currentTime - previousTime >= 1.0)
+        {
+            snprintf(buffer, 64, "FPS: %d", frameCount);
+            Gui::setTitle(buffer);
+
+            frameCount = 0;
+            previousTime = currentTime;
+        }
+        
         Gui::pollEvents();
 
         if (emu.m_isStepping || !emu.isInitialized()) {

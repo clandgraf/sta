@@ -31,9 +31,9 @@ uint8_t Memory::readb(uint16_t addr) {
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
-        LOG_ERR << "readb(" 
-                << sm::hex(addr) 
-                << ") Access to APU/IO\n";
+        //LOG_ERR << "readb(" 
+        //        << sm::hex(addr) 
+        //        << ") Access to APU/IO\n";
         return 0;
     }
     // CPU Test Mode registers
@@ -68,9 +68,9 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
-        LOG_ERR << "writeb(" 
-                << sm::hex(addr) << ", " << sm::hex(value) 
-                << ") Access to APU/IO\n";
+        //LOG_ERR << "writeb(" 
+        //        << sm::hex(addr) << ", " << sm::hex(value) 
+        //        << ") Access to APU/IO\n";
     }
     // CPU Test Mode registers
     else if (addr < 0x4020) {
