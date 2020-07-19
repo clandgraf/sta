@@ -5,7 +5,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>"C:\Users\chris\Desktop\Super Mario Bros. (World).nes"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--rom "$(USERPROFILE)\roms\nes\Donkey Kong (World) (Rev A).zip"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

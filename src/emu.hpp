@@ -4,9 +4,7 @@
 #include <set>
 #include <memory>
 
-#ifdef LOG_EXECUTION
 #include <fstream>
-#endif
 
 #include "inputs.hpp"
 
@@ -15,9 +13,7 @@ typedef void(*SetPixelFn)(unsigned int x, unsigned int y, unsigned int v);
 class Memory;
 class Cart;
 class PPU;
-#ifdef LOG_EXECUTION
 class Disassembler;
-#endif
 
 uint16_t constexpr NMI_VECTOR = 0xfffa;    // Address where NMI starts
 uint16_t constexpr RESET_VECTOR = 0xfffc;  // Address where execution starts
