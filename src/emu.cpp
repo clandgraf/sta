@@ -20,6 +20,13 @@ Emu::~Emu() {
     m_logOut.close();
 }
 
+void Emu::setPixelFn(SetPixelFn fn) {
+    m_setPixel = fn;
+    if (m_ppu) {
+        m_ppu->setPixelFn(fn);
+    }
+}
+
 void Emu::writeSettings() {
     Settings::set("emulator/break-on-interrupt", m_breakOnInterrupt);
     m_disassembler->writeSettings();
@@ -30,6 +37,10 @@ void Emu::init(std::shared_ptr<Cart> cart) {
     m_disassembler->clear();
     m_ppu = std::make_shared<PPU>(*this, m_cart);
     m_mem = std::make_unique<Memory>(*this, m_cart, m_ppu);
+
+    if (m_setPixel) {
+        m_ppu->setPixelFn(m_setPixel);
+    }
 
     reset();
 }

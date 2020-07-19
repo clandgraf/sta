@@ -10,6 +10,8 @@
 
 #include "inputs.hpp"
 
+typedef void(*SetPixelFn)(unsigned int x, unsigned int y, unsigned int v);
+
 class Memory;
 class Cart;
 class PPU;
@@ -63,6 +65,8 @@ public:
     Emu();
     ~Emu();
 
+    void setPixelFn(SetPixelFn);
+
     void writeSettings();
 
     bool toggleBreakpoint(uint16_t address);
@@ -90,6 +94,8 @@ public:
 
 private:
     std::ofstream m_logOut;
+
+    SetPixelFn m_setPixel;
 
     Mode m_mode = Mode::RESET;
 

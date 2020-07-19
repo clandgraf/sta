@@ -4,6 +4,8 @@
 
 #include "defs.hpp"
 
+typedef void(*SetPixelFn)(unsigned int x, unsigned int y, unsigned int v);
+
 class Cart;
 class Emu;
 
@@ -29,11 +31,11 @@ public:
             union {
                 uint8_t attributes;
                 struct {
-                    unsigned int palette : 2;
-                    unsigned int __unused : 3;
-                    unsigned int priority : 1;
-                    unsigned int hflip : 1;
-                    unsigned int vflip : 1;
+                    uint8_t palette : 2;
+                    uint8_t __unused : 3;
+                    uint8_t priority : 1;
+                    uint8_t hflip : 1;
+                    uint8_t vflip : 1;
                 };
             };
             uint8_t x;
@@ -43,32 +45,35 @@ public:
 
     PACK(union CtrlV {
         struct {
-            unsigned int baseNtAddress: 2;  // bit 0-1
-            unsigned int vramIncrement: 1;  // bit 2
-            unsigned int sprPatternTbl: 1;  // bit 3
-            unsigned int bkgPatternTbl: 1;  // bit 4
-            unsigned int sprSize: 1;        // bit 5
-            unsigned int masterSlave: 1;    // bit 6
-            unsigned int vblankNmi: 1;      // bit 7
+            uint8_t baseNtX       : 1;
+            uint8_t baseNtY       : 1;
+            uint8_t vramIncrement : 1;
+            uint8_t sprPatternTbl : 1;
+            uint8_t bkgPatternTbl : 1;
+            uint8_t sprSize       : 1;
+            uint8_t masterSlave   : 1;
+            uint8_t vblankNmi     : 1;
         };
         uint8_t field;
 
+        CtrlV() : field(0) {}
         CtrlV(uint8_t value) : field(value) {}
     });
 
     PACK(union MaskV {
         struct {
-            unsigned int greyscale: 1;
-            unsigned int bkgEnableLeft: 1;
-            unsigned int sprEnableLeft: 1;
-            unsigned int bkgEnable: 1;
-            unsigned int sprEnable: 1;
-            unsigned int emphRed: 1;
-            unsigned int emphGreen: 1;
-            unsigned int emphBlue: 1;
+            uint8_t greyscale: 1;
+            uint8_t bkgEnableLeft: 1;
+            uint8_t sprEnableLeft: 1;
+            uint8_t bkgEnable: 1;
+            uint8_t sprEnable: 1;
+            uint8_t emphRed: 1;
+            uint8_t emphGreen: 1;
+            uint8_t emphBlue: 1;
         };
         uint8_t field;
 
+        MaskV() : field(0) {}
         MaskV(uint8_t value) : field(value) {}
     });
 
@@ -84,43 +89,50 @@ public:
 
     PACK(union StatusV {
         struct {
-            unsigned int __unused: 5;
-            unsigned int overflow: 1;
-            unsigned int sprZero: 1;
-            unsigned int vblank: 1;
+            uint8_t __unused: 5;
+            uint8_t overflow: 1;
+            uint8_t sprZero:  1;
+            uint8_t vblank:   1;
         };
-        uint8_t          field;
+        uint8_t     field;
     });
 
     PACK(union NameTableAddress {
         struct {
-            unsigned int ntAddress: 10;
-            unsigned int ntIndex:    2;
-            unsigned int __unused:   4;
+            uint16_t ntAddress: 10;
+            uint16_t ntIndex:    2;
+            uint16_t __unused:   4;
         };
-        uint16_t         field;
+        uint16_t     field;
 
+        NameTableAddress() : field(0) {}
         NameTableAddress(uint16_t value) : field(value) {}
     });
 
     PACK(union T {
+        uint16_t word;
+
         struct {
-            unsigned int coarseScrollX : 5;
-            unsigned int coarseScrollY : 5;
-            union {
-                unsigned int baseNtAddress : 2;
-                struct {
-                    unsigned int baseNtX : 1;
-                    unsigned int baseNtY : 1;
-                };
-            };
-            unsigned int fineScrollY : 3;
-            unsigned int __unused: 1;
+            uint16_t coarseScrollX : 5;
+            uint16_t coarseScrollY : 5;
+            uint16_t baseNtX : 1;
+            uint16_t baseNtY : 1;
+            uint16_t fineScrollY : 3;
+            uint16_t __unused : 1;
         };
-        Word word;
+
+        struct {
+            uint16_t lo : 8;
+            uint16_t hi : 8;
+        };
+
+        T() : word(0) {}
+        T(uint16_t v) : word(v) {}
     });
 
     PPU(Emu& emu, std::shared_ptr<Cart> cart) : m_emu(emu), m_cart(cart) {}
+
+    void setPixelFn(SetPixelFn);
 
     unsigned long getCycleCount() const { return m_cycleCount; }
 
@@ -140,6 +152,8 @@ private:
     __forceinline bool isRenderingEnabled() { return m_r_mask.field & RENDERING_ENABLED; }
 
     Emu& m_emu;
+
+    SetPixelFn m_setPixel;
 
     std::shared_ptr<Cart> m_cart;
 

@@ -98,10 +98,10 @@ bool Gui::Surface::init() {
     }
 
     std::vector<float> vertices = {
-         0.5f,  0.5f, 0.0f,  1.0f, 0.0f,  // top right
-         0.5f, -0.5f, 0.0f,  1.0f, 1.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f,  0.0f, 0.0f,  // top left 
+         1.f,  1.f, 0.f,  1.0f, 0.0f,  // top right
+         1.f, -1.f, 0.f,  1.0f, 1.0f,  // bottom right
+        -1.f, -1.f, 0.f,  0.0f, 1.0f,  // bottom left
+        -1.f,  1.f, 0.f,  0.0f, 0.0f,  // top left 
     };
 
     std::vector<unsigned int> indices = {
@@ -152,6 +152,10 @@ void Gui::Surface::upload() {
 }
 
 void Gui::Surface::render() {
+    // if frameratio > screenratio => frameheight = pictureheight => scaleY = 1
+    //                                                            => scaleX = 1 / 
+    // look at tileengine code
+
     glUseProgram(Program);
     glBindTexture(GL_TEXTURE_2D, m_texture);
     glBindVertexArray(vao);

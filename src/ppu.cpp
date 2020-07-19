@@ -30,6 +30,10 @@ namespace sm = StreamManipulators;
     } \
 }
 
+void PPU::setPixelFn(SetPixelFn fn) {
+    m_setPixel = fn;
+}
+
 void PPU::reset() {
     m_ignoreWrites = true;
 
@@ -39,7 +43,7 @@ void PPU::reset() {
     m_f_oddFrame = false;
 
     m_f_vblankNmi = 0;
-    m_r_t.word.field = 0;
+    m_r_t.word = 0;
     m_r_mask.field = 0; 
 
     m_r_dataReadBuffer = 0x00;
@@ -133,11 +137,12 @@ void PPU::run(unsigned int cycles) {
                 switch ((m_sl_cycle - 1) % 8) {
                 case 0: // Fetch Nametable Byte
                     loadShiftRegs();
-                    m_latch_ntByte = readVram(0x2000 | (m_r_v.word.field & 0xfff)); 
+                    m_latch_ntByte = readVram(0x2000 | (m_r_v.word & 0xfff)); 
                     break;  
                 case 2: // Fetch Attribute Byte
                     m_latch_atByte = readVram(0x23c0 
-                                            | (m_r_v.baseNtAddress << 10) 
+                                            | (m_r_v.baseNtY << 11)
+                                            | (m_r_v.baseNtX << 10) 
                                             | ((m_r_v.coarseScrollY >> 2) << 3)
                                             | (m_r_v.coarseScrollX >> 2)); 
                     // Index into attribute byte
@@ -173,7 +178,7 @@ void PPU::run(unsigned int cycles) {
             }
 
             if (m_sl_cycle == 338 || m_sl_cycle == 340) {
-                m_latch_ntByte = readVram(0x2000 | (m_r_v.word.field & 0xfff));
+                m_latch_ntByte = readVram(0x2000 | (m_r_v.word & 0xfff));
             }
         }
 
@@ -209,9 +214,11 @@ void PPU::run(unsigned int cycles) {
                                | ((m_shiftAttrLo    & bit) ? 0b0100 : 0)
                                | ((m_shiftAttrHi    & bit) ? 0b1000 : 0);
 
-                uint8_t value = readVram(palIdx);
+                uint8_t value = readVram(0x3f00 | palIdx);
 
-                // setPixel(m_sl_cycle - 1, m_scanline, value);
+                if (m_setPixel) {
+                    m_setPixel(m_sl_cycle - 1, m_scanline, value);
+                }
             }
         }
 
@@ -281,7 +288,8 @@ void PPU::writeCtrl(CtrlV v) {
     m_bkgPatternTbl = v.bkgPatternTbl ? 0x1000 : 0x0000;
     m_sprPatternTbl = v.sprPatternTbl ? 0x1000 : 0x0000;
     m_r_addressIncrement = v.vramIncrement ? 32 : 1;
-    m_r_t.baseNtAddress = v.baseNtAddress;
+    m_r_t.baseNtX = v.baseNtX;
+    m_r_t.baseNtY = v.baseNtY;
 }
 
 void PPU::writeScroll(ScrollV v) {
@@ -299,25 +307,25 @@ void PPU::writeScroll(ScrollV v) {
 void PPU::writeAddr(uint8_t v) {
     if (m_r_addressLatch) {
         m_r_addressLatch = !m_r_addressLatch;
-        m_r_t.word.lo = v;
+        m_r_t.lo = v;
+        m_r_v.word = m_r_t.word;
     } else {
         m_r_addressLatch = !m_r_addressLatch;
-        m_r_t.word.hi = v & 0x3f;
-        m_r_v.word.field = m_r_t.word.field;
+        m_r_t.hi = v & 0x3f;
     }
 }
 
 void PPU::writeData(uint8_t v) {
-    writeVram(m_r_v.word.field, v);
-    m_r_v.word.field += m_r_addressIncrement;
+    writeVram(m_r_v.word, v);
+    m_r_v.word += m_r_addressIncrement;
 }
 
 uint8_t PPU::readData() {
-    m_r_dataReadBuffer = readVram(m_r_v.word.field, true);
+    m_r_dataReadBuffer = readVram(m_r_v.word, true);
     return (
-        m_r_v.word.field < 0x3f00 ? 
+        m_r_v.word < 0x3f00 ? 
         m_r_dataReadBuffer : 
-        readVram(m_r_v.word.field)
+        readVram(m_r_v.word)
     );
 }
 

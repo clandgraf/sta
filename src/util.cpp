@@ -6,7 +6,7 @@ std::shared_ptr<Palette> Palette::fromFile(const std::filesystem::path& p) {
     return nullptr;
 }
 
-Palette DEFAULT{ 
+const Palette Palette::DEFAULT{ 
     std::array<Palette::Color, 64>{{
         {  84,  84,  84 },
         {   0,  30, 116 },
