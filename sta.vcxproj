@@ -27,6 +27,7 @@
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_opengl3.cpp" />
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp" />
     <ClCompile Include="contrib\miniz\miniz.c" />
+    <ClCompile Include="src\controllers.cpp" />
     <ClCompile Include="src\disasm.cpp" />
     <ClCompile Include="src\emu.cpp" />
     <ClCompile Include="src\gui.cpp" />
@@ -40,6 +41,7 @@
     <ClCompile Include="src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\controllers.hpp" />
     <ClInclude Include="src\cpu_mnemonics.hpp" />
     <ClInclude Include="src\cpu_opcodes.hpp" />
     <ClInclude Include="src\defs.hpp" />

@@ -6,12 +6,16 @@
 #include "ppu.hpp"
 #include "emu.hpp"
 #include "util.hpp"
+#include "controllers.hpp"
 
 namespace sm = StreamManipulators;
 
 Memory::Memory(Emu& emu, std::shared_ptr<Cart> cart, std::shared_ptr<PPU> ppu)
     : m_emu(emu), m_cart(cart), m_ppu(ppu)
 {}
+
+void Memory::setPort0(std::shared_ptr<Port> p) { m_port0 = p; }
+void Memory::setPort1(std::shared_ptr<Port> p) { m_port1 = p; }
 
 uint8_t Memory::readb(uint16_t addr) {
     // Internal RAM, mirrored

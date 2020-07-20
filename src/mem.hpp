@@ -9,6 +9,7 @@
 class Cart;
 class PPU;
 class Emu;
+class Port;
 
 class Memory {
 public:
@@ -21,11 +22,16 @@ public:
 
     uint8_t m_internalRam[0x800];
 
+    void setPort0(std::shared_ptr<Port> p);
+    void setPort1(std::shared_ptr<Port> p);
+
 private:
     Emu& m_emu;
 
     std::shared_ptr<Cart> m_cart;
     std::shared_ptr<PPU> m_ppu;
+    std::shared_ptr<Port> m_port0;
+    std::shared_ptr<Port> m_port1;
 };
 
 #endif
