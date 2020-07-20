@@ -20,7 +20,7 @@ namespace Input {
         Select_0, Select_1,
     };
 
-    const std::map<ControllerDef, const char*> defToString = {
+    const std::map<ControllerDef, std::string> defToString = {
         { Menu,      "Menu"      },
         { Up_0,      "Up_0"      },
         { Up_1,      "Up_1"      },
@@ -40,7 +40,7 @@ namespace Input {
         { Select_1,  "Select_1"  },
     };
 
-    const std::map<ControllerDef, const char*> defToLabel = {
+    const std::map<ControllerDef, std::string> defToLabel = {
         { Menu,      "Menu"      },
         { Up_0,      "Up"      },
         { Up_1,      "Up"      },
@@ -60,7 +60,7 @@ namespace Input {
         { Select_1,  "Select"  },
     };
 
-    const std::map<const char*, ControllerDef> stringToDef = {
+    const std::map<std::string, ControllerDef> stringToDef = {
         { "Menu",      Menu,       },
         { "Up_0",      Up_0,       },
         { "Up_1",      Up_1,       },

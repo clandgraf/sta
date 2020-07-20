@@ -65,6 +65,11 @@ namespace Settings {
     extern nlohmann::json object;
 
     template<typename V>
+    V get(const char* str) {
+        return object.value(str);
+    }
+
+    template<typename V>
     V get(const char* str, const V& value) {
         return object.value(str, value);
     }

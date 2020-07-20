@@ -304,7 +304,7 @@ struct ButtonWidgetIds {
 static std::map<Input::ControllerDef, ButtonWidgetIds> buttonWidgetIds;
 
 static void renderControllerButtonPane(Input::ControllerDef button) {
-    ImGui::Text(Input::defToLabel.at(button)); 
+    ImGui::Text(Input::defToLabel.at(button).c_str()); 
     ImGui::SameLine();
     if (ImGui::Button(buttonWidgetIds[button].add.c_str())) {
         Input::waitForInput(button);
@@ -584,12 +584,14 @@ bool Gui::initUi(bool fullscreen) {
 
     for (const auto& label: Input::defToString) {
         std::string addLabel, clearLabel;
-        snprintf(widgetIdBuffer, 256, "Add##%s-add", label.second);
+        snprintf(widgetIdBuffer, 256, "Add##%s-add", label.second.c_str());
         addLabel = widgetIdBuffer;
-        snprintf(widgetIdBuffer, 256, "Clear##%s-clear", label.second);
+        snprintf(widgetIdBuffer, 256, "Clear##%s-clear", label.second.c_str());
         clearLabel = widgetIdBuffer;
         buttonWidgetIds[label.first] = {addLabel, clearLabel};
     }
+
+    Input::loadSettings();
 
     showMemoryView = Settings::get("debugger-view-memory", true);
     showEmuState = Settings::get("debugger-view-state", true);

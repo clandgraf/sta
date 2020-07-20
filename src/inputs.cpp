@@ -1,5 +1,6 @@
 #include <map>
 #include <unordered_set>
+#include <stdexcept>
 
 #include "inputs.hpp"
 #include "util.hpp"
@@ -81,14 +82,35 @@ void Input::resetMenuRequest() {
 }
 
 void Input::loadSettings() {
+    auto keys = Settings::object["keys"];
+    for (auto entry: keys.items()) {
+        std::string key = entry.key();
+        std::string value = entry.value();
+        
+        try {
+            if (key.find("scancode_", 0) == 0) {
+                Scancode scancode = std::stoi(key.substr(9));
+                auto cdef = Input::stringToDef.find(value.c_str());
+                if (cdef == Input::stringToDef.end()) {
+                    LOG_ERR << "Illegal ControllerDef: " << value << "\n";
+                    continue;
+                }
     
+                setScancode(scancode, cdef->second);
+            }
+        } catch (std::logic_error& e) {
+            LOG_ERR << "Error Parsing Scancode '" << key << "': " 
+                    << e.what() << "\n";
+        }
+    }
 }
 
 void Input::writeSettings() {
     Settings::erase("keys");
     for (auto entry: keyConfig) {
-        // TODO entry.first is interpreted as array index
-        Settings::setIn({"keys", std::to_string(entry.first)}, 
+        std::stringstream ss; 
+        ss << "scancode_" << std::to_string(entry.first);
+        Settings::setIn({"keys", ss.str()}, 
                         defToString.at(entry.second));
     }
 }
