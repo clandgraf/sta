@@ -5,7 +5,8 @@
 #include "inputs.hpp"
 
 class Port {
-    virtual void update(Input::Controller controllerState) = 0;
+public:
+    virtual void update() = 0;
     virtual void write(uint8_t v) = 0;
     virtual uint8_t read() = 0;
 };
@@ -15,10 +16,15 @@ class Controller : public Port
     bool m_latched;
     uint8_t m_shiftButtons;
 
-public:
-    Controller() : m_latched(false), m_shiftButtons(0) {}
+    const Input::Controller& m_state;
 
-    void update(Input::Controller controllerState);
+public:
+    Controller(const Input::Controller& state) 
+        : m_latched(false)
+        , m_shiftButtons(0)
+        , m_state(state) {}
+
+    void update();
     void write(uint8_t v);
     uint8_t read();
 };

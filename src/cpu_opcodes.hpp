@@ -166,6 +166,7 @@ uint8_t constexpr OPC_INC_ZPG = 0xe6;
 uint8_t constexpr OPC_INX = 0xe8;
 uint8_t constexpr OPC_SBC_IMD = 0xe9;
 uint8_t constexpr OPC_NOP = 0xea;
+uint8_t constexpr _OPC_SBC_IMD__0 = 0xeb;
 uint8_t constexpr OPC_CPX_ABS = 0xec;
 uint8_t constexpr OPC_SBC_ABS = 0xed;
 uint8_t constexpr OPC_INC_ABS = 0xee;
@@ -200,6 +201,6 @@ const int OPC_CYCLES[0x100] = {
     /* b */ 2, 5, 0, 0, 4, 4, 4, 0,   2, 4, 2, 0, 4, 4, 4, 0,
     /* c */ 2, 6, 0, 0, 3, 3, 5, 0,   2, 2, 2, 0, 4, 4, 6, 0,
     /* d */ 2, 5, 0, 0, 4, 4, 6, 0,   2, 4, 0, 0, 4, 4, 7, 0,
-    /* e */ 2, 6, 0, 0, 3, 3, 5, 0,   2, 2, 2, 0, 4, 4, 6, 0,
+    /* e */ 2, 6, 0, 0, 3, 3, 5, 0,   2, 2, 2, 2, 4, 4, 6, 0,
     /* f */ 2, 5, 0, 0, 4, 4, 6, 0,   2, 4, 0, 0, 4, 4, 7, 0,
 };

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <set>
 #include <memory>
+#include <array>
 
 #include <fstream>
 
@@ -14,6 +15,7 @@ class Memory;
 class Cart;
 class PPU;
 class Disassembler;
+class Port;
 
 uint16_t constexpr NMI_VECTOR = 0xfffa;    // Address where NMI starts
 uint16_t constexpr RESET_VECTOR = 0xfffc;  // Address where execution starts
@@ -92,6 +94,8 @@ private:
     std::ofstream m_logOut;
 
     SetPixelFn m_setPixel;
+
+    std::array<std::shared_ptr<Port>, 2> m_ports;
 
     Mode m_mode = Mode::RESET;
 

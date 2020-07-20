@@ -32,6 +32,8 @@ static MemoryEditor mem_edit;
 static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 static ImVec4 highlight_text_color = ImVec4(0.89f, 0.0f, 0.0f, 1.00f);
 
+static std::list<fs::path> recentFiles;
+
 static bool patternTableLoaded = false;
 
 static bool showEmuState = true;
@@ -53,6 +55,52 @@ Palette::Color colors[4] = {
     { 0x77, 0x77, 0x77 },
     { 0x00, 0x00, 0x00 },
 };
+
+static void addRecent(const fs::path& p) {
+    recentFiles.remove(p);
+    recentFiles.push_front(p);
+    while (recentFiles.size() > 10) {
+        recentFiles.pop_back();
+    }
+}
+
+static void loadRecentFiles() {
+    nlohmann::json recentFiles = Settings::object["recentFiles"];
+    if (recentFiles.is_null()) {
+        return;
+    }
+    if (!recentFiles.is_array()) {
+        LOG_ERR << "Configuration Error: recentFiles should be array!\n";
+        return;
+    }
+
+    for (auto entry : recentFiles) {
+        if (!entry.is_string()) {
+            LOG_ERR << "Configuration Error: recentFiles entry should be string\n";
+            continue;
+        }
+
+        const std::string f = entry;
+        addRecent(f);
+    }
+}
+
+static void writeRecentFiles() {
+    Settings::object["recentFiles"] = std::vector<std::string>();
+    for (auto it = recentFiles.rbegin(); it != recentFiles.rend(); it++) {
+        Settings::object["recentFiles"].push_back(it->string());
+    }
+}
+
+static bool openFile(Emu& emu, const fs::path& p) {
+    std::shared_ptr<Cart> cart = Cart::fromFile(p);
+    if (cart) {
+        addRecent(p);
+        emu.init(cart);
+        return true;
+    }
+    return false;
+}
 
 static void refreshPatternTable(Emu& emu) {
     for (int table = 0; table < 2; table++) {
@@ -94,6 +142,23 @@ static void renderMenuBar(Emu& emu) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open")) {
                 openRom = true;
+            }
+
+            if (ImGui::BeginMenu("Recent")) {
+                if (recentFiles.empty()) {
+                    ImGui::MenuItem("<none>");
+                } else {
+                    fs::path path;
+                    for (auto p: recentFiles) {
+                        if (ImGui::MenuItem(p.string().c_str())) {
+                            path = p;
+                        }
+                    }
+                    if (!path.empty()) {
+                        openFile(emu, path);
+                    }
+                }
+                ImGui::EndMenu();
             }
 
             if (ImGui::MenuItem("Setup Controllers")) {
@@ -283,9 +348,7 @@ static void renderOpenRomDialog(Emu& emu) {
     bool open = true;
     if (ImGui::BeginPopupModal("Open ROM", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui_FileBrowser(selectedFile)) {
-            std::shared_ptr<Cart> cart = Cart::fromFile(selectedFile);
-            if (cart) {
-                emu.init(cart);
+            if (openFile(emu, selectedFile)) {
                 open = false;
             }
         }
@@ -592,6 +655,7 @@ bool Gui::initUi(bool fullscreen) {
     }
 
     Input::loadSettings();
+    loadRecentFiles();
 
     showMemoryView = Settings::get("debugger-view-memory", true);
     showEmuState = Settings::get("debugger-view-state", true);
@@ -617,6 +681,7 @@ void Gui::teardownUi() {
     Settings::set("debugger-view-rominfo", showRomInfo);
     Settings::set("debugger-view-controls", showControls);
 
+    writeRecentFiles();
     Input::writeSettings();
 
     teardownImGui();

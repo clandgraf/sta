@@ -7,6 +7,7 @@
 #include "util.hpp"
 #include "cpu_opcodes.hpp"
 #include "disasm.hpp"
+#include "controllers.hpp"
 
 namespace sm = StreamManipulators;
 
@@ -14,6 +15,9 @@ Emu::Emu() {
     m_breakOnInterrupt = Settings::get("emulator/break-on-interrupt", false);
     m_logOut.open("cpu.log");
     m_disassembler = std::make_unique<Disassembler>(*this);
+
+    m_ports[0] = std::make_shared<Controller>(Input::getState().input0);
+    m_ports[1] = std::make_shared<Controller>(Input::getState().input1);
 }
 
 Emu::~Emu() {
@@ -37,6 +41,8 @@ void Emu::init(std::shared_ptr<Cart> cart) {
     m_disassembler->clear();
     m_ppu = std::make_shared<PPU>(*this, m_cart);
     m_mem = std::make_unique<Memory>(*this, m_cart, m_ppu);
+    m_mem->setPort0(m_ports[0]);
+    m_mem->setPort1(m_ports[1]);
 
     if (m_setPixel) {
         m_ppu->setPixelFn(m_setPixel);
@@ -549,6 +555,7 @@ void Emu::execOpcode() {
     case OPC_ADC_IND_X: _readIndX(); _execAdc(); break;
     case OPC_ADC_IND_Y: _readIndY(); _execAdc(); break;
 
+    case _OPC_SBC_IMD__0:
     case OPC_SBC_IMD:   _readImd();  _execSbc(); break;
     case OPC_SBC_ABS:   _readAbs();  _execSbc(); break;
     case OPC_SBC_ABS_X: _readAbsX(); _execSbc(); break;

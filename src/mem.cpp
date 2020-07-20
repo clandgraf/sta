@@ -33,6 +33,13 @@ uint8_t Memory::readb(uint16_t addr) {
         LOG_ERR << "readb on OAMDMA\n";
         return 0;
     }
+    // Gamepad
+    else if (addr == 0x4016) {
+        return m_port0->read();
+    }
+    else if (addr == 0x4017) {
+        return m_port1->read();
+    }
     // APU/IO Registers
     else if (addr < 0x4018) {
         //LOG_ERR << "readb(" 
@@ -69,6 +76,10 @@ void Memory::writeb(uint16_t addr, uint8_t value) {
     // OAM DMA
     else if (addr == 0x4014) {
         m_emu.startDMA(value);
+    }
+    // Gamepad
+    else if (addr == 0x4016) {
+        m_port0->write(value);
     }
     // APU/IO Registers
     else if (addr < 0x4018) {
