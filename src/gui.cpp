@@ -644,6 +644,11 @@ bool Gui::initUi(bool fullscreen) {
     }
 
     screenSurface = std::make_shared<Gui::Surface>(256, 240);
+    for (int y = 0; y < screenSurface->m_height; y++) {
+        for (int x = 0; x < screenSurface->m_width; x++) {
+            screenSurface->setPixel(x, y, {0, 0, 0});
+        }
+    }
 
     for (const auto& label: Input::defToString) {
         std::string addLabel, clearLabel;

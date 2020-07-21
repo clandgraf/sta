@@ -37,9 +37,10 @@ namespace Gui {
 
         Texture getTexture();
 
+        const size_t m_width;
+        const size_t m_height;
+
     private:
-        size_t m_width;
-        size_t m_height;
         Palette::Color* m_data;
         Texture m_texture;
     };
