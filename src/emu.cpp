@@ -282,6 +282,7 @@ bool Emu::stepCycle() {
             } else if (m_dmaCycle < 0) {
                 // Instruction's write has triggered OAMDMA
                 m_mode = Mode::DMA;
+                fetch();
             } else if (m_nmi_request) {
                 requestInterrupt(NMI_VECTOR);
                 m_nmi_request = false;
@@ -300,6 +301,7 @@ bool Emu::stepCycle() {
             m_mode = Mode::EXEC;
             if (m_dmaCycle < 0) {
                 m_mode = Mode::DMA;
+                fetch();
             } else if (m_nmi_request) {
                 requestInterrupt(NMI_VECTOR);
                 m_nmi_request = false;
@@ -508,6 +510,13 @@ void Emu::execOpcode() {
     case OPC_ROR_ZPG_X: _redmZpgX(); _execRor(_m_lo); _storeMem(); break;
     case OPC_ROR_ABS:   _redmAbs();  _execRor(_m_lo); _storeMem(); break;
     case OPC_ROR_ABS_X: _redmAbsX(); _execRor(_m_lo); _storeMem(); break;
+
+    case _OPC_LAX_ABS__0:   _readAbs();  _execLd(m_r_a); _execLd(m_r_x); break;
+    case _OPC_LAX_ABS_Y__0: _readAbsY(); _execLd(m_r_a); _execLd(m_r_x); break;
+    case _OPC_LAX_ZPG__0:   _readZpg();  _execLd(m_r_a); _execLd(m_r_x); break;
+    case _OPC_LAX_ZPG_Y__0: _readZpgY(); _execLd(m_r_a); _execLd(m_r_x); break;
+    case _OPC_LAX_IND_X__0: _readIndX(); _execLd(m_r_a); _execLd(m_r_x); break;
+    case _OPC_LAX_IND_Y__0: _readIndY(); _execLd(m_r_a); _execLd(m_r_x); break;
 
     case OPC_LDA_IMD:   _readImd();  _execLd(m_r_a); break;
     case OPC_LDA_ABS:   _readAbs();  _execLd(m_r_a); break;

@@ -56,12 +56,12 @@ namespace Opcode {
 
         /* 8 */    "*NOP", "STA", "*NOP", "???", "STY",  "STA", "STX", "???",    "DEY", "*NOP", "TXA",   "???",  "STY", "STA", "STX", "???",
         /* 9 */    "BCC",  "STA", "???",  "???", "STY",  "STA", "STX", "???",    "TYA", "STA",  "TXS",   "???",  "???", "STA", "???", "???",
-        /* A */    "LDY",  "LDA", "LDX",  "???", "LDY",  "LDA", "LDX", "???",    "TAY", "LDA",  "TAX",   "???",  "LDY", "LDA", "LDX", "???",
-        /* B */    "BCS",  "LDA", "???",  "???", "LDY",  "LDA", "LDX", "???",    "CLV", "LDA",  "TSX",   "???",  "LDY", "LDA", "LDX", "???",
+        /* A */    "LDY",  "LDA", "LDX",  "*LAX","LDY",  "LDA", "LDX", "*LAX",   "TAY", "LDA",  "TAX",   "???",  "LDY", "LDA", "LDX", "*LAX",
+        /* B */    "BCS",  "LDA", "???",  "*LAX","LDY",  "LDA", "LDX", "*LAX",   "CLV", "LDA",  "TSX",   "???",  "LDY", "LDA", "LDX", "*LAX",
         /* C */    "CPY",  "CMP", "???",  "???", "CPY",  "CMP", "DEC", "???",    "INY", "CMP",  "DEX",   "???",  "CPY", "CMP", "DEC", "???",
         /* D */    "BNE",  "CMP", "???",  "???", "*NOP", "CMP", "DEC", "???",    "CLD", "CMP",  "*NOP",  "???",  "*NOP","CMP", "DEC", "???",
         /* E */    "CPX",  "SBC", "???",  "???", "CPX",  "SBC", "INC", "???",    "INX", "SBC",  "NOP",   "*SBC", "CPX", "SBC", "INC", "???",
-        /* F */    "BEQ",  "SBC", "???",  "???", "*NOP",  "SBC", "INC", "???",   "SED", "SBC", "*NOP",  "???",  "*NOP","SBC", "INC", "???",
+        /* F */    "BEQ",  "SBC", "???",  "???", "*NOP",  "SBC", "INC", "???",   "SED", "SBC",  "*NOP",  "???",  "*NOP","SBC", "INC", "???",
     };
 
     static AddressingMode addressingModes[0x100] = {
@@ -77,8 +77,8 @@ namespace Opcode {
 
         /* 8 */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
         /* 9 */  Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageY,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, Undefined,AbsoluteX, Undefined, Undefined,
-        /* A */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
-        /* B */  Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageY,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, AbsoluteX,AbsoluteX, AbsoluteY, Undefined,
+        /* A */  Immediate,IndirectX,Immediate,IndirectX, ZeroPage, ZeroPage, ZeroPage, ZeroPage,     Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Absolute,
+        /* B */  Relative, IndirectY,Undefined,IndirectY, ZeroPageX,ZeroPageX,ZeroPageY,ZeroPageY,    Implicit,AbsoluteY, Implicit, Undefined, AbsoluteX,AbsoluteX, AbsoluteY, AbsoluteY,
         /* C */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Undefined, Absolute, Absolute,  Absolute,  Undefined,
         /* D */  Relative, IndirectY,Undefined,Undefined, ZeroPageX,ZeroPageX,ZeroPageX,Undefined,    Implicit,AbsoluteY, Implicit, Undefined, AbsoluteX,AbsoluteX, AbsoluteX, Undefined,
         /* E */  Immediate,IndirectX,Immediate,Undefined, ZeroPage, ZeroPage, ZeroPage, Undefined,    Implicit,Immediate, Implicit, Immediate, Absolute, Absolute,  Absolute,  Undefined,
