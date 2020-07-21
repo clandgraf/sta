@@ -471,6 +471,11 @@ void Emu::execOpcode() {
     case OPC_STY_ZPG_X: _redrZpgX(); _storeReg(m_r_y); break;
     case OPC_STY_ABS:   _redrAbs();  _storeReg(m_r_y); break;
 
+    case _OPC_AXS_ZPG__0:   _redrZpg();  _storeReg(m_r_a & m_r_x); break;
+    case _OPC_AXS_ZPG_Y__0: _redrZpgY(); _storeReg(m_r_a & m_r_x); break;
+    case _OPC_AXS_ABS__0:   _redrAbs();  _storeReg(m_r_a & m_r_x); break;
+    case _OPC_AXS_IND_Y__0: _redrIndY(); _storeReg(m_r_a & m_r_x); break;
+
     case OPC_INC_ZPG:   _redmZpg();  _execInc(_m_lo); _storeMem(); break;
     case OPC_INC_ZPG_X: _redmZpgX(); _execInc(_m_lo); _storeMem(); break;
     case OPC_INC_ABS:   _redmAbs();  _execInc(_m_lo); _storeMem(); break;
@@ -486,6 +491,12 @@ void Emu::execOpcode() {
 
     case OPC_DEX:       _execDec(m_r_x); break;
     case OPC_DEY:       _execDec(m_r_y); break;
+
+    case _OPC_DCM_ZPG:   _redmZpg();  _execDec(_m_lo); _execCmp(); _storeMem(); break;
+    case _OPC_DCM_ZPG_X: _redmZpgX(); _execDec(_m_lo); _execCmp(); _storeMem(); break;
+    case _OPC_DCM_ABS:   _redmAbs();  _execDec(_m_lo); _execCmp(); _storeMem(); break;
+    case _OPC_DCM_ABS_X: _redmAbsX(); _execDec(_m_lo); _execCmp(); _storeMem(); break;
+    case _OPC_DCM_ABS_Y: _redmAbsY(); _execDec(_m_lo); _execCmp(); _storeMem(); break;
 
     case OPC_ASL_A:     _execAsl(m_r_a); break;
     case OPC_ASL_ZPG:   _redmZpg();  _execAsl(_m_lo); _storeMem(); break;
@@ -783,4 +794,5 @@ __forceinline void Emu::_redmZpg()  { _redrZpg();  _m_lo = m_mem->readb(_m_hi); 
 __forceinline void Emu::_redmZpgX() { _redrZpgX(); _m_lo = m_mem->readb(_m_hi); }
 __forceinline void Emu::_redmAbs()  { _redrAbs(); _m_lo = m_mem->readb(_m_hi); }
 __forceinline void Emu::_redmAbsX() { _m_lo = m_mem->readb(_m_hi = (_hilo() + m_r_x)); }
+__forceinline void Emu::_redmAbsY() { _m_lo = m_mem->readb(_m_hi = (_hilo() + m_r_y)); }
 __forceinline void Emu::_storeMem() { m_mem->writeb(_m_hi, (uint8_t)_m_lo); }

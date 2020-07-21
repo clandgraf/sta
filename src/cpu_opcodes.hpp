@@ -93,7 +93,7 @@ uint8_t constexpr OPC_ROR_ABS_X = 0x7e;
 uint8_t constexpr _OPC_NOP_IMD__0 = 0x80;
 uint8_t constexpr OPC_STA_IND_X = 0x81;
 uint8_t constexpr _OPC_NOP_IMD__1 = 0x82;
-uint8_t constexpr _OPC_AXS_ZPG_Y__0 = 0x83;
+uint8_t constexpr _OPC_AXS_IND_Y__0 = 0x83;
 uint8_t constexpr OPC_STY_ZPG = 0x84;
 uint8_t constexpr OPC_STA_ZPG = 0x85;
 uint8_t constexpr OPC_STX_ZPG = 0x86;
@@ -104,11 +104,13 @@ uint8_t constexpr OPC_TXA = 0x8a;
 uint8_t constexpr OPC_STY_ABS = 0x8c;
 uint8_t constexpr OPC_STA_ABS = 0x8d;
 uint8_t constexpr OPC_STX_ABS = 0x8e;
+uint8_t constexpr _OPC_AXS_ABS__0 = 0x8f;
 uint8_t constexpr OPC_BCC = 0x90;
 uint8_t constexpr OPC_STA_IND_Y = 0x91;
 uint8_t constexpr OPC_STY_ZPG_X = 0x94;
 uint8_t constexpr OPC_STA_ZPG_X = 0x95;
 uint8_t constexpr OPC_STX_ZPG_Y = 0x96;
+uint8_t constexpr _OPC_AXS_ZPG_Y__0 = 0x97;
 uint8_t constexpr OPC_TYA = 0x98;
 uint8_t constexpr OPC_STA_ABS_Y = 0x99;
 uint8_t constexpr OPC_TXS = 0x9a;
@@ -148,23 +150,28 @@ uint8_t constexpr _OPC_NOP_IMD__3 = 0xc2;
 uint8_t constexpr OPC_CPY_ZPG = 0xc4;
 uint8_t constexpr OPC_CMP_ZPG = 0xc5;
 uint8_t constexpr OPC_DEC_ZPG = 0xc6;
+uint8_t constexpr _OPC_DCM_ZPG = 0xc7;
 uint8_t constexpr OPC_INY = 0xc8;
 uint8_t constexpr OPC_CMP_IMD = 0xc9;
 uint8_t constexpr OPC_DEX = 0xca;
 uint8_t constexpr OPC_CPY_ABS = 0xcc;
 uint8_t constexpr OPC_CMP_ABS = 0xcd;
 uint8_t constexpr OPC_DEC_ABS = 0xce;
+uint8_t constexpr _OPC_DCM_ABS =  0xcf;
 uint8_t constexpr OPC_BNE = 0xd0;
 uint8_t constexpr OPC_CMP_IND_Y = 0xd1;
 uint8_t constexpr _OPC_NOP_ZPG_X__4 = 0xd4;
 uint8_t constexpr OPC_CMP_ZPG_X = 0xd5;
 uint8_t constexpr OPC_DEC_ZPG_X = 0xd6;
+uint8_t constexpr _OPC_DCM_ZPG_X = 0xd7;
 uint8_t constexpr OPC_CLD = 0xd8;
 uint8_t constexpr OPC_CMP_ABS_Y = 0xd9;
 uint8_t constexpr _OPC_NOP__4 = 0xda;
+uint8_t constexpr _OPC_DCM_ABS_Y = 0xdb;
 uint8_t constexpr _OPC_NOP_ABS_X__4 = 0xdc;
 uint8_t constexpr OPC_CMP_ABS_X = 0xdd;
 uint8_t constexpr OPC_DEC_ABS_X = 0xde;
+uint8_t constexpr _OPC_DCM_ABS_X = 0xdf;
 uint8_t constexpr OPC_CPX_IMD = 0xe0;
 uint8_t constexpr OPC_SBC_IND_X = 0xe1;
 uint8_t constexpr _OPC_NOP_IMD__4 = 0xe2;
@@ -203,12 +210,12 @@ const int OPC_CYCLES[0x100] = {
     /* 6 */ 6, 6, 0, 0, 3, 3, 5, 0,   4, 2, 2, 0, 5, 4, 6, 0,
     /* 7 */ 2, 5, 0, 0, 4, 4, 6, 0,   2, 4, 0, 0, 4, 4, 7, 0,
 
-    /* 8 */ 0, 6, 0, 0, 3, 3, 3, 0,   2, 0, 2, 0, 4, 4, 4, 0,
-    /* 9 */ 2, 6, 0, 0, 4, 4, 4, 0,   2, 5, 2, 0, 0, 5, 0, 0,
+    /* 8 */ 0, 6, 0, 6, 3, 3, 3, 3,   2, 0, 2, 0, 4, 4, 4, 4,
+    /* 9 */ 2, 6, 0, 0, 4, 4, 4, 4,   2, 5, 2, 0, 0, 5, 0, 0,
     /* a */ 2, 6, 2, 6, 3, 3, 3, 3,   2, 2, 2, 0, 4, 4, 4, 0,
     /* b */ 2, 5, 0, 0, 4, 4, 4, 0,   2, 4, 2, 0, 4, 4, 4, 0,
-    /* c */ 2, 6, 0, 0, 3, 3, 5, 0,   2, 2, 2, 0, 4, 4, 6, 0,
-    /* d */ 2, 5, 0, 0, 4, 4, 6, 0,   2, 4, 0, 0, 4, 4, 7, 0,
+    /* c */ 2, 6, 0, 0, 3, 3, 5, 5,   2, 2, 2, 0, 4, 4, 6, 6,
+    /* d */ 2, 5, 0, 0, 4, 4, 6, 6,   2, 4, 0, 7, 4, 4, 7, 7,
     /* e */ 2, 6, 0, 0, 3, 3, 5, 0,   2, 2, 2, 2, 4, 4, 6, 0,
     /* f */ 2, 5, 0, 0, 4, 4, 6, 0,   2, 4, 0, 0, 4, 4, 7, 0,
 };
