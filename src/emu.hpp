@@ -171,6 +171,8 @@ private:
     __forceinline void     _redmAbs();
     __forceinline void     _redmAbsX();
     __forceinline void     _redmAbsY();
+    __forceinline void     _redmIndX();
+    __forceinline void     _redmIndY();
     __forceinline void     _storeMem();
 
     template<typename T>

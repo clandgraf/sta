@@ -16,4 +16,6 @@ namespace Gui {
     extern void runUi(Emu&);
     extern void swapBuffers();
     extern void teardownUi();
+
+    extern void addNotification(const std::string&);
 }
