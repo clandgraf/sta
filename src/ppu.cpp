@@ -52,7 +52,10 @@ void PPU::reset() {
     m_bkgPatternTbl = 0;
     m_sprPatternTbl = 0;
 
-    m_oamAddress = 0;
+    m_oamAddrExt = 0;
+    m_oamAddrInt = 0;
+
+    m_oam.data[0x120] = 0xff;
 }
 
 void PPU::run(unsigned int cycles) {
@@ -124,6 +127,31 @@ void PPU::run(unsigned int cycles) {
 
     for (unsigned int i = 0; i < cycles; i++) {
 
+        // ----------- Setting up OAM ------------
+        // https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation#Details
+        if (m_scanline < 240) {
+            // Reset both internal and external OAM Pointers
+            if (m_sl_cycle == 0) {
+                m_oamPtr = 0;
+                m_oamAddrInt = 0;
+                m_oamAddrExt = 0;
+            } 
+            // Clear Secondary OAM
+            else if (m_sl_cycle > 0 && m_sl_cycle <= 64) {
+                if (m_sl_cycle & 1) {
+                    m_sprTmp = m_oam.data[m_oamPtr = 0x120];
+                } else {
+                    m_oam.data[0x100 | m_oamAddrInt] = m_sprTmp;
+                    m_oamAddrInt = (m_oamAddrInt + 1) & 0x1f;
+                }
+            }
+            // Sprite Evaluation
+            else if (m_sl_cycle <= 256) {
+                // TODO 
+            }
+        }
+
+        // ------------- Tile Fetching -----------
         if (m_scanline < 240 || m_scanline == 261) {
 
             // Filling latches for bkg rendering
@@ -190,7 +218,7 @@ void PPU::run(unsigned int cycles) {
 
         }
 
-        // Update Status Flags and raise NMI
+        // ----- Update Status Flags and raise NMI ---
         if (m_scanline == 241 && m_sl_cycle == 1) {
             m_f_statusVblank = true;
             if (m_f_vblankNmi) {
@@ -198,13 +226,14 @@ void PPU::run(unsigned int cycles) {
             }
         }
 
+        // ----------- Reset Status Flags ------------
         if (m_scanline == 261 && m_sl_cycle == 1) {
             m_f_statusVblank = false;
             m_f_statusOverflow = false;
             m_f_statusSprZero = false;
         }
 
-        // Rendering a Pixel
+        // ----------- Rendering a Pixel --------------
         if (m_r_mask.bkgEnable && m_scanline >= 0 && m_scanline < 240) {
             if (m_sl_cycle > 0 && m_sl_cycle < 257) {
                 uint16_t bit = 0x8000 >> m_r_x;
@@ -222,7 +251,7 @@ void PPU::run(unsigned int cycles) {
             }
         }
 
-        // Update Counters for next scanline
+        // ----- Update Counters for next scanline ------
         if (++m_sl_cycle > 340) {
             m_sl_cycle = 0;
             
@@ -249,7 +278,9 @@ uint8_t PPU::readRegister(uint8_t reg) {
     switch (reg) {
     case PPUSTATUS: return readStatus();
     case PPUDATA:   return readData();
-    case OAMDATA:   return m_oam.data[m_oamAddress];
+    case OAMDATA:   
+        // TODO While Rendering this leaks internal OAM
+        return m_oam.data[m_oamAddrExt];
     default:
         LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
             << " PPU::read_register("
@@ -268,8 +299,8 @@ void PPU::writeRegister(uint8_t reg, uint8_t value) {
     case PPUADDR:   CHECK_WRITE; writeAddr(value); break;
     case PPUMASK:   CHECK_WRITE; m_r_mask.field = value; break;
     case PPUDATA:   writeData(value); break;
-    case OAMADDR:   m_oamAddress = value; break;
-    case OAMDATA:   m_oam.data[m_oamAddress++] = value; break;
+    case OAMADDR:   m_oamAddrExt = value; break;
+    case OAMDATA:   m_oam.data[m_oamAddrExt++] = value; break;
     default:
         LOG_ERR << sm::hex(m_emu.getOpcodeAddress())
             << " PPU::write_register("

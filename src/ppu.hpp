@@ -169,17 +169,15 @@ private:
 
     unsigned long m_cycleCount = 0;
 
-    uint8_t m_oamAddress;
+    uint16_t m_oamPtr;
+    uint8_t m_oamAddrExt;
+    uint8_t m_oamAddrInt;
+
     union {
-        OamEntry sprites[64];
-        uint8_t data[256];
+        OamEntry sprites[0x48];
+        uint8_t data[0x121];
     } m_oam;
     
-    union {
-        OamEntry sprites[8];
-        uint8_t data[32];
-    } m_soam;
-
     bool m_ignoreWrites = true;  // true until the PPU is write-ready, after WARMUP_CYCLES cycles
     bool m_f_oddFrame  = false;  // indicates wether we are on an even or odd frame
 
@@ -217,7 +215,7 @@ private:
     uint8_t    m_vram[0x0800];
     uint8_t    m_palette[0x20];
 
-    // Rendering
+    // Rendering Background
     
     uint8_t    m_latch_ntByte;
     uint8_t    m_latch_atByte;
@@ -228,4 +226,11 @@ private:
     uint16_t   m_shiftPatternLo;
     uint16_t   m_shiftAttrHi;
     uint16_t   m_shiftAttrLo;
+
+    // Rendering Sprites
+        
+    uint8_t m_sprTmp;  // temporary for copying between primary and secondary OAM
+
+    uint8_t m_sprCounter[8];
+    uint8_t m_sprAttributes[8];
 };
