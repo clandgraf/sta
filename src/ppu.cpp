@@ -71,13 +71,18 @@ enum SpriteEvalState {
     SPR_EVAL_DONE = 4,
 };
 
-void PPU::run(unsigned int cycles) {
+void PPU::cycle() {
+    if (!isRenderingEnabled()) {
+        return;
+    }
+
     auto incScrollX = [&]() {
         if (isRenderingEnabled()) {
             if (m_r_v.coarseScrollX == 31) {
                 m_r_v.coarseScrollX = 0;
                 m_r_v.baseNtX = ~m_r_v.baseNtX;
-            } else {
+            }
+            else {
                 m_r_v.coarseScrollX++;
             }
         }
@@ -87,7 +92,8 @@ void PPU::run(unsigned int cycles) {
         if (isRenderingEnabled()) {
             if (m_r_v.fineScrollY < 7) {
                 m_r_v.fineScrollY++;
-            } else {
+            }
+            else {
                 m_r_v.fineScrollY = 0;
                 switch (m_r_v.coarseScrollY) {
                 case 29:
@@ -106,21 +112,21 @@ void PPU::run(unsigned int cycles) {
     auto resScrollX = [&]() {
         if (isRenderingEnabled()) {
             m_r_v.coarseScrollX = m_r_t.coarseScrollX;
-            m_r_v.baseNtX       = m_r_t.baseNtX;
+            m_r_v.baseNtX = m_r_t.baseNtX;
         }
     };
 
     auto resScrollY = [&]() {
         if (isRenderingEnabled()) {
-            m_r_v.fineScrollY   = m_r_t.fineScrollY;
+            m_r_v.fineScrollY = m_r_t.fineScrollY;
             m_r_v.coarseScrollY = m_r_t.coarseScrollY;
-            m_r_v.baseNtY       = m_r_t.baseNtY;
+            m_r_v.baseNtY = m_r_t.baseNtY;
         }
     };
-    
+
     auto loadShiftReg = [&](uint16_t& reg, uint8_t value) {
         reg &= 0xff00;
-        reg |= value;  
+        reg |= value;
     };
 
     auto loadShiftRegs = [&]() {
@@ -140,150 +146,212 @@ void PPU::run(unsigned int cycles) {
 
     auto sprOnScanline = [&](int spriteY) {
         return (
-           m_scanline >= (spriteY) &&
-           m_scanline <= (m_sprTmp + m_f_sprSize ? 0xf : 0x7)
-        );
+            m_scanline >= (spriteY) &&
+            m_scanline <= (m_sprTmp + m_f_sprSize ? 0xf : 0x7)
+            );
     };
 
-    for (unsigned int i = 0; i < cycles; i++) {
-
-        // ----------- Setting up OAM ------------
-        // https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation#Details
-        if (m_scanline < 240) {
-            // Reset both internal and external OAM Pointers
-            if (m_sl_cycle == 0) {
-                m_oamPtr = 0;
-                m_oamAddrInt = 0;
-                m_oamAddrExt = 0;
-            } 
-            // Clear Secondary OAM
-            else if (m_sl_cycle > 0 && m_sl_cycle <= 64) {
-                if (m_sl_cycle & 1) {
-                    m_sprTmp = m_oam.data[m_oamPtr = 0x120];
-                } else {
-                    m_oam.data[0x100 | m_oamAddrInt] = m_sprTmp;
-                    m_oamAddrInt = (m_oamAddrInt + 1) & 0x1f;
-                }
+    // ----------- Setting up OAM ------------
+    // https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation#Details
+    if (m_scanline < 240) {
+        // Reset both internal and external OAM Pointers
+        if (m_sl_cycle == 0) {
+            m_oamPtr = 0;
+            m_oamAddrInt = 0;
+            m_oamAddrExt = 0;
+        }
+        // Clear Secondary OAM
+        else if (m_sl_cycle > 0 && m_sl_cycle <= 64) {
+            if (m_sl_cycle & 1) {
+                m_sprTmp = m_oam.data[m_oamPtr = 0x120];
             }
-            // Sprite Evaluation
-            else if (m_sl_cycle <= 256) {
-                static int sprEvalState;
-                if (m_sl_cycle == 65) {
-                    sprEvalState = SPR_EVAL_COPY_Y;
-                }
+            else {
+                m_oam.data[0x100 | m_oamAddrInt] = m_sprTmp;
+                m_oamAddrInt = (m_oamAddrInt + 1) & 0x1f;
+            }
+        }
+        // Sprite Evaluation
+        else if (m_sl_cycle <= 256) {
+            static int sprEvalState;
+            if (m_sl_cycle == 65) {
+                sprEvalState = SPR_EVAL_COPY_Y;
+            }
 
-                switch (sprEvalState) {
-                case SPR_EVAL_COPY_Y:
-                    if (m_sl_cycle & 1) {
-                        m_sprTmp = m_oam.data[m_oamPtr = m_oamAddrExt];
-                    } else {
-                        m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
-                        if (sprOnScanline(m_sprTmp)) {
-                            sprEvalState = SPR_EVAL_COPY_REST;
-                            m_oamAddrExt += 1; m_oamAddrExt &= 0xff;
-                            m_oamAddrInt += 1; m_oamAddrInt &= 0x1f;
-                        }  else {
-                            m_oamAddrExt += 4; m_oamAddrExt &= 0xff;
-                            if (m_oamAddrExt == 0) {  // Check if we wrapped to 0 (all 64 sprites done)
-                                sprEvalState = SPR_EVAL_DONE;
-                            }
-                        }
-                    }
-                    break;
-                case SPR_EVAL_COPY_REST:
-                    if (m_sl_cycle & 1) {
-                        m_sprTmp = m_oam.data[m_oamPtr = m_oamAddrExt];
-                    } else {
-                        m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
+            switch (sprEvalState) {
+            case SPR_EVAL_COPY_Y:
+                if (m_sl_cycle & 1) {
+                    m_sprTmp = m_oam.data[m_oamPtr = m_oamAddrExt];
+                }
+                else {
+                    m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
+                    if (sprOnScanline(m_sprTmp)) {
+                        sprEvalState = SPR_EVAL_COPY_REST;
                         m_oamAddrExt += 1; m_oamAddrExt &= 0xff;
                         m_oamAddrInt += 1; m_oamAddrInt &= 0x1f;
+                    }
+                    else {
+                        m_oamAddrExt += 4; m_oamAddrExt &= 0xff;
                         if (m_oamAddrExt == 0) {  // Check if we wrapped to 0 (all 64 sprites done)
                             sprEvalState = SPR_EVAL_DONE;
-                        } else if (m_oamAddrExt & 0x3) {  // ... or we're starting the next sprite
-                            if (m_oamAddrInt == 0) { // ... but secondary oam is full
-                                sprEvalState = SPR_EVAL_FULL;
-                            } else {
-                                sprEvalState = SPR_EVAL_COPY_Y;
-                            }
                         }
                     }
-                    break;
-                case SPR_EVAL_FULL:
-                    break;
-                case SPR_EVAL_OVERFLOW:
-                    break;
-                case SPR_EVAL_DONE:
-                    break;
                 }
+                break;
+            case SPR_EVAL_COPY_REST:
+                if (m_sl_cycle & 1) {
+                    m_sprTmp = m_oam.data[m_oamPtr = m_oamAddrExt];
+                }
+                else {
+                    m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
+                    m_oamAddrExt += 1; m_oamAddrExt &= 0xff;
+                    m_oamAddrInt += 1; m_oamAddrInt &= 0x1f;
+                    if (m_oamAddrExt == 0) {  // Check if we wrapped to 0 (all 64 sprites done)
+                        sprEvalState = SPR_EVAL_DONE;
+                    }
+                    else if (m_oamAddrExt & 0x3) {  // ... or we're starting the next sprite
+                        if (m_oamAddrInt == 0) { // ... but secondary oam is full
+                            sprEvalState = SPR_EVAL_FULL;
+                        }
+                        else {
+                            sprEvalState = SPR_EVAL_COPY_Y;
+                        }
+                    }
+                }
+                break;
+            case SPR_EVAL_FULL:
+                break;
+            case SPR_EVAL_OVERFLOW:
+                break;
+            case SPR_EVAL_DONE:
+                break;
             }
         }
+    }
 
-        // ------------- Tile Fetching -----------
-        if (m_scanline < 240 || m_scanline == 261) {
+    // ------------- Tile Fetching -----------
+    if (m_scanline < 240 || m_scanline == 261) {
 
-            // Filling latches for bkg rendering
-        
-            if ((m_sl_cycle > 0 && m_sl_cycle < 256)  // < 256 cuts of last case 7 (since this does incScrollY)
-                || (m_sl_cycle > 320 && m_sl_cycle < 337)) {
+        // Filling latches for bkg rendering
 
-                updateShiftRegs();
+        if ((m_sl_cycle > 0 && m_sl_cycle < 337)) {
 
-                // Regular Fetches
-                switch ((m_sl_cycle - 1) % 8) {
-                case 0: // Fetch Nametable Byte
-                    loadShiftRegs();
-                    m_latch_ntByte = readVram(0x2000 | (m_r_v.word & 0xfff)); 
-                    break;  
-                case 2: // Fetch Attribute Byte
-                    m_latch_atByte = readVram(0x23c0 
-                                            | (m_r_v.baseNtY << 11)
-                                            | (m_r_v.baseNtX << 10) 
-                                            | ((m_r_v.coarseScrollY >> 2) << 3)
-                                            | (m_r_v.coarseScrollX >> 2)); 
-                    // Index into attribute byte
-                    if (m_r_v.coarseScrollY & 0x02) m_latch_atByte >>= 4;
-                    if (m_r_v.coarseScrollX & 0x02) m_latch_atByte >>= 2;
-                    m_latch_atByte &= 0b11;
-                    break;
-                case 4: // Fetch Lo Tile Byte
-                    m_latch_tileLo = readVram(m_bkgPatternTbl 
-                                            + ((uint16_t)m_latch_ntByte << 4) 
-                                            + m_r_v.fineScrollY 
-                                            + 0);
-                    break; 
-                case 6: // Fetch Hi Tile Byte
-                    m_latch_tileHi = readVram(m_bkgPatternTbl 
-                                            + ((uint16_t)m_latch_ntByte << 4) 
-                                            + m_r_v.fineScrollY 
-                                            + 8);
-                    break; 
-                case 7: // Increase V horizontally
-                    incScrollX(); 
-                    break; 
-                }
+            static bool doSprites;
+            static uint16_t sprIndex;
+
+            if (doSprites = (m_sl_cycle > 256 && m_sl_cycle <= 320)) {
+                sprIndex = (m_sl_cycle - 257) / 8;
             }
 
-            if (m_sl_cycle == 256) {
-                incScrollY();
-            }
+            updateShiftRegs();
 
-            if (m_sl_cycle == 257) {
+            // Regular Fetches
+            switch ((m_sl_cycle - 1) % 8) {
+            case 0: // Fetch Nametable Byte
                 loadShiftRegs();
-                resScrollX();
-            }
-
-            if (m_sl_cycle == 338 || m_sl_cycle == 340) {
                 m_latch_ntByte = readVram(0x2000 | (m_r_v.word & 0xfff));
+                break;
+            case 2: // Fetch BG Attribute Byte / Fetch Sprite Attribute Byte
+                if (doSprites) {
+                    m_sprAttributes[sprIndex] = m_oam.sprites[64 + sprIndex].attributes;
+                }
+
+                m_latch_atByte = readVram(0x23c0
+                    | (m_r_v.baseNtY << 11)
+                    | (m_r_v.baseNtX << 10)
+                    | ((m_r_v.coarseScrollY >> 2) << 3)
+                    | (m_r_v.coarseScrollX >> 2));
+                // Index into attribute byte
+                if (m_r_v.coarseScrollY & 0x02) m_latch_atByte >>= 4;
+                if (m_r_v.coarseScrollX & 0x02) m_latch_atByte >>= 2;
+                m_latch_atByte &= 0b11;
+                break;
+            case 3: // Fetch Sprite X Coordinate
+                if (doSprites) {
+                    m_sprCounter[sprIndex] = m_oam.sprites[64 + sprIndex].x;
+                }
+                break;
+            case 4: // Fetch BG / Sprite Lo Tile Byte
+                if (doSprites) {
+                    // TODO Support for 8x16 Sprites
+                    unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
+                    if (tile == 0xff) {
+                        // If tile == 0xff render transparently
+                        m_sprTileLo[sprIndex] = 0;
+                    }
+                    else {
+                        unsigned int offset = m_scanline - m_oam.sprites[64 + sprIndex].y;
+                        m_sprTileLo[sprIndex] = readVram(m_sprPatternTbl
+                            + ((uint16_t)tile << 4)
+                            + offset
+                            + 0);
+                    }
+                }
+                else {
+                    m_latch_tileLo = readVram(m_bkgPatternTbl
+                        + ((uint16_t)m_latch_ntByte << 4)
+                        + m_r_v.fineScrollY
+                        + 0);
+                }
+                break;
+            case 6: // Fetch BG / Sprite Hi Tile Byte
+                if (doSprites) {
+                    // TODO Support for 8x16 Sprites
+                    unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
+                    if (tile == 0xff) {
+                        // If tile == 0xff render transparently
+                        m_sprTileHi[sprIndex] = 0;
+                    }
+                    else {
+                        unsigned int offset = m_scanline - m_oam.sprites[64 + sprIndex].y;
+                        m_sprTileHi[sprIndex] = readVram(m_sprPatternTbl
+                            + ((uint16_t)tile << 4)
+                            + offset
+                            + 8);
+                    }
+                }
+                else {
+                    m_latch_tileHi = readVram(m_bkgPatternTbl
+                        + ((uint16_t)m_latch_ntByte << 4)
+                        + m_r_v.fineScrollY
+                        + 8);
+                }
+                break;
+            case 7: // Increase V horizontally
+                if (!doSprites) {
+                    incScrollX();
+                }
+                break;
             }
         }
 
-        if (m_scanline == 261) {
-            
-            if (m_sl_cycle > 279 && m_sl_cycle < 305) {
-                resScrollY();
-            }
-
+        if (m_sl_cycle == 256) {
+            incScrollY();
         }
+
+        if (m_sl_cycle == 257) {
+            loadShiftRegs();
+            resScrollX();
+        }
+
+        if (m_sl_cycle == 338 || m_sl_cycle == 340) {
+            m_latch_ntByte = readVram(0x2000 | (m_r_v.word & 0xfff));
+        }
+    }
+
+    // ------------- Reset V --------------------
+    if (m_scanline == 261) {
+
+        if (m_sl_cycle > 279 && m_sl_cycle < 305) {
+            resScrollY();
+        }
+
+    }
+}
+
+void PPU::run(unsigned int cycles) {
+    for (unsigned int i = 0; i < cycles; i++) {
+        // Prepare everything for rendering a pixel
+        cycle();
 
         // ----- Update Status Flags and raise NMI ---
         if (m_scanline == 241 && m_sl_cycle == 1) {
@@ -301,21 +369,60 @@ void PPU::run(unsigned int cycles) {
         }
 
         // ----------- Rendering a Pixel --------------
-        if (m_r_mask.bkgEnable && m_scanline >= 0 && m_scanline < 240) {
+        if (m_scanline >= 0 && m_scanline < 240) {
             if (m_sl_cycle > 0 && m_sl_cycle < 257) {
-                uint16_t bit = 0x8000 >> m_r_x;
+                // Background Value
+                uint8_t bgPalIdx = 0;
+                if (m_r_mask.bkgEnable) {
+                    uint16_t bit = 0x8000 >> m_r_x;
                 
-                uint8_t palIdx = ((m_shiftPatternLo & bit) ? 0b0001 : 0) 
-                               | ((m_shiftPatternHi & bit) ? 0b0010 : 0)
-                               | ((m_shiftAttrLo    & bit) ? 0b0100 : 0)
-                               | ((m_shiftAttrHi    & bit) ? 0b1000 : 0);
+                    bgPalIdx = ((m_shiftPatternLo & bit) ? 0b0001 : 0)
+                             | ((m_shiftPatternHi & bit) ? 0b0010 : 0)
+                             | ((m_shiftAttrLo    & bit) ? 0b0100 : 0)
+                             | ((m_shiftAttrHi    & bit) ? 0b1000 : 0);
+                }
 
-                uint8_t value = readVram(0x3f00 | palIdx);
+                uint8_t fgPalIdx = 0;
+                int sprIndex = 0;
+                if (m_r_mask.sprEnable) {
+                    for (sprIndex = 0; sprIndex < 8; sprIndex++) {
+                        if (m_sprCounter[sprIndex] > 0) continue;
+    
+                        // Sprite Value
+                        fgPalIdx = ((m_sprTileLo[sprIndex] & 0x8000) ? 0b0001 : 0)
+                                 | ((m_sprTileHi[sprIndex] & 0x8000) ? 0b0010 : 0)
+                                 | ((m_sprAttributes[sprIndex] & 0x3) << 2);
 
-                if (m_setPixel) {
-                    m_setPixel(m_sl_cycle - 1, m_scanline, value);
+                        if (fgPalIdx != 0) {
+                            break;
+                        }
+                    }
+                }
+
+                if (isRenderingEnabled()) {
+                    uint8_t value;
+                    if ((fgPalIdx & 0x3) == 0) {
+                        value = readVram(0x3f00 | bgPalIdx);
+                    } else if ((bgPalIdx & 0x3) == 0) {
+                        value = readVram(0x3f00 | (fgPalIdx + 0x10));
+                    } else if (m_sprAttributes[sprIndex] & (1 << 6)) {
+                        value = readVram(0x3f00 | bgPalIdx);
+                    } else {
+                        value = readVram(0x3f00 | (fgPalIdx + 0x10));
+                    }
+
+                    if (m_setPixel) {
+                        m_setPixel(m_sl_cycle - 1, m_scanline, value);
+                    }
                 }
             }
+        }
+
+        // ----- Update Sprite Counters -----------------
+        if (isRenderingEnabled()) {
+            for (int i = 0; i < 8; i++)
+                if (m_sprCounter[i] > 0)
+                    m_sprCounter[i]--;
         }
 
         // ----- Update Counters for next scanline ------

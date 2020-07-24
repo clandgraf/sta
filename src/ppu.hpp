@@ -141,6 +141,7 @@ public:
     
     void reset();
     void run(unsigned int cycles);
+    void cycle();
 
     uint16_t m_scanline = 261;
     uint16_t m_sl_cycle = 0;
@@ -231,6 +232,8 @@ private:
         
     uint8_t m_sprTmp;  // temporary for copying between primary and secondary OAM
 
+    uint8_t m_sprTileLo[8];
+    uint8_t m_sprTileHi[8];
     uint8_t m_sprCounter[8];
     uint8_t m_sprAttributes[8];
 };
