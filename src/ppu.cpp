@@ -58,6 +58,19 @@ void PPU::reset() {
     m_oam.data[0x120] = 0xff;
 }
 
+enum SpriteEvalState {
+    // Copy and check Sprite's Y
+    SPR_EVAL_COPY_Y = 0,
+    // ... If in Range, copy rest of sprite's bytes
+    SPR_EVAL_COPY_REST = 1,
+    // If OAM is full (8 sprites found on scanline)
+    SPR_EVAL_FULL = 2,
+    // If OAM is overflown (9th sprite found on scanline)
+    SPR_EVAL_OVERFLOW = 3,
+    // If all 64 sprites have been found
+    SPR_EVAL_DONE = 4,
+};
+
 void PPU::run(unsigned int cycles) {
     auto incScrollX = [&]() {
         if (isRenderingEnabled()) {
@@ -125,6 +138,13 @@ void PPU::run(unsigned int cycles) {
         m_shiftAttrHi <<= 1;
     };
 
+    auto sprOnScanline = [&](int spriteY) {
+        return (
+           m_scanline >= (spriteY) &&
+           m_scanline <= (m_sprTmp + m_f_sprSize ? 0xf : 0x7)
+        );
+    };
+
     for (unsigned int i = 0; i < cycles; i++) {
 
         // ----------- Setting up OAM ------------
@@ -147,7 +167,54 @@ void PPU::run(unsigned int cycles) {
             }
             // Sprite Evaluation
             else if (m_sl_cycle <= 256) {
-                // TODO 
+                static int sprEvalState;
+                if (m_sl_cycle == 65) {
+                    sprEvalState = SPR_EVAL_COPY_Y;
+                }
+
+                switch (sprEvalState) {
+                case SPR_EVAL_COPY_Y:
+                    if (m_sl_cycle & 1) {
+                        m_sprTmp = m_oam.data[m_oamPtr = m_oamAddrExt];
+                    } else {
+                        m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
+                        if (sprOnScanline(m_sprTmp)) {
+                            sprEvalState = SPR_EVAL_COPY_REST;
+                            m_oamAddrExt += 1; m_oamAddrExt &= 0xff;
+                            m_oamAddrInt += 1; m_oamAddrInt &= 0x1f;
+                        }  else {
+                            m_oamAddrExt += 4; m_oamAddrExt &= 0xff;
+                            if (m_oamAddrExt == 0) {  // Check if we wrapped to 0 (all 64 sprites done)
+                                sprEvalState = SPR_EVAL_DONE;
+                            }
+                        }
+                    }
+                    break;
+                case SPR_EVAL_COPY_REST:
+                    if (m_sl_cycle & 1) {
+                        m_sprTmp = m_oam.data[m_oamPtr = m_oamAddrExt];
+                    } else {
+                        m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
+                        m_oamAddrExt += 1; m_oamAddrExt &= 0xff;
+                        m_oamAddrInt += 1; m_oamAddrInt &= 0x1f;
+                        if (m_oamAddrExt == 0) {  // Check if we wrapped to 0 (all 64 sprites done)
+                            sprEvalState = SPR_EVAL_DONE;
+                        } else if (m_oamAddrExt & 0x3) {  // ... or we're starting the next sprite
+                            if (m_oamAddrInt == 0) { // ... but secondary oam is full
+                                sprEvalState = SPR_EVAL_FULL;
+                            } else {
+                                sprEvalState = SPR_EVAL_COPY_Y;
+                            }
+                        }
+                    }
+                    break;
+                case SPR_EVAL_FULL:
+                    break;
+                case SPR_EVAL_OVERFLOW:
+                    break;
+                case SPR_EVAL_DONE:
+                    break;
+                }
             }
         }
 
