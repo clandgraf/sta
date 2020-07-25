@@ -147,7 +147,7 @@ void PPU::cycle() {
     auto sprOnScanline = [&](int spriteY) {
         return (
             m_scanline >= (spriteY) &&
-            m_scanline <= (m_sprTmp + m_f_sprSize ? 0xf : 0x7)
+            m_scanline <= (spriteY + (m_f_sprSize ? 0xf : 0x7))
             );
     };
 
@@ -208,7 +208,7 @@ void PPU::cycle() {
                     if (m_oamAddrExt == 0) {  // Check if we wrapped to 0 (all 64 sprites done)
                         sprEvalState = SPR_EVAL_DONE;
                     }
-                    else if (m_oamAddrExt & 0x3) {  // ... or we're starting the next sprite
+                    else if ((m_oamAddrExt & 0x3) == 0) {  // ... or we're starting the next sprite
                         if (m_oamAddrInt == 0) { // ... but secondary oam is full
                             sprEvalState = SPR_EVAL_FULL;
                         }
@@ -389,9 +389,12 @@ void PPU::run(unsigned int cycles) {
                         if (m_sprCounter[sprIndex] > 0) continue;
     
                         // Sprite Value
-                        fgPalIdx = ((m_sprTileLo[sprIndex] & 0x8000) ? 0b0001 : 0)
-                                 | ((m_sprTileHi[sprIndex] & 0x8000) ? 0b0010 : 0)
+                        fgPalIdx = ((m_sprTileLo[sprIndex] & 0x80) ? 0b0001 : 0)
+                                 | ((m_sprTileHi[sprIndex] & 0x80) ? 0b0010 : 0)
                                  | ((m_sprAttributes[sprIndex] & 0x3) << 2);
+
+                        m_sprTileLo[sprIndex] <<= 1;
+                        m_sprTileHi[sprIndex] <<= 1;
 
                         if (fgPalIdx != 0) {
                             break;
@@ -419,7 +422,7 @@ void PPU::run(unsigned int cycles) {
         }
 
         // ----- Update Sprite Counters -----------------
-        if (isRenderingEnabled()) {
+        if (isRenderingEnabled() && m_sl_cycle > 0 && m_sl_cycle <= 256) {
             for (int i = 0; i < 8; i++)
                 if (m_sprCounter[i] > 0)
                     m_sprCounter[i]--;

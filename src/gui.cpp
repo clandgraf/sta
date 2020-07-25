@@ -606,7 +606,7 @@ static void renderControls(Input::Controller& input0, Input::Controller& input1)
 }
 
 static void setPixel(unsigned int x, unsigned int y, unsigned int v) {
-    screenSurface->setPixel(x, y, Palette::DEFAULT[v]);
+    screenSurface->setPixel(x, y, Palette::DEFAULT[v & 0x3f]);
 }
 
 SetPixelFn Gui::getSetPixelFn() {
