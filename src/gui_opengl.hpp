@@ -87,7 +87,14 @@ static void glfw_error_callback(int error, const char* description) {
 }
 
 void updateInputs(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    Input::dispatchInput(key, action == GLFW_PRESS);
+    switch (action) {
+    case GLFW_PRESS:
+        Input::dispatchInput(key, true);
+        break;
+    case GLFW_RELEASE:
+        Input::dispatchInput(key, false);
+        break;
+    }
 }
 
 bool initWindow(const char* title, bool fullscreen) {

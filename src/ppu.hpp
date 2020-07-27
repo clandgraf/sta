@@ -24,20 +24,22 @@ public:
     static uint8_t constexpr PPUADDR = 0x6;
     static uint8_t constexpr PPUDATA = 0x7;
 
+    PACK(union OamAttributes {
+        uint8_t field;
+        struct {
+            uint8_t palette : 2;
+            uint8_t __unused : 3;
+            uint8_t priority : 1;
+            uint8_t hflip : 1;
+            uint8_t vflip : 1;
+        };
+    });
+
     PACK(union OamEntry {
         struct {
             uint8_t y;
             uint8_t tileIndex;
-            union {
-                uint8_t attributes;
-                struct {
-                    uint8_t palette : 2;
-                    uint8_t __unused : 3;
-                    uint8_t priority : 1;
-                    uint8_t hflip : 1;
-                    uint8_t vflip : 1;
-                };
-            };
+            OamAttributes attributes;
             uint8_t x;
         };
         uint8_t fields[4];
@@ -235,5 +237,5 @@ private:
     uint8_t m_sprTileLo[8];
     uint8_t m_sprTileHi[8];
     uint8_t m_sprCounter[8];
-    uint8_t m_sprAttributes[8];
+    OamAttributes m_sprAttributes[8];
 };

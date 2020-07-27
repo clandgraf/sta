@@ -389,12 +389,21 @@ void PPU::run(unsigned int cycles) {
                         if (m_sprCounter[sprIndex] > 0) continue;
     
                         // Sprite Value
-                        fgPalIdx = ((m_sprTileLo[sprIndex] & 0x80) ? 0b0001 : 0)
-                                 | ((m_sprTileHi[sprIndex] & 0x80) ? 0b0010 : 0)
-                                 | ((m_sprAttributes[sprIndex] & 0x3) << 2);
+                        if (m_sprAttributes[sprIndex].hflip) {
+                            fgPalIdx = ((m_sprTileLo[sprIndex] & 0x01) ? 0b0001 : 0)
+                                | ((m_sprTileHi[sprIndex] & 0x01) ? 0b0010 : 0)
+                                | (m_sprAttributes[sprIndex].palette << 2);
 
-                        m_sprTileLo[sprIndex] <<= 1;
-                        m_sprTileHi[sprIndex] <<= 1;
+                            m_sprTileLo[sprIndex] >>= 1;
+                            m_sprTileHi[sprIndex] >>= 1;
+                        } else {
+                            fgPalIdx = ((m_sprTileLo[sprIndex] & 0x80) ? 0b0001 : 0)
+                                | ((m_sprTileHi[sprIndex] & 0x80) ? 0b0010 : 0)
+                                | (m_sprAttributes[sprIndex].palette << 2);
+
+                            m_sprTileLo[sprIndex] <<= 1;
+                            m_sprTileHi[sprIndex] <<= 1;
+                        }
 
                         if (fgPalIdx != 0) {
                             break;
@@ -408,7 +417,7 @@ void PPU::run(unsigned int cycles) {
                         value = readVram(0x3f00 | bgPalIdx);
                     } else if ((bgPalIdx & 0x3) == 0) {
                         value = readVram(0x3f00 | (fgPalIdx + 0x10));
-                    } else if (m_sprAttributes[sprIndex] & (1 << 6)) {
+                    } else if (m_sprAttributes[sprIndex].priority) {
                         value = readVram(0x3f00 | bgPalIdx);
                     } else {
                         value = readVram(0x3f00 | (fgPalIdx + 0x10));
