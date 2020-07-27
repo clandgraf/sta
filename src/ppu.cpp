@@ -287,7 +287,9 @@ void PPU::cycle() {
                     }
                     else {
                         unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
-                        unsigned int offset = m_scanline - m_oam.sprites[64 + sprIndex].y;
+                        unsigned int offset = m_sprAttributes[sprIndex].vflip ? 
+                            (m_oam.sprites[64 + sprIndex].y + 7 - m_scanline) :
+                            (m_scanline - m_oam.sprites[64 + sprIndex].y);
                         m_sprTileLo[sprIndex] = readVram(m_sprPatternTbl
                             + ((uint16_t)tile << 4)
                             + offset
@@ -309,7 +311,9 @@ void PPU::cycle() {
                         m_sprTileHi[sprIndex] = 0;
                     } else {
                         unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
-                        unsigned int offset = m_scanline - m_oam.sprites[64 + sprIndex].y;
+                        unsigned int offset = m_sprAttributes[sprIndex].vflip ?
+                            (m_oam.sprites[64 + sprIndex].y + 7 - m_scanline) : 
+                            (m_scanline - m_oam.sprites[64 + sprIndex].y);
                         m_sprTileHi[sprIndex] = readVram(m_sprPatternTbl
                             + ((uint16_t)tile << 4)
                             + offset
@@ -569,12 +573,12 @@ void PPU::writeData(uint8_t v) {
 }
 
 uint8_t PPU::readData() {
+    uint8_t value = (m_r_v.word < 0x3f00) ?
+        m_r_dataReadBuffer :
+        readVram(m_r_v.word);
     m_r_dataReadBuffer = readVram(m_r_v.word, true);
-    return (
-        m_r_v.word < 0x3f00 ? 
-        m_r_dataReadBuffer : 
-        readVram(m_r_v.word)
-    );
+    m_r_v.word += m_r_addressIncrement;
+    return value;
 }
 
 uint8_t PPU::readStatus() {
