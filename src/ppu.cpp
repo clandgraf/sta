@@ -355,6 +355,20 @@ void PPU::cycle() {
     }
 }
 
+uint8_t BG_LUT[] = {
+    0x00, 0x01, 0x02, 0x03,
+    0x00, 0x05, 0x06, 0x07,
+    0x00, 0x09, 0x0a, 0x0b,
+    0x00, 0x0d, 0x0e, 0x0f,
+};
+
+uint8_t FG_LUT[] = {
+    0x00, 0x11, 0x12, 0x13,
+    0x00, 0x15, 0x16, 0x17,
+    0x00, 0x19, 0x1a, 0x1b,
+    0x00, 0x1d, 0x1e, 0x1f,
+};
+
 void PPU::run(unsigned int cycles) {
     for (unsigned int i = 0; i < cycles; i++) {
         // Prepare everything for rendering a pixel
@@ -407,6 +421,8 @@ void PPU::run(unsigned int cycles) {
 
                         if ((fgPalIdx & 0x3) != 0) {
                             break;
+                        } else {
+                            fgPalIdx = 0;
                         }
                     }
 
@@ -426,16 +442,16 @@ void PPU::run(unsigned int cycles) {
                 if (isRenderingEnabled()) {
                     uint8_t value;
                     if ((fgPalIdx & 0x3) == 0) {
-                        value = readVram(0x3f00 | bgPalIdx);
+                        value = m_palette[BG_LUT[bgPalIdx]];
                     } else if ((bgPalIdx & 0x3) == 0) {
-                        value = readVram(0x3f00 | (fgPalIdx + 0x10));
+                        value = m_palette[FG_LUT[fgPalIdx]];
                     } else if (m_sprAttributes[sprIndex].priority) {
                         if (m_sprZeroOnSl && sprIndex == 0) {
                             m_f_statusSprZero = true;
                         }
-                        value = readVram(0x3f00 | bgPalIdx);
+                        value = m_palette[BG_LUT[bgPalIdx]];
                     } else {
-                        value = readVram(0x3f00 | (fgPalIdx + 0x10));
+                        value = m_palette[FG_LUT[fgPalIdx]];
                     }
 
                     if (m_setPixel) {
@@ -581,9 +597,14 @@ uint8_t PPU::readVram(uint16_t address, bool ignorePalette) {
     } else if (address < 0x4000) {
         address &= 0x001F;
         switch (address) {
-        case 0x00: case 0x04: case 0x08: case 0x0C:
-        case 0x10: case 0x14: case 0x18: case 0x1C:
+        case 0x00: case 0x10: 
             return m_palette[0x00];
+        case 0x04: case 0x14:
+            return m_palette[0x04];
+        case 0x08: case 0x18:
+            return m_palette[0x08];
+        case 0x0C: case 0x1C:
+            return m_palette[0x0C];
         default:
             return m_palette[address];
         }
@@ -603,9 +624,17 @@ void PPU::writeVram(uint16_t address, uint8_t value) {
     } else if (address < 0x4000) {
         address &= 0x001F;
         switch (address) {
-        case 0x00: case 0x04: case 0x08: case 0x0C:
-        case 0x10: case 0x14: case 0x18: case 0x1C:
+        case 0x00: case 0x10: 
             m_palette[0x00] = value;
+            break;
+        case 0x04: case 0x14:
+            m_palette[0x04] = value;
+            break;
+        case 0x08: case 0x18:
+            m_palette[0x08] = value;
+            break;
+        case 0x0C: case 0x1C:
+            m_palette[0x0C] = value;
             break;
         default:
             m_palette[address] = value;
