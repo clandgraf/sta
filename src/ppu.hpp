@@ -236,6 +236,8 @@ private:
         
     uint8_t m_sprTmp;  // temporary for copying between primary and secondary OAM
 
+    bool m_sprZeroOnSl;
+
     uint8_t m_sprTileLo[8];
     uint8_t m_sprTileHi[8];
     uint8_t m_sprCounter[8];

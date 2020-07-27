@@ -154,8 +154,12 @@ void PPU::cycle() {
     // ----------- Setting up OAM ------------
     // https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation#Details
     if (m_scanline < 240) {
-        // Reset both internal and external OAM Pointers
+        // New Scanline:
+        // - Reset both internal and external OAM Pointers
+        // - Reset sprite 0 on sl indicator
         if (m_sl_cycle == 0) {
+            m_sprZeroOnSl = false;
+
             m_oamPtr = 0;
             m_oamAddrInt = 0;
             m_oamAddrExt = 0;
@@ -186,6 +190,10 @@ void PPU::cycle() {
                     m_oam.data[m_oamPtr = (0x100 | m_oamAddrInt)] = m_sprTmp;
                     if (sprOnScanline(m_sprTmp)) {
                         sprEvalState = SPR_EVAL_COPY_REST;
+                        if (m_oamAddrExt == 0) {
+                            // Sprite Zero is rendered on this scanline
+                            m_sprZeroOnSl = true;
+                        }
                         m_oamAddrExt += 1; m_oamAddrExt &= 0xff;
                         m_oamAddrInt += 1; m_oamAddrInt &= 0x1f;
                     }
@@ -422,6 +430,9 @@ void PPU::run(unsigned int cycles) {
                     } else if ((bgPalIdx & 0x3) == 0) {
                         value = readVram(0x3f00 | (fgPalIdx + 0x10));
                     } else if (m_sprAttributes[sprIndex].priority) {
+                        if (m_sprZeroOnSl && sprIndex == 0) {
+                            m_f_statusSprZero = true;
+                        }
                         value = readVram(0x3f00 | bgPalIdx);
                     } else {
                         value = readVram(0x3f00 | (fgPalIdx + 0x10));
