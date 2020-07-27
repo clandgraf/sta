@@ -126,7 +126,7 @@ namespace Gui {
     } Notifications;
 }
 
-static void addNotification(const std::string& message) {
+static void Gui::addNotification(const std::string& message) {
     Gui::Notifications.add(message);
 }
 

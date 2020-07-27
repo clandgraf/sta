@@ -1,3 +1,4 @@
+#include <GLFW/glfw3.h>
 #include <map>
 #include <unordered_set>
 #include <stdexcept>
@@ -6,7 +7,9 @@
 #include "util.hpp"
 
 namespace Input {
-    static Input::State state;
+    static Input::State keyboardState;
+
+    static Input::State outputState;
 
     static ControllerDef waitingFor = None;
 
@@ -26,25 +29,25 @@ void Input::dispatchInput(Scancode scancode, bool pressed) {
     auto input = button == keyConfig.end() ? ControllerDef::None : button->second;
 
     switch (input) {
-    case Menu:      state.openMenu       = pressed; break;    
+    case Menu:      keyboardState.openMenu       = pressed; break;    
 
-    case Up_0:      state.input0.d_up    = pressed; break;
-    case Down_0:    state.input0.d_down  = pressed; break;
-    case Left_0:    state.input0.d_left  = pressed; break;
-    case Right_0:   state.input0.d_right = pressed; break;
-    case ButtonA_0: state.input0.btn_a   = pressed; break;
-    case ButtonB_0: state.input0.btn_b   = pressed; break;
-    case Start_0:   state.input0.start   = pressed; break;
-    case Select_0:  state.input0.select  = pressed; break;
+    case Up_0:      keyboardState.input0.d_up    = pressed; break;
+    case Down_0:    keyboardState.input0.d_down  = pressed; break;
+    case Left_0:    keyboardState.input0.d_left  = pressed; break;
+    case Right_0:   keyboardState.input0.d_right = pressed; break;
+    case ButtonA_0: keyboardState.input0.btn_a   = pressed; break;
+    case ButtonB_0: keyboardState.input0.btn_b   = pressed; break;
+    case Start_0:   keyboardState.input0.start   = pressed; break;
+    case Select_0:  keyboardState.input0.select  = pressed; break;
 
-    case Up_1:      state.input1.d_up    = pressed; break;
-    case Down_1:    state.input1.d_down  = pressed; break;
-    case Left_1:    state.input1.d_left  = pressed; break;
-    case Right_1:   state.input1.d_right = pressed; break;
-    case ButtonA_1: state.input1.btn_a   = pressed; break;
-    case ButtonB_1: state.input1.btn_b   = pressed; break;
-    case Start_1:   state.input1.start   = pressed; break;
-    case Select_1:  state.input1.select  = pressed; break;
+    case Up_1:      keyboardState.input1.d_up    = pressed; break;
+    case Down_1:    keyboardState.input1.d_down  = pressed; break;
+    case Left_1:    keyboardState.input1.d_left  = pressed; break;
+    case Right_1:   keyboardState.input1.d_right = pressed; break;
+    case ButtonA_1: keyboardState.input1.btn_a   = pressed; break;
+    case ButtonB_1: keyboardState.input1.btn_b   = pressed; break;
+    case Start_1:   keyboardState.input1.start   = pressed; break;
+    case Select_1:  keyboardState.input1.select  = pressed; break;
     }
 }
 
@@ -57,7 +60,24 @@ Input::ControllerDef Input::getWaitingForInput() {
 }
 
 const Input::State& Input::getState() {
-    return Input::state;
+    outputState.input0 = keyboardState.input0;
+    outputState.input1 = keyboardState.input1;
+    outputState.openMenu = keyboardState.openMenu;
+
+    if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+        GLFWgamepadstate state;
+        glfwGetGamepadState(GLFW_JOYSTICK_1, &state);
+        outputState.input0.btn_a = outputState.input0.btn_a || state.buttons[GLFW_GAMEPAD_BUTTON_A];
+        outputState.input0.btn_b = outputState.input0.btn_b || state.buttons[GLFW_GAMEPAD_BUTTON_X];
+        outputState.input0.start = outputState.input0.start || state.buttons[GLFW_GAMEPAD_BUTTON_START];
+        outputState.input0.select = outputState.input0.select || state.buttons[GLFW_GAMEPAD_BUTTON_BACK];
+        outputState.input0.d_up = outputState.input0.d_up || state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
+        outputState.input0.d_down = outputState.input0.d_down || state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+        outputState.input0.d_left = outputState.input0.d_left || state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
+        outputState.input0.d_right = outputState.input0.d_right || state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
+    }
+
+    return outputState;
 }
 
 void Input::clearButton(ControllerDef def) {
@@ -78,7 +98,7 @@ const std::unordered_set<Input::Scancode>& Input::getScancodes(ControllerDef def
 }
 
 void Input::resetMenuRequest() {
-    state.openMenu = false;
+    keyboardState.openMenu = false;
 }
 
 void Input::loadSettings() {

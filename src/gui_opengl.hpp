@@ -82,6 +82,21 @@ void ImGui_Impl_Shutdown() {
     ImGui_ImplGlfw_Shutdown();
 }
 
+static void glfw_joystick_callback(int jid, int event) {
+    std::stringstream ss;
+    if (event == GLFW_CONNECTED) {
+        ss << "Gamepad " << jid << " connected.";
+        if (!glfwJoystickIsGamepad(jid))
+        {
+            ss << " No gamepad.";
+        }
+        Gui::addNotification(ss.str());
+    } else if (event == GLFW_DISCONNECTED) {
+        ss << "Gamepad " << jid << " disconnected.";
+        Gui::addNotification(ss.str());
+    }
+}
+
 static void glfw_error_callback(int error, const char* description) {
     LOG_ERR << "Glfw Error " << error << ": " << description << "\n";
 }
@@ -152,6 +167,7 @@ bool initWindow(const char* title, bool fullscreen) {
 
     Input::setScancode(GLFW_KEY_ESCAPE, Input::Menu);
     glfwSetKeyCallback(window, updateInputs);
+    glfwSetJoystickCallback(glfw_joystick_callback);
 
     return true;
 }
