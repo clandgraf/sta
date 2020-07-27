@@ -216,9 +216,6 @@ void Emu::execReset() {
     }
 }
 
-bool ADC_CARRY_LUT[8]    = { 0, 0, 0, 1, 0, 1, 1, 1 };
-bool ADC_OVERFLOW_LUT[8] = { 0, 1, 0, 0, 0, 0, 1, 0 };
-
 void Emu::stepOperation() {
     do  {
         if (stepCycle()) {

@@ -1,8 +1,18 @@
+- Break on Scanline
+
+- Sprite Rendering
+	-> Sprite Zero Hit
+	-> Vertical Flipping
+	-> Sprite Overflow Handling
+
+- OAM Viewer
+
 - Notifications
 
 - Gamepad Support
 
-- Sprite Rendering
+================================
+
 
 - APU Emulation
 

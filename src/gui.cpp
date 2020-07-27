@@ -42,6 +42,7 @@ static bool showRomInfo = true;
 static bool showDisassembly = true;
 static bool showPatternTable = true;
 static bool showControls = false;
+static bool showOamViewer = false;
 
 #include "gui_opengl.hpp"
 
@@ -296,6 +297,10 @@ static void renderMenuBar(Emu& emu) {
                 showMemoryView = !showMemoryView;
             }
 
+            if (ImGui::MenuItem("OAM", nullptr, showOamViewer)) {
+                showOamViewer = !showOamViewer;
+            }
+
             if (ImGui::MenuItem("Controls", nullptr, showControls)) {
                 showControls = !showControls;
             }
@@ -423,6 +428,27 @@ static void renderOpenRomDialog(Emu& emu) {
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
+    }
+}
+
+static void renderOamEntry(Emu& emu, unsigned int index, const PPU::OamEntry& entry) {
+    if (entry.y >= 0xef) {
+        return;
+    }
+
+    ImGui::Text("%02X  Y: %02X  X: %02X  I: %02X", index, entry.y, entry.x, entry.tileIndex);
+    ImGui::Separator();
+}
+
+static void renderOamViewer(Emu &emu) {
+    if (emu.isInitialized() && showOamViewer) {
+        if (ImGui::Begin("OAM Viewer", &showOamViewer)) {
+            const PPU::OamEntry* entries = emu.m_ppu->getSprites();
+            for (int i = 0; i < 64; i++) {
+                renderOamEntry(emu, i, entries[i]);
+            }
+        }
+        ImGui::End();
     }
 }
 
@@ -658,6 +684,7 @@ void Gui::runUi(Emu& emu) {
     renderSetupControllersDialog();
     renderEmuState(emu);
     renderRomInfo(emu);
+    renderOamViewer(emu);
     renderMemoryView(emu);
     renderDisassembly(emu);
     renderPatternTable();

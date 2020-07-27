@@ -150,6 +150,8 @@ public:
 
     __forceinline bool isOddFrame() { return m_f_oddFrame; }
 
+    const OamEntry* getSprites() { return m_oam.sprites; }
+
 private:
     
     __forceinline bool isRenderingEnabled() { return m_r_mask.field & RENDERING_ENABLED; }

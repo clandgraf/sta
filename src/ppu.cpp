@@ -273,12 +273,12 @@ void PPU::cycle() {
             case 4: // Fetch BG / Sprite Lo Tile Byte
                 if (doSprites) {
                     // TODO Support for 8x16 Sprites
-                    unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
-                    if (tile == 0xff) {
+                    if (m_oam.sprites[64 + sprIndex].attributes.field == 0xff) {
                         // If tile == 0xff render transparently
                         m_sprTileLo[sprIndex] = 0;
                     }
                     else {
+                        unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
                         unsigned int offset = m_scanline - m_oam.sprites[64 + sprIndex].y;
                         m_sprTileLo[sprIndex] = readVram(m_sprPatternTbl
                             + ((uint16_t)tile << 4)
@@ -296,12 +296,11 @@ void PPU::cycle() {
             case 6: // Fetch BG / Sprite Hi Tile Byte
                 if (doSprites) {
                     // TODO Support for 8x16 Sprites
-                    unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
-                    if (tile == 0xff) {
+                    if (m_oam.sprites[64 + sprIndex].attributes.field == 0xff) {
                         // If tile == 0xff render transparently
                         m_sprTileHi[sprIndex] = 0;
-                    }
-                    else {
+                    } else {
+                        unsigned int tile = m_oam.sprites[64 + sprIndex].tileIndex;
                         unsigned int offset = m_scanline - m_oam.sprites[64 + sprIndex].y;
                         m_sprTileHi[sprIndex] = readVram(m_sprPatternTbl
                             + ((uint16_t)tile << 4)
@@ -388,25 +387,30 @@ void PPU::run(unsigned int cycles) {
                     for (sprIndex = 0; sprIndex < 8; sprIndex++) {
                         if (m_sprCounter[sprIndex] > 0) continue;
     
-                        // Sprite Value
                         if (m_sprAttributes[sprIndex].hflip) {
                             fgPalIdx = ((m_sprTileLo[sprIndex] & 0x01) ? 0b0001 : 0)
                                 | ((m_sprTileHi[sprIndex] & 0x01) ? 0b0010 : 0)
                                 | (m_sprAttributes[sprIndex].palette << 2);
-
-                            m_sprTileLo[sprIndex] >>= 1;
-                            m_sprTileHi[sprIndex] >>= 1;
                         } else {
                             fgPalIdx = ((m_sprTileLo[sprIndex] & 0x80) ? 0b0001 : 0)
                                 | ((m_sprTileHi[sprIndex] & 0x80) ? 0b0010 : 0)
                                 | (m_sprAttributes[sprIndex].palette << 2);
-
-                            m_sprTileLo[sprIndex] <<= 1;
-                            m_sprTileHi[sprIndex] <<= 1;
                         }
 
-                        if (fgPalIdx != 0) {
+                        if ((fgPalIdx & 0x3) != 0) {
                             break;
+                        }
+                    }
+
+                    for (int i = 0; i < 8; i++) {
+                        if (m_sprCounter[i] > 0) continue;
+    
+                        if (m_sprAttributes[i].hflip) {
+                            m_sprTileLo[i] >>= 1;
+                            m_sprTileHi[i] >>= 1;
+                        } else {
+                            m_sprTileLo[i] <<= 1;
+                            m_sprTileHi[i] <<= 1;
                         }
                     }
                 }
