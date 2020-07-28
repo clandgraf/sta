@@ -415,12 +415,12 @@ void PPU::run(unsigned int cycles) {
     
                         if (m_sprAttributes[sprIndex].hflip) {
                             fgPalIdx = ((m_sprTileLo[sprIndex] & 0x01) ? 0b0001 : 0)
-                                | ((m_sprTileHi[sprIndex] & 0x01) ? 0b0010 : 0)
-                                | (m_sprAttributes[sprIndex].palette << 2);
+                                     | ((m_sprTileHi[sprIndex] & 0x01) ? 0b0010 : 0)
+                                     | (m_sprAttributes[sprIndex].palette << 2);
                         } else {
                             fgPalIdx = ((m_sprTileLo[sprIndex] & 0x80) ? 0b0001 : 0)
-                                | ((m_sprTileHi[sprIndex] & 0x80) ? 0b0010 : 0)
-                                | (m_sprAttributes[sprIndex].palette << 2);
+                                     | ((m_sprTileHi[sprIndex] & 0x80) ? 0b0010 : 0)
+                                     | (m_sprAttributes[sprIndex].palette << 2);
                         }
 
                         if ((fgPalIdx & 0x3) != 0) {

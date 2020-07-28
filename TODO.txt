@@ -1,8 +1,7 @@
 - Break on Scanline
 
 - Sprite Rendering
-	-> Sprite Zero Hit
-	-> Vertical Flipping
+	-> 8x16 Sprites
 	-> Sprite Overflow Handling
 
 - OAM Viewer

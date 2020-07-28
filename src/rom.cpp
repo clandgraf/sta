@@ -88,13 +88,13 @@ Cart::Cart(uint8_t* data, std::string name) : m_data(data), m_name(name) {
 
     // PRG ROM, always available
     m_prgBanks = (prg_bank*)cart_off;
-    cart_off += PRG_BANK_SIZE * this->prg_size();
+    cart_off += PRG_BANK_SIZE * this->prgSize();
 
     // CHR ROM, available?
     if (m_header->chrSize != 0) {
         m_chrBanks = (chr_bank*)cart_off;
         m_chrSize = m_header->chrSize;
-        cart_off += CHR_BANK_SIZE * this->chr_size();
+        cart_off += CHR_BANK_SIZE * this->chrSize();
     } else {
         // CHR RAM
         m_chrSize = 1;
@@ -154,7 +154,7 @@ void Cart::writeb_cpu(uint16_t addr, uint8_t value) {
 uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 {
     addr -= 0x8000;
-    if (prg_size() == 1) {
+    if (prgSize() == 1) {
         addr &= 0x3fff;
     }
     return prg(0)[addr];
@@ -163,7 +163,7 @@ uint8_t Cart::readb_cpu_nrom(uint16_t addr)
 void Cart::translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {
     bankOut = 0;
     addressOut = addressIn - 0x8000;
-    if (prg_size() == 1) {
+    if (prgSize() == 1) {
         addressOut &= 0x3fff;
     }
 }

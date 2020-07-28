@@ -77,8 +77,8 @@ public:
     Cart(uint8_t*, std::string file = "<none>");
     ~Cart();
 
-    inline uint8_t prg_size() const { return m_header->prgSize; }
-    inline uint8_t chr_size() const { return m_chrSize; }
+    inline uint8_t prgSize() const { return m_header->prgSize; }
+    inline uint8_t chrSize() const { return m_chrSize; }
 
     inline prg_bank& prg(uint8_t bank) const { return m_prgBanks[bank]; };
     inline chr_bank& chr(uint8_t bank) const { return m_chrBanks[bank]; };

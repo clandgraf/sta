@@ -323,8 +323,8 @@ static void renderRomInfo(Emu& emu) {
         if (ImGui::Begin("ROM Info", &showRomInfo)) {
             ImGui::Text("File: %s", emu.m_cart->m_name.c_str());
             ImGui::Text("Mapper: %d, %s", emu.m_cart->m_mapperId, mappers[emu.m_cart->m_mapperId]);
-            ImGui::Text("PRG ROM #: %d", emu.m_cart->prg_size());
-            ImGui::Text(emu.m_cart->m_useChrRam ? "CHR RAM #: %d" : "CHR ROM #: %d", emu.m_cart->chr_size());
+            ImGui::Text("PRG ROM #: %d", emu.m_cart->prgSize());
+            ImGui::Text(emu.m_cart->m_useChrRam ? "CHR RAM #: %d" : "CHR ROM #: %d", emu.m_cart->chrSize());
         }
         ImGui::End();
     }
@@ -388,7 +388,7 @@ static void renderMemoryView(Emu& emu) {
                     ImGui::PopFont();
                     ImGui::EndTabItem();
                 }
-                for (uint8_t i = 0; i < emu.m_cart->prg_size(); i++) {
+                for (uint8_t i = 0; i < emu.m_cart->prgSize(); i++) {
                     snprintf(title, 10, "PRG %d", i);
                     if (ImGui::BeginTabItem(title)) {
                         ImGui::PushFont(monoFont);
@@ -398,7 +398,7 @@ static void renderMemoryView(Emu& emu) {
                     }
                 }
 
-                for (uint8_t i = 0; i < emu.m_cart->chr_size(); i++) {
+                for (uint8_t i = 0; i < emu.m_cart->chrSize(); i++) {
                     snprintf(title, 10, "CHR %d", i);
                     if (ImGui::BeginTabItem(title)) {
                         ImGui::PushFont(monoFont);
