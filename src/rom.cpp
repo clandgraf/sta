@@ -7,6 +7,7 @@
 
 #include "rom.hpp"
 #include "util.hpp"
+#include "mappers/mapper000.hpp"
 
 namespace fs = std::filesystem;
 namespace sm = StreamManipulators;
@@ -104,6 +105,12 @@ Cart::Cart(uint8_t* data, std::string name) : m_data(data), m_name(name) {
 
     // Setup mapper id from flags fields from hi nybble of flags 6, 7
     m_mapperId = (m_header->mapperHi << 4) | (m_header->mapperLo);
+    switch (m_mapperId) {
+    case 0: m_mapper = std::make_shared<Mapper000>(*this); break;
+    default:
+        LOG_ERR << "Mapper " << m_mapperId << " is not supported.\n";
+        exit(1);
+    }
 }
 
 Cart::~Cart()
@@ -123,83 +130,25 @@ uint16_t Cart::getNameTable(uint8_t index) {
     return nametableOffsets[m_header->mirroring][index];
 }
 
-uint8_t Cart::readb_cpu(uint16_t addr)
+uint8_t Cart::readb_cpu(uint16_t address)
 {
-    if (m_mapperId == 0) {
-        return this->readb_cpu_nrom(addr);
-    }
-
-    LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
-    exit(1);
+    return m_mapper->readbCpu(address);
 }
 
 void Cart::translate_cpu(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {
-    if (m_mapperId == 0) {
-        return translate_cpu_nrom(addressIn, bankOut, addressOut);
-    }
-
-    LOG_ERR << "Unsupported Mapper" << m_mapperId << "\n";
-    exit(1);
+    return m_mapper->translateCpu(addressIn, bankOut, addressOut);
 }
 
 void Cart::writeb_cpu(uint16_t addr, uint8_t value) {
-    if (m_mapperId == 0) {
-        return this->writeb_cpu_nrom(addr, value);
-    }
-
-    LOG_ERR << "Unsupported Mapper"  << m_mapperId << "\n";
-    exit(1);
-}
-
-uint8_t Cart::readb_cpu_nrom(uint16_t addr)
-{
-    addr -= 0x8000;
-    if (prgSize() == 1) {
-        addr &= 0x3fff;
-    }
-    return prg(0)[addr];
-}
-
-void Cart::translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut) {
-    bankOut = 0;
-    addressOut = addressIn - 0x8000;
-    if (prgSize() == 1) {
-        addressOut &= 0x3fff;
-    }
-}
-
-void Cart::writeb_cpu_nrom(uint16_t addr, uint8_t value) {
-    LOG_ERR << "Write to NROM address " << addr << "\n";
+    m_mapper->writebCpu(addr, value);
 }
 
 uint8_t Cart::readb_ppu(uint16_t addr)
 {
-    if (m_mapperId == 0) {
-        return this->readb_ppu_nrom(addr);
-    }
-
-    LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
-    exit(1);
-}
-
-uint8_t Cart::readb_ppu_nrom(uint16_t addr) {
-    return this->chr(0)[addr];
+    return m_mapper->readbPpu(addr);
 }
 
 void Cart::writeb_ppu(uint16_t addr, uint8_t value)
 {
-    if (m_mapperId == 0) {
-        return writeb_ppu_nrom(addr, value);
-    }
-
-    LOG_ERR << "Unsupported Mapper " << m_mapperId << "\n";
-    exit(1);
-}
-
-void Cart::writeb_ppu_nrom(uint16_t addr, uint8_t value) {
-    if (m_useChrRam) {
-        chr(0)[addr] = value;
-    } else {
-        LOG_ERR << "Illegal write to CHR ROM @ " << sm::hex(addr) << "\n";
-    }
+    m_mapper->writebPpu(addr, value);
 }
