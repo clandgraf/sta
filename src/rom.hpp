@@ -25,6 +25,8 @@ typedef uint8_t prg_bank[PRG_BANK_SIZE];
 typedef uint8_t chr_bank[CHR_BANK_SIZE];
 typedef uint8_t trainer_bank[TRAINER_BANK_SIZE];
 
+class Mapper;
+
 class Cart {
     PACK(struct InesHeader {
         uint32_t             magic;
@@ -95,12 +97,7 @@ public:
 private:
     uint8_t m_chrSize = 0;
 
-    uint8_t readb_cpu_nrom(uint16_t address);
-    void translate_cpu_nrom(uint16_t addressIn, uint8_t& bankOut, uint16_t& addressOut);
-    void writeb_cpu_nrom(uint16_t address, uint8_t value);
-
-    uint8_t readb_ppu_nrom(uint16_t address);
-    void writeb_ppu_nrom(uint16_t address, uint8_t value);
+    std::shared_ptr<Mapper> m_mapper;
 };
 
 #endif

@@ -25,6 +25,9 @@
     <Filter Include="Source Files\contrib\glad">
       <UniqueIdentifier>{92cd9377-0be4-4e01-b881-a3b2a355561b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mappers">
+      <UniqueIdentifier>{e8d39764-1473-4375-a687-fde92327e5f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -87,6 +90,12 @@
     <ClCompile Include="src\controllers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\mappers\mapper.cpp">
+      <Filter>Mappers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mappers\mapper000.cpp">
+      <Filter>Mappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\defs.hpp">
@@ -142,6 +151,12 @@
     </ClInclude>
     <ClInclude Include="src\controllers.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mappers\mapper.hpp">
+      <Filter>Mappers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mappers\mapper000.hpp">
+      <Filter>Mappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
