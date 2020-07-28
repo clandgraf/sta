@@ -44,6 +44,8 @@ static bool showPatternTable = true;
 static bool showControls = false;
 static bool showOamViewer = false;
 
+static int selectedOamEntry = -1;
+
 #include "gui_opengl.hpp"
 
 static std::shared_ptr<Gui::Surface> patternTableSurface;
@@ -435,8 +437,12 @@ static void renderOamEntry(Emu& emu, unsigned int index, const PPU::OamEntry& en
     if (entry.y >= 0xef) {
         return;
     }
-
-    ImGui::Text("%02X  Y: %02X  X: %02X  I: %02X", index, entry.y, entry.x, entry.tileIndex);
+    
+    char buffer[64];
+    snprintf(buffer, 64, "##%02X  Y: %02X  X: %02X  I: %02X", index, entry.y, entry.x, entry.tileIndex);
+    if (ImGui::Selectable(buffer)) {
+        selectedOamEntry = entry.tileIndex;
+    }
     ImGui::Separator();
 }
 
@@ -762,6 +768,7 @@ bool Gui::initUi(bool fullscreen) {
     showDisassembly = Settings::get("debugger-view-disassembly", true);
     showRomInfo = Settings::get("debugger-view-rominfo", true);
     showControls = Settings::get("debugger-view-controls", true);
+    showOamViewer = Settings::get("debugger-view-oam", false);
 
     patternTableSurface = std::make_shared<Gui::Surface>(2 * 128, 128);
     initPatternTable();
@@ -780,6 +787,7 @@ void Gui::teardownUi() {
     Settings::set("debugger-view-disassembly", showDisassembly);
     Settings::set("debugger-view-rominfo", showRomInfo);
     Settings::set("debugger-view-controls", showControls);
+    Settings::set("debugger-view-oam", showOamViewer);
 
     writeRecentFiles();
     Input::writeSettings();
