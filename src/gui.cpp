@@ -653,7 +653,7 @@ static void renderFrame() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     screenSurface->upload();
-    screenSurface->render();
+    screenSurface->render(display_w, display_h);
 }
 
 void Gui::runFrame(Emu& emu) {

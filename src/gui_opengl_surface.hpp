@@ -33,7 +33,7 @@ namespace Gui {
 
         void setPixel(int x, int y, Palette::Color color);
         void upload();
-        void render();
+        void render(int displayWidth, int displayHeight);
 
         Texture getTexture();
 

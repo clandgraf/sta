@@ -4,9 +4,10 @@ const char* Gui::Surface::VertexShaderSource =
     "#version 330 core\n"
     "layout(location = 0) in vec3 aPos;\n"
     "layout(location = 1) in vec2 aTexCoord;\n"
+    "uniform vec4 scaleV;\n"
     "out vec2 TexCoord;\n"
     "void main() {\n"
-    "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0) * scaleV;\n"
     "  TexCoord = aTexCoord;"
     "}\n\0";
 
@@ -151,12 +152,21 @@ void Gui::Surface::upload() {
     uploadTextureData(m_texture, m_width, m_height, m_data);
 }
 
-void Gui::Surface::render() {
-    // if frameratio > screenratio => frameheight = pictureheight => scaleY = 1
-    //                                                            => scaleX = 1 / 
-    // look at tileengine code
+void Gui::Surface::render(int displayWidth, int displayHeight) {
+    float sx, sy;
+    float displayRatio = float(displayWidth) / float(displayHeight);
+    float surfaceRatio = float(m_width) / float(m_height);
+    if (displayRatio > surfaceRatio) {
+        sy = 1;
+        sx = 1 / displayRatio * surfaceRatio;
+    } else {
+        sx = 1;
+        sy = 1 / (float(displayHeight) / float(displayWidth)) * (float(m_height) / float(m_width));
+    }
 
     glUseProgram(Program);
+    int loc = glGetUniformLocation(Program, "scaleV");
+    glUniform4f(loc, sx, sy, 1.0f, 1.0f);
     glBindTexture(GL_TEXTURE_2D, m_texture);
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
