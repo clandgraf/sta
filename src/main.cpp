@@ -37,7 +37,7 @@ int main(int ac, char ** av) {
         }
     }
 
-    if (!Gui::initUi(fullscreen)) {
+    if (!Gui::initUi(emu, fullscreen)) {
         return EXIT_FAILURE;
     }
 
@@ -70,7 +70,7 @@ int main(int ac, char ** av) {
         Gui::swapBuffers();
     }
 
-    Gui::teardownUi();
+    Gui::teardownUi(emu);
     emu.writeSettings();
     Settings::write();
     return EXIT_SUCCESS;

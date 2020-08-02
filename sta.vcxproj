@@ -31,12 +31,21 @@
     <ClCompile Include="src\disasm.cpp" />
     <ClCompile Include="src\emu.cpp" />
     <ClCompile Include="src\gui.cpp" />
+    <ClCompile Include="src\gui\gui_controls.cpp" />
+    <ClCompile Include="src\gui\gui_disasm.cpp" />
+    <ClCompile Include="src\gui\gui_emustate.cpp" />
+    <ClCompile Include="src\gui\gui_memory.cpp" />
+    <ClCompile Include="src\gui\gui_oam.cpp" />
+    <ClCompile Include="src\gui\gui_patterntbl.cpp" />
+    <ClCompile Include="src\gui\gui_rominfo.cpp" />
+    <ClCompile Include="src\gui\gui_window.cpp" />
     <ClCompile Include="src\gui_filebrowser.cpp" />
     <ClCompile Include="src\gui_opengl_surface.cpp" />
     <ClCompile Include="src\inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mappers\mapper.cpp" />
     <ClCompile Include="src\mappers\mapper000.cpp" />
+    <ClCompile Include="src\mappers\mapper001.cpp" />
     <ClCompile Include="src\mem.cpp" />
     <ClCompile Include="src\ppu.cpp" />
     <ClCompile Include="src\rom.cpp" />
@@ -50,6 +59,7 @@
     <ClInclude Include="src\disasm.hpp" />
     <ClInclude Include="src\emu.hpp" />
     <ClInclude Include="src\gui.hpp" />
+    <ClInclude Include="src\gui\gui_window.hpp" />
     <ClInclude Include="src\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui_opengl.hpp" />
     <ClInclude Include="src\gui_opengl_surface.hpp" />
@@ -59,6 +69,7 @@
     <ClInclude Include="src\mappers.hpp" />
     <ClInclude Include="src\mappers\mapper.hpp" />
     <ClInclude Include="src\mappers\mapper000.hpp" />
+    <ClInclude Include="src\mappers\mapper001.hpp" />
     <ClInclude Include="src\mem.hpp" />
     <ClInclude Include="src\ppu.hpp" />
     <ClInclude Include="src\rom.hpp" />

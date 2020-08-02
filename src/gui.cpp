@@ -2,20 +2,16 @@
 #include <sstream>
 
 #include "gui.hpp"
+#include "gui/gui_window.hpp"
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
-#include "ppu.hpp"
 #include "disasm.hpp"
-#include "mappers.hpp"
 #include "IconsMaterialDesign.h"
 
 #include <iostream>
 #include <cstdio>
 #include <filesystem>
-
-#define _CRT_SECURE_NO_WARNINGS 1
-#include <imgui_memory_editor.h>
 
 #include "gui_filebrowser.hpp"
 
@@ -27,37 +23,22 @@ static ImFont* defaultFont;
 static ImFont* sansFont;
 static ImFont* monoFont;
 
-static MemoryEditor mem_edit;
-
 static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 static ImVec4 highlight_text_color = ImVec4(0.89f, 0.0f, 0.0f, 1.00f);
 
 static std::list<fs::path> recentFiles;
 
-static bool patternTableLoaded = false;
-
-static bool showEmuState = true;
-static bool showMemoryView = true;
-static bool showRomInfo = true;
-static bool showDisassembly = true;
-static bool showPatternTable = true;
-static bool showControls = false;
-static bool showOamViewer = false;
-
-static int selectedOamEntry = -1;
-
 #include "gui_opengl.hpp"
-
-static std::shared_ptr<Gui::Surface> patternTableSurface;
 
 static std::shared_ptr<Gui::Surface> screenSurface;
 
-Palette::Color colors[4] = {
-    { 0xff, 0xff, 0xff },
-    { 0xbb, 0xbb, 0xbb },
-    { 0x77, 0x77, 0x77 },
-    { 0x00, 0x00, 0x00 },
-};
+void Gui::pushMonoFont() {
+    ImGui::PushFont(monoFont);
+}
+
+void Gui::pushHighlightText() {
+    ImGui::PushStyleColor(ImGuiCol_Text, highlight_text_color);
+}
 
 static void addRecent(const fs::path& p) {
     recentFiles.remove(p);
@@ -172,38 +153,6 @@ static bool openFile(Emu& emu, const fs::path& p) {
     return false;
 }
 
-static void refreshPatternTable(Emu& emu) {
-    for (int table = 0; table < 2; table++) {
-        for (int tile = 0; tile < 256; tile++) {
-            uint16_t offset = (table ? 0x1000 : 0) + tile * 0x10;
-            for (int row = 0; row < 8; row++) {
-                uint8_t p0 = emu.m_cart->readb_ppu(offset + row + 0);
-                uint16_t p1 = emu.m_cart->readb_ppu(offset + row + 8);
-                for (int col = 0; col < 8; col++) {
-                    uint8_t pxl = ((p0 >> (7 - col)) & 1) | (((p1 >> (7 - col)) & 1) << 1);
-
-                    size_t textureX = ((table ? 128 : 0) + (tile % 16) * 8 + col);
-                    size_t textureY = ((tile / 16) * 8 + row);
-
-                    patternTableSurface->setPixel(textureX, textureY, colors[pxl]);
-                }
-            }
-        }
-    }
-
-    patternTableSurface->upload();
-}
-
-static void initPatternTable() {
-    for (int y = 0; y < 128; y++) {
-        for (int x = 0; x < 2 * 128; x++) {
-            patternTableSurface->setPixel(x, y, {0, 0, 0});
-        }
-    }
-
-    patternTableSurface->upload();
-}
-
 static void renderMenuBar(Emu& emu) {
     bool openRom = false;
     bool setupControllers = false;
@@ -253,9 +202,17 @@ static void renderMenuBar(Emu& emu) {
                 emu.m_logState = !emu.m_logState;
             }
 
-            if (ImGui::MenuItem("Refresh Pattern Table", nullptr)) {
-                if (emu.isInitialized()) {
-                    refreshPatternTable(emu);
+            for (auto& window: Gui::Windows) {
+                Gui::Window& w = *window.second;
+                if (w.hasActions()) {
+                    if (ImGui::BeginMenu(w.title)) {
+                        for (const auto& action: w) {
+                            if (ImGui::MenuItem(action.c_str(), nullptr)) {
+                                w.runAction(action.c_str(), emu);
+                            }
+                        }
+                        ImGui::EndMenu();
+                    }
                 }
             }
 
@@ -283,29 +240,11 @@ static void renderMenuBar(Emu& emu) {
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Emu State", nullptr, showEmuState)) {
-                showEmuState = !showEmuState;
+            for (auto& window: Gui::Windows) {
+                auto w = window.second;
+                ImGui::MenuItem(w->title, nullptr, w->show());
             }
 
-            if (ImGui::MenuItem("Rom Info", nullptr, showRomInfo)) {
-                showRomInfo = !showRomInfo;
-            }
-
-            if (ImGui::MenuItem("Disassembly", nullptr, showDisassembly)) {
-                showDisassembly = !showDisassembly;
-            }
-
-            if (ImGui::MenuItem("Memory", nullptr, showMemoryView)) {
-                showMemoryView = !showMemoryView;
-            }
-
-            if (ImGui::MenuItem("OAM", nullptr, showOamViewer)) {
-                showOamViewer = !showOamViewer;
-            }
-
-            if (ImGui::MenuItem("Controls", nullptr, showControls)) {
-                showControls = !showControls;
-            }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -320,102 +259,6 @@ static void renderMenuBar(Emu& emu) {
     }
 }
 
-static void renderRomInfo(Emu& emu) {
-    if (emu.isInitialized() && showRomInfo) {
-        if (ImGui::Begin("ROM Info", &showRomInfo)) {
-            ImGui::Text("File: %s", emu.m_cart->m_name.c_str());
-            ImGui::Text("Mapper: %d, %s", emu.m_cart->m_mapperId, mappers[emu.m_cart->m_mapperId]);
-            ImGui::Text("PRG ROM #: %d", emu.m_cart->prgSize());
-            ImGui::Text(emu.m_cart->m_useChrRam ? "CHR RAM #: %d" : "CHR ROM #: %d", emu.m_cart->chrSize());
-        }
-        ImGui::End();
-    }
-}
-
-static void ImGui_AttachTooltip(const char* str) {
-    if (ImGui::IsItemHovered()) {
-        ImGui::BeginTooltip();
-        ImGui::TextUnformatted(str);
-        ImGui::EndTooltip();
-    }
-}
-
-static void renderStateControl(const char* icon, const char* tooltip, std::function<void()> action) {
-    if (ImGui::Button(icon)) {
-        action();
-    }
-    ImGui_AttachTooltip(tooltip);
-}
-
-static void renderEmuState(Emu& emu) {
-    if (emu.isInitialized() && showEmuState) {
-        if (ImGui::Begin("Emu State", &showEmuState)) {
-            renderStateControl(ICON_MD_PLAY_ARROW, "Continue", [&emu]{ emu.m_isStepping = false; });
-            ImGui::SameLine();
-            renderStateControl(ICON_MD_ARROW_FORWARD, "Step Operation", [&emu]{ emu.stepOperation(); });
-            ImGui::SameLine();
-            renderStateControl(ICON_MD_ARROW_UPWARD, "Step Out", [&emu] { emu.stepOut(); });
-            ImGui::SameLine();
-            renderStateControl(ICON_MD_CAMERA, "Step Frame", [&emu] { emu.stepFrame(); });
-            ImGui::SameLine();
-            renderStateControl(ICON_MD_SKIP_NEXT, "Step Scanline", [&emu] { emu.stepScanline(); });
-
-            ImGui::PushFont(monoFont);
-            ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
-            ImGui::Text("PC: %04x  Carry:    %01x", emu.m_pc, emu.m_f_carry);
-            ImGui::Text("SP: %02x    Zero:     %01x", emu.m_sp, emu.m_f_zero);
-            ImGui::Text("A:  %02x    IRQ:      %01x", emu.m_r_a, emu.m_f_irq); 
-            ImGui::Text("X:  %02x    Decimal:  %01x", emu.m_r_x, emu.m_f_decimal);
-            ImGui::Text("Y:  %02x    Overflow: %01x", emu.m_r_y, emu.m_f_overflow);
-            ImGui::Text("          Negative: %01x", emu.m_f_negative);
-            ImGui::Separator();
-            ImGui::Text("PPU Cycles: %d", emu.m_ppu->getCycleCount());
-            ImGui::Text("PPU Scanline: %d", emu.m_ppu->m_scanline);
-            ImGui::PopFont();
-        }
-        ImGui::End();
-    }
-}
-
-static void renderMemoryView(Emu& emu) {
-    // Create Memory View
-    if (emu.isInitialized() && showMemoryView) {
-        if (ImGui::Begin("Memory", &showMemoryView)) {
-            ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-            char title[10];
-            if (ImGui::BeginTabBar("Memory Tabbar", tab_bar_flags)) {
-                if (ImGui::BeginTabItem("RAM")) {
-                    ImGui::PushFont(monoFont);
-                    mem_edit.DrawContents(emu.m_mem->m_internalRam, 0x800, 0x0000);
-                    ImGui::PopFont();
-                    ImGui::EndTabItem();
-                }
-                for (uint8_t i = 0; i < emu.m_cart->prgSize(); i++) {
-                    snprintf(title, 10, "PRG %d", i);
-                    if (ImGui::BeginTabItem(title)) {
-                        ImGui::PushFont(monoFont);
-                        mem_edit.DrawContents(emu.m_cart->m_prgBanks[i], 0x4000, 0x8000 + 0x4000 * i);  // TODO only true for NROM
-                        ImGui::PopFont();
-                        ImGui::EndTabItem();
-                    }
-                }
-
-                for (uint8_t i = 0; i < emu.m_cart->chrSize(); i++) {
-                    snprintf(title, 10, "CHR %d", i);
-                    if (ImGui::BeginTabItem(title)) {
-                        ImGui::PushFont(monoFont);
-                        mem_edit.DrawContents(emu.m_cart->chr(i), 0x2000, 0x2000 * i);
-                        ImGui::PopFont();
-                        ImGui::EndTabItem();
-                    }
-                }
-
-                ImGui::EndTabBar();
-            }
-        }
-        ImGui::End();
-    }
-}
 
 static void renderOpenRomDialog(Emu& emu) {
     fs::path selectedFile;
@@ -430,31 +273,6 @@ static void renderOpenRomDialog(Emu& emu) {
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
-    }
-}
-
-static void renderOamEntry(Emu& emu, unsigned int index, const PPU::OamEntry& entry) {
-    if (entry.y >= 0xef) {
-        return;
-    }
-    
-    char buffer[64];
-    snprintf(buffer, 64, "##%02X  Y: %02X  X: %02X  I: %02X", index, entry.y, entry.x, entry.tileIndex);
-    if (ImGui::Selectable(buffer)) {
-        selectedOamEntry = entry.tileIndex;
-    }
-    ImGui::Separator();
-}
-
-static void renderOamViewer(Emu &emu) {
-    if (emu.isInitialized() && showOamViewer) {
-        if (ImGui::Begin("OAM Viewer", &showOamViewer)) {
-            const PPU::OamEntry* entries = emu.m_ppu->getSprites();
-            for (int i = 0; i < 64; i++) {
-                renderOamEntry(emu, i, entries[i]);
-            }
-        }
-        ImGui::End();
     }
 }
 
@@ -475,7 +293,6 @@ static void renderControllerButtonPane(Input::ControllerDef button) {
     if (ImGui::Button(buttonWidgetIds[button].clear.c_str())) {
         Input::clearButton(button);
     }
-
 
     const auto& scancodes = Input::getScancodes(button);
     auto scancode = scancodes.begin();
@@ -545,98 +362,6 @@ static void renderSetupControllersDialog() {
     }
 }
 
-static int16_t lastOpcode = -1;
-static std::string disassembledLine{""};
-
-static void renderDisassembly(Emu& emu) {
-    using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
-
-    if (emu.getMode() != Emu::Mode::RESET) {
-        uint16_t address = emu.getOpcodeAddress();
-        DisasmSegmentSptr segment = emu.m_disassembler->disasmSegment(address);
-
-        if (ImGui::Begin("Disassembly", &showDisassembly)) {
-            ImGui::PushFont(monoFont);
-            for (auto& entry: segment->m_lines) {
-                auto& line = entry.second;
-
-                bool isBreakpoint = emu.isBreakpoint(line.offset);
-                static char buffer[0xff];
-                snprintf(buffer, 0xff, "%s###%04x_brk", isBreakpoint ? ">" : " ", line.offset);
-                if (ImGui::Selectable(buffer, isBreakpoint)) {
-                    emu.toggleBreakpoint(line.offset);
-                }
-                ImGui::SameLine();
-                if (line.offset == address) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, highlight_text_color);
-                    ImGui::Text(line.repr.c_str());
-                    ImGui::PopStyleColor();
-                } else {
-                    ImGui::Text(line.repr.c_str());
-                }
-            }
-            ImGui::PopFont();
-
-            if (ImGui::Button("continue...")) {
-                emu.m_disassembler->continueSegment(segment);
-            }
-        }
-        ImGui::End();
-    }
-}
-
-static void renderPatternTable() {
-    if (showPatternTable) {
-        if (ImGui::Begin("Pattern Table", &showPatternTable)) {
-            ImGui::Image((void*)(intptr_t)patternTableSurface->getTexture(), ImVec2(512, 256));
-        }
-        ImGui::End();
-    }
-}
-
-static void renderControls(Input::Controller& input0, Input::Controller& input1) {
-    if (showControls) {
-        if (ImGui::Begin("Controls", &showControls)) {
-            ImGui::Text("Controller 1");
-            ImGui::Checkbox("Up", &(input0.d_up));
-            ImGui::SameLine();
-            ImGui::Checkbox("Left", &(input0.d_left));
-            ImGui::SameLine();
-            ImGui::Checkbox("A", &(input0.btn_a));
-            ImGui::SameLine();
-            ImGui::Checkbox("Start", &(input0.start));
-
-            ImGui::Checkbox("Down", &(input0.d_down));
-            ImGui::SameLine();
-            ImGui::Checkbox("Right", &(input0.d_right));
-            ImGui::SameLine();
-            ImGui::Checkbox("B", &(input0.btn_b));
-            ImGui::SameLine();
-            ImGui::Checkbox("Select", &(input0.select));
-
-            ImGui::Separator();
-
-            ImGui::Text("Controller 2");
-            ImGui::Checkbox("Up", &(input1.d_up));
-            ImGui::SameLine();
-            ImGui::Checkbox("Left", &(input1.d_left));
-            ImGui::SameLine();
-            ImGui::Checkbox("A", &(input1.btn_a));
-            ImGui::SameLine();
-            ImGui::Checkbox("Start", &(input1.start));
-
-            ImGui::Checkbox("Down", &(input1.d_down));
-            ImGui::SameLine();
-            ImGui::Checkbox("Right", &(input1.d_right));
-            ImGui::SameLine();
-            ImGui::Checkbox("B", &(input1.btn_b));
-            ImGui::SameLine();
-            ImGui::Checkbox("Select", &(input1.select));
-        }
-        ImGui::End();
-    }
-}
-
 static void setPixel(unsigned int x, unsigned int y, unsigned int v) {
     screenSurface->setPixel(x, y, Palette::DEFAULT[v & 0x3f]);
 }
@@ -667,9 +392,6 @@ void Gui::runFrame(Emu& emu) {
 }
 
 void Gui::runUi(Emu& emu) {
-    static Input::Controller controller0;
-    static Input::Controller controller1;
-
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -688,13 +410,9 @@ void Gui::runUi(Emu& emu) {
     renderMenuBar(emu);
     renderOpenRomDialog(emu);
     renderSetupControllersDialog();
-    renderEmuState(emu);
-    renderRomInfo(emu);
-    renderOamViewer(emu);
-    renderMemoryView(emu);
-    renderDisassembly(emu);
-    renderPatternTable();
-    renderControls(controller0, controller1);
+    for (auto& window: Gui::Windows) {
+        window.second->render(emu);
+    }
     Gui::Notifications.render();
     ImGui::PopFont();
 
@@ -731,7 +449,15 @@ bool initImGUI(GLFWwindow* window) {
     return true;
 }
 
-bool Gui::initUi(bool fullscreen) {
+extern void createDisassembly();
+extern void createPatternTable();
+extern void createEmuState();
+extern void createMemoryViewer();
+extern void createOamViewer();
+extern void createControls();
+extern void createRomInfo();
+
+bool Gui::initUi(Emu& emu, bool fullscreen) {
     static char widgetIdBuffer[256];
 
     ImGui_FileBrowser_Init();
@@ -763,15 +489,17 @@ bool Gui::initUi(bool fullscreen) {
     Input::loadSettings();
     loadRecentFiles();
 
-    showMemoryView = Settings::get("debugger-view-memory", true);
-    showEmuState = Settings::get("debugger-view-state", true);
-    showDisassembly = Settings::get("debugger-view-disassembly", true);
-    showRomInfo = Settings::get("debugger-view-rominfo", true);
-    showControls = Settings::get("debugger-view-controls", true);
-    showOamViewer = Settings::get("debugger-view-oam", false);
+    createDisassembly();
+    createPatternTable();
+    createEmuState();
+    createMemoryViewer();
+    createOamViewer();
+    createControls();
+    createRomInfo();
 
-    patternTableSurface = std::make_shared<Gui::Surface>(2 * 128, 128);
-    initPatternTable();
+    for (auto& window: Gui::Windows) {
+        window.second->init(emu);
+    }
 
     return initImGUI(window);
 }
@@ -781,19 +509,15 @@ static void teardownImGui() {
     ImGui::DestroyContext();
 }
 
-void Gui::teardownUi() {
-    Settings::set("debugger-view-memory", showMemoryView);
-    Settings::set("debugger-view-state", showEmuState);
-    Settings::set("debugger-view-disassembly", showDisassembly);
-    Settings::set("debugger-view-rominfo", showRomInfo);
-    Settings::set("debugger-view-controls", showControls);
-    Settings::set("debugger-view-oam", showOamViewer);
+void Gui::teardownUi(Emu& emu) {
+    for (auto& window : Gui::Windows) {
+        window.second->teardown(emu);
+    }
 
     writeRecentFiles();
     Input::writeSettings();
 
     teardownImGui();
-    patternTableSurface = nullptr;
     screenSurface = nullptr;
     Surface::teardown();
     teardownWindow();

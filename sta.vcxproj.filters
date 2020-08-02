@@ -28,6 +28,9 @@
     <Filter Include="Mappers">
       <UniqueIdentifier>{e8d39764-1473-4375-a687-fde92327e5f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Gui">
+      <UniqueIdentifier>{a2abcc69-857f-45b6-bf6a-d7e8de6f5e51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -96,6 +99,33 @@
     <ClCompile Include="src\mappers\mapper000.cpp">
       <Filter>Mappers</Filter>
     </ClCompile>
+    <ClCompile Include="src\mappers\mapper001.cpp">
+      <Filter>Mappers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_window.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_disasm.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_patterntbl.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_emustate.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_memory.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_oam.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_controls.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\gui_rominfo.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\defs.hpp">
@@ -157,6 +187,12 @@
     </ClInclude>
     <ClInclude Include="src\mappers\mapper000.hpp">
       <Filter>Mappers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mappers\mapper001.hpp">
+      <Filter>Mappers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\gui_window.hpp">
+      <Filter>Gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

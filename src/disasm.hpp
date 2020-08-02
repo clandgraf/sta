@@ -44,6 +44,9 @@ public:
     bool m_showAbsoluteLabels = true;       // Show Labels for Absolute Addressing
     bool m_absoluteBranchAddresses = true;  // Display absolute Branch Addresses
 
+    std::map<uint16_t, DisasmSegmentSptr>::const_iterator begin() const { return m_disassembly.begin(); }
+    std::map<uint16_t, DisasmSegmentSptr>::const_iterator end() const { return m_disassembly.end(); }
+
 private:
     Emu& m_emu;
 
