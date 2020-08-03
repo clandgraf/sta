@@ -34,12 +34,12 @@
     <ClCompile Include="src\gui\gui_controls.cpp" />
     <ClCompile Include="src\gui\gui_disasm.cpp" />
     <ClCompile Include="src\gui\gui_emustate.cpp" />
+    <ClCompile Include="src\gui\gui_filebrowser.cpp" />
     <ClCompile Include="src\gui\gui_memory.cpp" />
     <ClCompile Include="src\gui\gui_oam.cpp" />
     <ClCompile Include="src\gui\gui_patterntbl.cpp" />
     <ClCompile Include="src\gui\gui_rominfo.cpp" />
     <ClCompile Include="src\gui\gui_window.cpp" />
-    <ClCompile Include="src\gui_filebrowser.cpp" />
     <ClCompile Include="src\gui_opengl_surface.cpp" />
     <ClCompile Include="src\inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -59,8 +59,8 @@
     <ClInclude Include="src\disasm.hpp" />
     <ClInclude Include="src\emu.hpp" />
     <ClInclude Include="src\gui.hpp" />
+    <ClInclude Include="src\gui\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui\gui_window.hpp" />
-    <ClInclude Include="src\gui_filebrowser.hpp" />
     <ClInclude Include="src\gui_opengl.hpp" />
     <ClInclude Include="src\gui_opengl_surface.hpp" />
     <ClInclude Include="src\IconsMaterialDesign.h" />

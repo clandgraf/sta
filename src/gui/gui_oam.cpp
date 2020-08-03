@@ -37,5 +37,5 @@ static void render(Gui::Window& window, Emu& emu) {
 }
 
 void createOamViewer() {
-    Gui::Window::createWindow("debugger-view-oam", "OAM Viewer", render);
+    Gui::create<Gui::Window>("debugger-view-oam", "OAM Viewer", render);
 }

@@ -50,5 +50,5 @@ static void render(Gui::Window& window, Emu& emu) {
 }
 
 void createMemoryViewer() {
-    Gui::Window::createWindow("debugger-view-memory", "Memory", render);
+    Gui::create<Gui::Window>("debugger-view-memory", "Memory", render);
 }

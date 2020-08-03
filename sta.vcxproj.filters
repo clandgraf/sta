@@ -63,9 +63,6 @@
     <ClCompile Include="src\rom.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui_filebrowser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -126,6 +123,9 @@
     <ClCompile Include="src\gui\gui_rominfo.cpp">
       <Filter>Gui</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui\gui_filebrowser.cpp">
+      <Filter>Gui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\defs.hpp">
@@ -138,9 +138,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mappers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui_filebrowser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\util.hpp">
@@ -192,6 +189,9 @@
       <Filter>Mappers</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\gui_window.hpp">
+      <Filter>Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\gui_filebrowser.hpp">
       <Filter>Gui</Filter>
     </ClInclude>
   </ItemGroup>

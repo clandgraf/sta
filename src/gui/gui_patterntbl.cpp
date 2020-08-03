@@ -61,6 +61,6 @@ static void teardown(Gui::Window& window, Emu&) {
 }
 
 void createPatternTable() {
-    auto w = Gui::Window::createWindow("debugger-view-patterntbl", "Pattern Table", render, init, teardown);
+    auto w = Gui::create<Gui::Window>("debugger-view-patterntbl", "Pattern Table", render, init, teardown);
     w->addAction("Refresh Pattern Table", refreshPatternTable);
 }

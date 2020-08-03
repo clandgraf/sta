@@ -50,5 +50,5 @@ static void render(Gui::Window& window, Emu& emu) {
 }
 
 void createControls() {
-    Gui::Window::createWindow("debugger-view-controls", "Controls", render);
+    Gui::create<Gui::Window>("debugger-view-controls", "Controls", render);
 }

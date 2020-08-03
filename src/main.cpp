@@ -17,6 +17,24 @@ void printUsage(const char* prog) {
     std::cout << prog << " [--rom <rom_file>] [--fullscreen] [--help]\n";
 }
 
+extern void createDisassembly();
+extern void createPatternTable();
+extern void createEmuState();
+extern void createMemoryViewer();
+extern void createOamViewer();
+extern void createControls();
+extern void createRomInfo();
+
+void registerGuiElements() {
+    createDisassembly();
+    createPatternTable();
+    createEmuState();
+    createMemoryViewer();
+    createOamViewer();
+    createControls();
+    createRomInfo();
+}
+
 int main(int ac, char ** av) {
     const char* romPath = cli::value(ac, av, "--rom");
     bool fullscreen = cli::flag(ac, av, "--fullscreen");
@@ -36,6 +54,8 @@ int main(int ac, char ** av) {
             emu.init(cart);
         }
     }
+
+    registerGuiElements();
 
     if (!Gui::initUi(emu, fullscreen)) {
         return EXIT_FAILURE;

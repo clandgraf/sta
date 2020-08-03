@@ -52,5 +52,5 @@ void render(Gui::Window window, Emu& emu) {
 }
 
 void createEmuState() {
-    Gui::Window::createWindow("debugger-view-state", "Emu State", render);
+    Gui::create<Gui::Window>("debugger-view-state", "Emu State", render);
 }

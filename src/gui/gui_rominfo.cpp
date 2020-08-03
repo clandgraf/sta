@@ -18,5 +18,5 @@ static void render(Gui::Window& window, Emu& emu) {
 }
 
 void createRomInfo() {
-    Gui::Window::createWindow("debugger-view-rominfo", "ROM Info", render);
+    Gui::create<Gui::Window>("debugger-view-rominfo", "ROM Info", render);
 }

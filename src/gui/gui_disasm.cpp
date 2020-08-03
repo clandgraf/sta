@@ -48,5 +48,5 @@ static void render(Gui::Window& window, Emu& emu) {
 }
 
 void createDisassembly() {
-    Gui::Window::createWindow("debugger-view-disassembly", "Disassembly", render);
+    Gui::create<Gui::Window>("debugger-view-disassembly", "Disassembly", render);
 }

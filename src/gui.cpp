@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <filesystem>
 
-#include "gui_filebrowser.hpp"
+#include "gui/gui_filebrowser.hpp"
 
 #include "defs.hpp"
 
@@ -202,7 +202,7 @@ static void renderMenuBar(Emu& emu) {
                 emu.m_logState = !emu.m_logState;
             }
 
-            for (auto& window: Gui::Windows) {
+            for (auto& window: Gui::Window::Entries) {
                 Gui::Window& w = *window.second;
                 if (w.hasActions()) {
                     if (ImGui::BeginMenu(w.title)) {
@@ -240,7 +240,7 @@ static void renderMenuBar(Emu& emu) {
 
             ImGui::Separator();
 
-            for (auto& window: Gui::Windows) {
+            for (auto& window: Gui::Window::Entries) {
                 auto w = window.second;
                 ImGui::MenuItem(w->title, nullptr, w->show());
             }
@@ -258,7 +258,6 @@ static void renderMenuBar(Emu& emu) {
         ImGui::OpenPopup("Setup Controllers");
     }
 }
-
 
 static void renderOpenRomDialog(Emu& emu) {
     fs::path selectedFile;
@@ -410,7 +409,7 @@ void Gui::runUi(Emu& emu) {
     renderMenuBar(emu);
     renderOpenRomDialog(emu);
     renderSetupControllersDialog();
-    for (auto& window: Gui::Windows) {
+    for (auto& window: Gui::Window::Entries) {
         window.second->render(emu);
     }
     Gui::Notifications.render();
@@ -449,14 +448,6 @@ bool initImGUI(GLFWwindow* window) {
     return true;
 }
 
-extern void createDisassembly();
-extern void createPatternTable();
-extern void createEmuState();
-extern void createMemoryViewer();
-extern void createOamViewer();
-extern void createControls();
-extern void createRomInfo();
-
 bool Gui::initUi(Emu& emu, bool fullscreen) {
     static char widgetIdBuffer[256];
 
@@ -489,15 +480,7 @@ bool Gui::initUi(Emu& emu, bool fullscreen) {
     Input::loadSettings();
     loadRecentFiles();
 
-    createDisassembly();
-    createPatternTable();
-    createEmuState();
-    createMemoryViewer();
-    createOamViewer();
-    createControls();
-    createRomInfo();
-
-    for (auto& window: Gui::Windows) {
+    for (auto& window: Gui::Window::Entries) {
         window.second->init(emu);
     }
 
@@ -510,7 +493,7 @@ static void teardownImGui() {
 }
 
 void Gui::teardownUi(Emu& emu) {
-    for (auto& window : Gui::Windows) {
+    for (auto& window : Gui::Window::Entries) {
         window.second->teardown(emu);
     }
 
