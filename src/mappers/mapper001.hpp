@@ -26,8 +26,17 @@ public:
     virtual void writebPpu(uint16_t address, uint8_t value);
 
 private:
+    uint8_t* m_prgRam;
+
+    prg_bank* m_prgBanks[2];
+
     unsigned int m_counter = 0;
     unsigned int m_shifter = 0;
 
     Control m_control;
+    
+    uint8_t m_prgBankSelect;
+    bool m_prgRamEnable;
+
+    void updatePrgBanks();
 };
