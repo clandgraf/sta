@@ -16,6 +16,32 @@ uint8_t Mapper001::readbCpu(uint16_t address) {
 }
 
 void Mapper001::writebCpu(uint16_t address, uint8_t value) {
+    if (address >= 0x8000) {
+        if (0x80 & value) {
+            m_shifter = 0;
+            m_counter = 0;
+        } else {
+            m_shifter <<= 1;
+            m_shifter |= 0x01 & value;
+            m_counter++;
+
+            if (m_counter == 5) {
+                uint16_t a = address & 0x6000;
+                switch (a) {
+                    case 0x0000:
+                        m_control.value = m_shifter;
+                        break;
+                    case 0x2000:
+                    case 0x4000:
+                    case 0x6000:
+                        break;
+                }
+                m_counter = 0;
+                m_shifter = 0;
+            }
+        }
+    }
+
     LOG_ERR << "Write to NROM address " << address << "\n";
 }
 
