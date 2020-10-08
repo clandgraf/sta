@@ -4,7 +4,7 @@
 #include "mem.hpp"
 #include "rom.hpp"
 #include "ppu.hpp"
-#include "util.hpp"
+#include "core/util.hpp"
 #include "cpu_opcodes.hpp"
 #include "disasm.hpp"
 #include "controllers.hpp"
@@ -24,7 +24,7 @@ Emu::~Emu() {
     m_logOut.close();
 }
 
-void Emu::setPixelFn(SetPixelFn fn) {
+void Emu::setPixelFn(std::function<void(unsigned int, unsigned int, unsigned int)> fn) {
     m_setPixel = fn;
     if (m_ppu) {
         m_ppu->setPixelFn(fn);
@@ -34,6 +34,15 @@ void Emu::setPixelFn(SetPixelFn fn) {
 void Emu::writeSettings() {
     Settings::set("emulator/break-on-interrupt", m_breakOnInterrupt);
     m_disassembler->writeSettings();
+}
+
+bool Emu::init(const std::filesystem::path& path) {
+    std::shared_ptr<Cart> cart = Cart::fromFile(path);
+    if (cart) {
+        init(cart);
+        return true;
+    }
+    return false;
 }
 
 void Emu::init(std::shared_ptr<Cart> cart) {

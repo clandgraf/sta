@@ -2,8 +2,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
-#include "gui_filebrowser.hpp"
-#include "util.hpp"
+
+#include "core/gui/filebrowser.hpp"
+#include "core/util.hpp"
 
 static const int BUFFER_LEN = 0xff;
 

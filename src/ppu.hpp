@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 
 #include "defs.hpp"
 
@@ -134,7 +135,7 @@ public:
 
     PPU(Emu& emu, std::shared_ptr<Cart> cart) : m_emu(emu), m_cart(cart) {}
 
-    void setPixelFn(SetPixelFn);
+    void setPixelFn(std::function<void(unsigned int, unsigned int, unsigned int)>);
 
     unsigned long getCycleCount() const { return m_cycleCount; }
 
@@ -158,7 +159,7 @@ private:
 
     Emu& m_emu;
 
-    SetPixelFn m_setPixel;
+    std::function<void(unsigned int, unsigned int, unsigned int)> m_setPixel;
 
     std::shared_ptr<Cart> m_cart;
 

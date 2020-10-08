@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include "inputs.hpp"
-#include "util.hpp"
+#include "core/util.hpp"
 
 namespace Input {
     static Input::State keyboardState;

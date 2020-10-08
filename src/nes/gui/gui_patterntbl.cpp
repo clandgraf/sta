@@ -2,8 +2,8 @@
 
 #include "emu.hpp"
 #include "rom.hpp"
-#include "gui/gui_window.hpp"
-#include "gui_opengl_surface.hpp"
+#include "core/gui/manager.hpp"
+#include "core/gui/opengl_surface.hpp"
 
 static std::shared_ptr<Gui::Surface> patternTableSurface;
 
@@ -14,7 +14,7 @@ static Palette::Color colors[4] = {
     { 0x00, 0x00, 0x00 },
 };
 
-static void render(Gui::Window& window, Emu&) {
+static void render(Gui::Manager<Emu>::Window& window, Emu&) {
     if (*window.show()) {
         if (ImGui::Begin("Pattern Table", window.show())) {
             ImGui::Image((void*)(intptr_t)patternTableSurface->getTexture(), ImVec2(512, 256));
@@ -23,7 +23,7 @@ static void render(Gui::Window& window, Emu&) {
     }
 }
 
-static void refreshPatternTable(Gui::Window&, Emu& emu) {
+static void refreshPatternTable(Emu& emu) {
     for (int table = 0; table < 2; table++) {
         for (int tile = 0; tile < 256; tile++) {
             uint16_t offset = (table ? 0x1000 : 0) + tile * 0x10;
@@ -45,7 +45,7 @@ static void refreshPatternTable(Gui::Window&, Emu& emu) {
     patternTableSurface->upload();
 }
 
-static void init(Gui::Window& window, Emu&) {
+static void init(Gui::Manager<Emu>::Window& window, Emu&) {
     patternTableSurface = std::make_shared<Gui::Surface>(2 * 128, 128);
     for (int y = 0; y < 128; y++) {
         for (int x = 0; x < 2 * 128; x++) {
@@ -56,11 +56,11 @@ static void init(Gui::Window& window, Emu&) {
     patternTableSurface->upload();
 }
 
-static void teardown(Gui::Window& window, Emu&) {
+static void teardown(Gui::Manager<Emu>::Window& window, Emu&) {
     patternTableSurface = nullptr;
 }
 
-void createPatternTable() {
-    auto w = Gui::create<Gui::Window>("debugger-view-patterntbl", "Pattern Table", render, init, teardown);
-    w->addAction("Refresh Pattern Table", refreshPatternTable);
+void createPatternTable(Gui::Manager<Emu>& manager) {
+    manager.window("debugger-view-patterntbl", "Pattern Table", render, init, teardown);
+    manager.action("Debugger", "Refresh Pattern Table", refreshPatternTable);
 }

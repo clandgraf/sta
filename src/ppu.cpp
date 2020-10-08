@@ -1,8 +1,8 @@
 #include <iostream>
 
+#include "core/util.hpp"
 #include "emu.hpp"
 #include "ppu.hpp"
-#include "util.hpp"
 #include "rom.hpp"
 
 /*
@@ -30,7 +30,7 @@ namespace sm = StreamManipulators;
     } \
 }
 
-void PPU::setPixelFn(SetPixelFn fn) {
+void PPU::setPixelFn(std::function<void(unsigned int, unsigned int, unsigned int)> fn) {
     m_setPixel = fn;
 }
 

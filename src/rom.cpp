@@ -5,9 +5,9 @@
 #include <miniz.h>
 #include <memory>
 
+#include "core/util.hpp"
 #include "rom.hpp"
-#include "util.hpp"
-#include "mappers/mapper000.hpp"
+#include "nes/mappers/mapper000.hpp"
 
 namespace fs = std::filesystem;
 namespace sm = StreamManipulators;

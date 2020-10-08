@@ -1,12 +1,13 @@
 #include <imgui.h>
 
 #include "inputs.hpp"
-#include "gui/gui_window.hpp"
+#include "emu.hpp"
+#include "core/gui/manager.hpp"
 
 static Input::Controller input0;
 static Input::Controller input1;
 
-static void render(Gui::Window& window, Emu& emu) {
+static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
     if (*window.show()) {
         if (ImGui::Begin("Controls", window.show())) {
             ImGui::Text("Controller 1");
@@ -49,6 +50,6 @@ static void render(Gui::Window& window, Emu& emu) {
     }
 }
 
-void createControls() {
-    Gui::create<Gui::Window>("debugger-view-controls", "Controls", render);
+void createControls(Gui::Manager<Emu>& manager) {
+    manager.window("debugger-view-controls", "Controls", render);
 }

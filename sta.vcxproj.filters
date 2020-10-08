@@ -1,203 +1,226 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
+    <Filter Include="nes">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="contrib">
+      <UniqueIdentifier>{5f0ab270-274b-4fac-9644-bb4a7d3dc2da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
+    <Filter Include="contrib\miniz">
+      <UniqueIdentifier>{290c52d2-60df-483d-bf34-7b8724148462}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="contrib\imgui">
+      <UniqueIdentifier>{078e0fcc-c8e4-4247-a1b0-4f16441b4ab2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="contrib\glad">
+      <UniqueIdentifier>{92cd9377-0be4-4e01-b881-a3b2a355561b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="nes\gui">
+      <UniqueIdentifier>{a2abcc69-857f-45b6-bf6a-d7e8de6f5e51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="nes\mappers">
+      <UniqueIdentifier>{e8d39764-1473-4375-a687-fde92327e5f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\contrib">
-      <UniqueIdentifier>{5f0ab270-274b-4fac-9644-bb4a7d3dc2da}</UniqueIdentifier>
+    <Filter Include="core">
+      <UniqueIdentifier>{8ab283f0-1ce3-4146-8ea3-1ba9142ac31e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\contrib\miniz">
-      <UniqueIdentifier>{290c52d2-60df-483d-bf34-7b8724148462}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\contrib\imgui">
-      <UniqueIdentifier>{078e0fcc-c8e4-4247-a1b0-4f16441b4ab2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\contrib\glad">
-      <UniqueIdentifier>{92cd9377-0be4-4e01-b881-a3b2a355561b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Mappers">
-      <UniqueIdentifier>{e8d39764-1473-4375-a687-fde92327e5f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Gui">
-      <UniqueIdentifier>{a2abcc69-857f-45b6-bf6a-d7e8de6f5e51}</UniqueIdentifier>
+    <Filter Include="core\gui">
+      <UniqueIdentifier>{48bbce53-951c-4780-b193-bcbf108b6785}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="contrib\imgui-1.76\imgui_draw.cpp">
-      <Filter>Source Files\contrib\imgui</Filter>
+      <Filter>contrib\imgui</Filter>
     </ClCompile>
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_glfw.cpp">
-      <Filter>Source Files\contrib\imgui</Filter>
+      <Filter>contrib\imgui</Filter>
     </ClCompile>
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_opengl3.cpp">
-      <Filter>Source Files\contrib\imgui</Filter>
+      <Filter>contrib\imgui</Filter>
     </ClCompile>
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp">
-      <Filter>Source Files\contrib\imgui</Filter>
+      <Filter>contrib\imgui</Filter>
     </ClCompile>
     <ClCompile Include="contrib\imgui-1.76\imgui.cpp">
-      <Filter>Source Files\contrib\imgui</Filter>
+      <Filter>contrib\imgui</Filter>
     </ClCompile>
     <ClCompile Include="contrib\imgui-1.76\imgui_demo.cpp">
-      <Filter>Source Files\contrib\imgui</Filter>
+      <Filter>contrib\imgui</Filter>
     </ClCompile>
     <ClCompile Include="contrib\glad\glad.c">
-      <Filter>Source Files\contrib\glad</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rom.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\emu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\disasm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ppu.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>contrib\glad</Filter>
     </ClCompile>
     <ClCompile Include="contrib\miniz\miniz.c">
-      <Filter>Source Files\contrib\miniz</Filter>
+      <Filter>contrib\miniz</Filter>
     </ClCompile>
-    <ClCompile Include="src\inputs.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\core\gui\gui.cpp">
+      <Filter>core\gui</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui_opengl_surface.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\core\gui\notifications.cpp">
+      <Filter>core\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\recents.cpp">
+      <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="src\controllers.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\mappers\mapper.cpp">
-      <Filter>Mappers</Filter>
+    <ClCompile Include="src\disasm.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\mappers\mapper000.cpp">
-      <Filter>Mappers</Filter>
+    <ClCompile Include="src\emu.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\mappers\mapper001.cpp">
-      <Filter>Mappers</Filter>
+    <ClCompile Include="src\inputs.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_window.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\main.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_disasm.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\mem.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_patterntbl.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\ppu.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_emustate.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\rom.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_memory.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\nes\gui\gui_controls.cpp">
+      <Filter>nes\gui</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_oam.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\nes\gui\gui_disasm.cpp">
+      <Filter>nes\gui</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_controls.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\nes\gui\gui_emustate.cpp">
+      <Filter>nes\gui</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_rominfo.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\nes\gui\gui_memory.cpp">
+      <Filter>nes\gui</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\gui_filebrowser.cpp">
-      <Filter>Gui</Filter>
+    <ClCompile Include="src\nes\gui\gui_oam.cpp">
+      <Filter>nes\gui</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\defs.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rom.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mappers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\util.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mem.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\emu.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IconsMaterialDesign.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cpu_opcodes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cpu_mnemonics.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disasm.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ppu.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\inputs.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\keynames.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui_opengl_surface.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui_opengl.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\controllers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mappers\mapper.hpp">
-      <Filter>Mappers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mappers\mapper000.hpp">
-      <Filter>Mappers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mappers\mapper001.hpp">
-      <Filter>Mappers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui\gui_window.hpp">
-      <Filter>Gui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui\gui_filebrowser.hpp">
-      <Filter>Gui</Filter>
-    </ClInclude>
+    <ClCompile Include="src\nes\gui\gui_patterntbl.cpp">
+      <Filter>nes\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\gui\gui_rominfo.cpp">
+      <Filter>nes\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\gui\gui_setupcontrollers.cpp">
+      <Filter>nes\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\mappers\mapper.cpp">
+      <Filter>nes\mappers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\mappers\mapper000.cpp">
+      <Filter>nes\mappers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\mappers\mapper001.cpp">
+      <Filter>nes\mappers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\gui\filebrowser.cpp">
+      <Filter>core\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\gui\opengl.cpp">
+      <Filter>core\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\gui\opengl_surface.cpp">
+      <Filter>core\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\util.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\palette.cpp">
+      <Filter>nes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt">
-      <Filter>Resource Files</Filter>
+      <Filter>resources</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\core\gui\gui.hpp">
+      <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\gui\manager.hpp">
+      <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\gui\notifications.hpp">
+      <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\recents.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\controllers.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu_mnemonics.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu_opcodes.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\defs.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disasm.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\emu.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IconsMaterialDesign.h">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inputs.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\keynames.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mappers.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mem.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ppu.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rom.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\mappers\mapper.hpp">
+      <Filter>nes\mappers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\mappers\mapper000.hpp">
+      <Filter>nes\mappers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\mappers\mapper001.hpp">
+      <Filter>nes\mappers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\gui\filebrowser.hpp">
+      <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\gui\opengl.hpp">
+      <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\gui\opengl_surface.hpp">
+      <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\util.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\palette.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

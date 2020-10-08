@@ -4,12 +4,10 @@
 #include <set>
 #include <memory>
 #include <array>
-
+#include <functional>
 #include <fstream>
 
 #include "inputs.hpp"
-
-typedef void(*SetPixelFn)(unsigned int x, unsigned int y, unsigned int v);
 
 class Memory;
 class Cart;
@@ -63,13 +61,14 @@ public:
     Emu();
     ~Emu();
 
-    void setPixelFn(SetPixelFn);
+    void setPixelFn(std::function<void(unsigned int, unsigned int, unsigned int)>);
 
     void writeSettings();
 
     bool toggleBreakpoint(uint16_t address);
     bool isBreakpoint(uint16_t address);
 
+    bool init(const std::filesystem::path& path);
     void init(std::shared_ptr<Cart> _cart);
     bool isInitialized();
     void reset();
@@ -93,7 +92,7 @@ public:
 private:
     std::ofstream m_logOut;
 
-    SetPixelFn m_setPixel;
+    std::function<void(unsigned int, unsigned int, unsigned int)> m_setPixel;
 
     std::array<std::shared_ptr<Port>, 2> m_ports;
 

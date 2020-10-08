@@ -3,9 +3,9 @@
 #include "emu.hpp"
 #include "rom.hpp"
 #include "mappers.hpp"
-#include "gui/gui_window.hpp"
+#include "core/gui/manager.hpp"
 
-static void render(Gui::Window& window, Emu& emu) {
+static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
     if (emu.isInitialized() && *window.show()) {
         if (ImGui::Begin("ROM Info", window.show())) {
             ImGui::Text("File: %s", emu.m_cart->m_name.c_str());
@@ -17,6 +17,6 @@ static void render(Gui::Window& window, Emu& emu) {
     }
 }
 
-void createRomInfo() {
-    Gui::create<Gui::Window>("debugger-view-rominfo", "ROM Info", render);
+void createRomInfo(Gui::Manager<Emu>& manager) {
+    manager.window("debugger-view-rominfo", "ROM Info", render);
 }

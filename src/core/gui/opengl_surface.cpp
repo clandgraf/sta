@@ -1,4 +1,5 @@
-#include "gui_opengl_surface.hpp"
+#include "core/util.hpp"
+#include "core/gui/opengl_surface.hpp"
 
 const char* Gui::Surface::VertexShaderSource =
     "#version 330 core\n"

@@ -1,3 +1,18 @@
+
+
+GUI Refactoring
+
+- Remove window-bound actions
+- Implement generic actions
+
+- Generalize inputs module
+- Create nes inputs module
+
+- General Cleanup
+
+===============================
+
+
 - Break on Scanline
 
 - Sprite Rendering

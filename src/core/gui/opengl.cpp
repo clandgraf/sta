@@ -1,29 +1,26 @@
-#pragma once
-
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <iostream>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <sstream>
 
 #include "inputs.hpp"
-#include "util.hpp"
-#include "gui_opengl_surface.hpp"
+#include "core/util.hpp"
+#include "core/gui/opengl.hpp"
+#include "core/gui/notifications.hpp"
 
 static const char* glsl_version = "#version 130";
 
-static GLFWwindow* window = nullptr;
+GLFWwindow* w(Gui::Window win) { return (GLFWwindow*) win._; }
 
-void setWindowClosing(bool closing) {
-    if (window) {
-        glfwSetWindowShouldClose(window, closing);
+void Gui::setWindowClosing(Window window, bool closing) {
+    if (window._) {
+        glfwSetWindowShouldClose(w(window), closing);
     }
 }
 
-bool Gui::isWindowClosing() {
-    return glfwWindowShouldClose(window);
+bool Gui::isWindowClosing(Window window) {
+    return glfwWindowShouldClose(w(window));
 }
 
 void Gui::pollEvents() {
@@ -31,53 +28,49 @@ void Gui::pollEvents() {
     return glfwPollEvents();
 }
 
-bool isFullscreen() {
-    return glfwGetWindowMonitor(window) != nullptr;
+bool Gui::isFullscreen(Window window) {
+    return glfwGetWindowMonitor(w(window)) != nullptr;
 }
 
-void Gui::swapBuffers() {
-    glfwSwapBuffers(window);
+void Gui::swapBuffers(Window window) {
+    glfwSwapBuffers(w(window));
 }
 
-#include "keynames.hpp"
-
-const char* getKeyName(int scancode) {
-    return KEY_NAMES.at(scancode);
-}
-
-void toggleFullscreen() {
-    if (isFullscreen()) {
+void Gui::toggleFullscreen(Window window) {
+    GLFWwindow* win{w(window)};
+    if (isFullscreen(window)) {
         glfwSetWindowMonitor(
-            window, nullptr,
+            win, nullptr,
             50, 50, 1920, 1200,
             GLFW_DONT_CARE);
         glfwSwapInterval(1);
-    } else {
+    }
+    else {
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(
-            window, monitor,
+            win, monitor,
             0, 0, mode->width, mode->height,
             GLFW_DONT_CARE);
         glfwSwapInterval(1);
     }
 }
 
-void ImGui_Impl_NewFrame() {
+void Gui::ImGui_Impl_NewFrame() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
 }
 
-void ImGui_Impl_RenderDrawData(ImDrawData* draw_data) {
+void Gui::ImGui_Impl_RenderDrawData(ImDrawData* draw_data) {
     ImGui_ImplOpenGL3_RenderDrawData(draw_data);
 }
 
-void ImGui_Impl_Init() {
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+void Gui::ImGui_Impl_Init(Gui::Window window) {
+    ImGui_ImplGlfw_InitForOpenGL(w(window), true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void ImGui_Impl_Shutdown() {
+void Gui::ImGui_Impl_Shutdown() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
 }
@@ -91,7 +84,8 @@ static void glfw_joystick_callback(int jid, int event) {
             ss << " No gamepad.";
         }
         Gui::addNotification(ss.str());
-    } else if (event == GLFW_DISCONNECTED) {
+    }
+    else if (event == GLFW_DISCONNECTED) {
         ss << "Gamepad " << jid << " disconnected.";
         Gui::addNotification(ss.str());
     }
@@ -112,11 +106,11 @@ void updateInputs(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-bool initWindow(const char* title, bool fullscreen) {
+Gui::Window Gui::initWindow(const char* title, bool fullscreen) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {
-        return false;
+        return Window{nullptr};
     }
 
     // Set GL Version
@@ -137,51 +131,53 @@ bool initWindow(const char* title, bool fullscreen) {
         if (fullscreen) {
             width = mode->width;
             height = mode->height;
-        } else {
+        }
+        else {
             width = Settings::get("window-width", int(.66f * float(mode->width)));
             height = Settings::get("window-height", int(.66f * float(mode->height)));
         }
-    } else {
+    }
+    else {
         width = Settings::get("window-width", 1920);
         height = Settings::get("window-height", 1200);
     }
 
-    window = glfwCreateWindow(
-        width, height, 
-        "staNES", 
-        fullscreen ? monitor : nullptr, 
+    GLFWwindow* win = glfwCreateWindow(
+        width, height,
+        "staNES",
+        fullscreen ? monitor : nullptr,
         nullptr
     );
-    if (window == NULL) {
-        return false;
+    if (win == nullptr) {
+        return Window{nullptr};
     }
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(win);
     glfwSwapInterval(1); // Enable vsync
 
     // Setup GLAD
     bool err = gladLoadGL() == 0;
     if (err) {
         std::cerr << "Failed to initialize OpenGL loader!\n";
-        return false;
+        return Window{nullptr};
     }
 
     Input::setScancode(GLFW_KEY_ESCAPE, Input::Menu);
-    glfwSetKeyCallback(window, updateInputs);
+    glfwSetKeyCallback(win, updateInputs);
     glfwSetJoystickCallback(glfw_joystick_callback);
 
-    return true;
+    return Window{win};
 }
 
-void Gui::setTitle(const char* title) {
-    glfwSetWindowTitle(window, title);
+void Gui::setTitle(Window window, const char* title) {
+    glfwSetWindowTitle(w(window), title);
 }
 
-void teardownWindow() {
+void Gui::teardownWindow(Window window) {
     int width, height;
-    glfwGetWindowSize(window, &width, &height);
+    glfwGetWindowSize(w(window), &width, &height);
     Settings::set("window-width", width);
     Settings::set("window-height", height);
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(w(window));
     glfwTerminate();
 }

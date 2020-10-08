@@ -8,7 +8,7 @@
 #include <filesystem>
 
 #include "defs.hpp"
-#include "util.hpp"
+#include "core/util.hpp"
 
 constexpr uint32_t HEADER_AS_UINT32(uint8_t* h) {
     return ((h[0]) | ((h[1]) << 8) | ((h[2]) << 16) | ((h[3]) << 24));

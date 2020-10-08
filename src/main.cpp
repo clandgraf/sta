@@ -1,14 +1,14 @@
-﻿#include <GLFW/glfw3.h>
-#include <cstdlib>
+﻿#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 
-#include "gui.hpp"
+#include "core/util.hpp"
+#include "core/gui/manager.hpp"
+#include "defs.hpp"
 #include "rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
 #include "disasm.hpp"
-#include "util.hpp"
 
 namespace fs = std::filesystem;
 namespace cli = CliArguments;
@@ -17,22 +17,35 @@ void printUsage(const char* prog) {
     std::cout << prog << " [--rom <rom_file>] [--fullscreen] [--help]\n";
 }
 
-extern void createDisassembly();
-extern void createPatternTable();
-extern void createEmuState();
-extern void createMemoryViewer();
-extern void createOamViewer();
-extern void createControls();
-extern void createRomInfo();
+extern void createDisassembly(Gui::Manager<Emu>& manager);
+extern void createPatternTable(Gui::Manager<Emu>& manager);
+extern void createEmuState(Gui::Manager<Emu>& manager);
+extern void createMemoryViewer(Gui::Manager<Emu>& manager);
+extern void createOamViewer(Gui::Manager<Emu>& manager);
+extern void createControls(Gui::Manager<Emu>& manager);
+extern void createRomInfo(Gui::Manager<Emu>& manager);
+extern void createSetupControllers(Gui::Manager<Emu>& manager);
 
-void registerGuiElements() {
-    createDisassembly();
-    createPatternTable();
-    createEmuState();
-    createMemoryViewer();
-    createOamViewer();
-    createControls();
-    createRomInfo();
+void registerGuiElements(Gui::Manager<Emu>& manager) {
+    createDisassembly(manager);
+    createPatternTable(manager);
+    createEmuState(manager);
+    createMemoryViewer(manager);
+    createOamViewer(manager);
+    createControls(manager);
+    createRomInfo(manager);
+    createSetupControllers(manager);
+
+    manager.action("File", "Reset", 
+                   [](Emu& emu) -> void  { emu.reset(); });
+    manager.checkbox("Debugger", "Log State", 
+                     [](Emu& emu) -> bool& { return emu.m_breakOnInterrupt; });
+    manager.checkbox("Debugger", "Break on Interrupts", 
+                     [](Emu& emu) -> bool& { return emu.m_logState; });
+    manager.action("Debugger", "Absolute Labels", 
+                   [](Emu& emu) -> bool& { return emu.m_disassembler->m_showAbsoluteLabels; }, 
+                   [](Emu& emu) -> void  { emu.m_disassembler->refresh(); }
+    );
 }
 
 int main(int ac, char ** av) {
@@ -49,31 +62,29 @@ int main(int ac, char ** av) {
 
     Emu emu;
     if (romPath) {
-        std::shared_ptr<Cart> cart = Cart::fromFile(fs::path{romPath});
-        if (cart) {
-            emu.init(cart);
-        }
+        emu.init(romPath);
     }
 
-    registerGuiElements();
+    Gui::Manager<Emu> manager;
+    registerGuiElements(manager);
 
-    if (!Gui::initUi(emu, fullscreen)) {
+    if (!manager.init(emu, WINDOW_TITLE, fullscreen)) {
         return EXIT_FAILURE;
     }
 
-    emu.setPixelFn(Gui::getSetPixelFn());
+    emu.setPixelFn(manager.getSetPixelFn());
 
     double previousTime = glfwGetTime();
     int frameCount = 0;
     char buffer[64];
 
-    while (!Gui::isWindowClosing()) {
+    while (!manager.isWindowClosing()) {
         double currentTime = glfwGetTime();
         frameCount++;
         if (currentTime - previousTime >= 1.0)
         {
             snprintf(buffer, 64, "FPS: %d", frameCount);
-            Gui::setTitle(buffer);
+            manager.setTitle(buffer);
 
             frameCount = 0;
             previousTime = currentTime;
@@ -82,15 +93,15 @@ int main(int ac, char ** av) {
         Gui::pollEvents();
 
         if (emu.m_isStepping || !emu.isInitialized()) {
-            Gui::runUi(emu);
+            manager.runUi(emu);
         } else {
-            Gui::runFrame(emu);
+            manager.runFrame(emu);
         }
 
-        Gui::swapBuffers();
+        manager.swapBuffers();
     }
 
-    Gui::teardownUi(emu);
+    manager.teardown(emu);
     emu.writeSettings();
     Settings::write();
     return EXIT_SUCCESS;

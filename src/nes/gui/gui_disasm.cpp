@@ -1,11 +1,11 @@
 #include <imgui.h>
 
-#include "gui.hpp"
-#include "gui/gui_window.hpp"
+#include "core/gui/gui.hpp"
+#include "core/gui/manager.hpp"
 #include "disasm.hpp"
 #include "emu.hpp"
 
-static void render(Gui::Window& window, Emu& emu) {
+static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
     if (emu.getMode() != Emu::Mode::RESET && *window.show()) {
@@ -13,7 +13,7 @@ static void render(Gui::Window& window, Emu& emu) {
         emu.m_disassembler->disasmSegment(address);
 
         if (ImGui::Begin("Disassembly", window.show())) {
-            Gui::pushMonoFont();
+            window.manager.pushMonoFont();
             for (auto& segment : *emu.m_disassembler) {
                 for (auto& entry : segment.second->m_lines) {
                     auto& line = entry.second;
@@ -26,7 +26,7 @@ static void render(Gui::Window& window, Emu& emu) {
                     }
                     ImGui::SameLine();
                     if (line.offset == address) {
-                        Gui::pushHighlightText();
+                        window.manager.pushHighlightText();
                         ImGui::Text(line.repr.c_str());
                         ImGui::PopStyleColor();
                     }
@@ -47,6 +47,6 @@ static void render(Gui::Window& window, Emu& emu) {
     }
 }
 
-void createDisassembly() {
-    Gui::create<Gui::Window>("debugger-view-disassembly", "Disassembly", render);
+void createDisassembly(Gui::Manager<Emu>& manager) {
+    manager.window("debugger-view-disassembly", "Disassembly", render);
 }

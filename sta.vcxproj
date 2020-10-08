@@ -28,55 +28,62 @@
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp" />
     <ClCompile Include="contrib\miniz\miniz.c" />
     <ClCompile Include="src\controllers.cpp" />
+    <ClCompile Include="src\core\gui\gui.cpp" />
+    <ClCompile Include="src\core\gui\filebrowser.cpp" />
+    <ClCompile Include="src\core\gui\opengl.cpp" />
+    <ClCompile Include="src\core\gui\opengl_surface.cpp" />
+    <ClCompile Include="src\core\gui\notifications.cpp" />
+    <ClCompile Include="src\core\recents.cpp" />
+    <ClCompile Include="src\core\util.cpp" />
     <ClCompile Include="src\disasm.cpp" />
     <ClCompile Include="src\emu.cpp" />
-    <ClCompile Include="src\gui.cpp" />
-    <ClCompile Include="src\gui\gui_controls.cpp" />
-    <ClCompile Include="src\gui\gui_disasm.cpp" />
-    <ClCompile Include="src\gui\gui_emustate.cpp" />
-    <ClCompile Include="src\gui\gui_filebrowser.cpp" />
-    <ClCompile Include="src\gui\gui_memory.cpp" />
-    <ClCompile Include="src\gui\gui_oam.cpp" />
-    <ClCompile Include="src\gui\gui_patterntbl.cpp" />
-    <ClCompile Include="src\gui\gui_rominfo.cpp" />
-    <ClCompile Include="src\gui\gui_window.cpp" />
-    <ClCompile Include="src\gui_opengl_surface.cpp" />
     <ClCompile Include="src\inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\mappers\mapper.cpp" />
-    <ClCompile Include="src\mappers\mapper000.cpp" />
-    <ClCompile Include="src\mappers\mapper001.cpp" />
     <ClCompile Include="src\mem.cpp" />
+    <ClCompile Include="src\nes\gui\gui_controls.cpp" />
+    <ClCompile Include="src\nes\gui\gui_disasm.cpp" />
+    <ClCompile Include="src\nes\gui\gui_emustate.cpp" />
+    <ClCompile Include="src\nes\gui\gui_memory.cpp" />
+    <ClCompile Include="src\nes\gui\gui_oam.cpp" />
+    <ClCompile Include="src\nes\gui\gui_patterntbl.cpp" />
+    <ClCompile Include="src\nes\gui\gui_rominfo.cpp" />
+    <ClCompile Include="src\nes\gui\gui_setupcontrollers.cpp" />
+    <ClCompile Include="src\nes\mappers\mapper.cpp" />
+    <ClCompile Include="src\nes\mappers\mapper000.cpp" />
+    <ClCompile Include="src\nes\mappers\mapper001.cpp" />
+    <ClCompile Include="src\nes\palette.cpp" />
     <ClCompile Include="src\ppu.cpp" />
     <ClCompile Include="src\rom.cpp" />
-    <ClCompile Include="src\util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\controllers.hpp" />
+    <ClInclude Include="src\core\gui\gui.hpp" />
+    <ClInclude Include="src\core\gui\filebrowser.hpp" />
+    <ClInclude Include="src\core\gui\opengl.hpp" />
+    <ClInclude Include="src\core\gui\opengl_surface.hpp" />
+    <ClInclude Include="src\core\gui\manager.hpp" />
+    <ClInclude Include="src\core\gui\notifications.hpp" />
+    <ClInclude Include="src\core\recents.hpp" />
+    <ClInclude Include="src\core\util.hpp" />
     <ClInclude Include="src\cpu_mnemonics.hpp" />
     <ClInclude Include="src\cpu_opcodes.hpp" />
     <ClInclude Include="src\defs.hpp" />
     <ClInclude Include="src\disasm.hpp" />
     <ClInclude Include="src\emu.hpp" />
-    <ClInclude Include="src\gui.hpp" />
-    <ClInclude Include="src\gui\gui_filebrowser.hpp" />
-    <ClInclude Include="src\gui\gui_window.hpp" />
-    <ClInclude Include="src\gui_opengl.hpp" />
-    <ClInclude Include="src\gui_opengl_surface.hpp" />
     <ClInclude Include="src\IconsMaterialDesign.h" />
     <ClInclude Include="src\inputs.hpp" />
     <ClInclude Include="src\keynames.hpp" />
     <ClInclude Include="src\mappers.hpp" />
-    <ClInclude Include="src\mappers\mapper.hpp" />
-    <ClInclude Include="src\mappers\mapper000.hpp" />
-    <ClInclude Include="src\mappers\mapper001.hpp" />
     <ClInclude Include="src\mem.hpp" />
+    <ClInclude Include="src\nes\mappers\mapper.hpp" />
+    <ClInclude Include="src\nes\mappers\mapper000.hpp" />
+    <ClInclude Include="src\nes\mappers\mapper001.hpp" />
+    <ClInclude Include="src\nes\palette.hpp" />
     <ClInclude Include="src\ppu.hpp" />
     <ClInclude Include="src\rom.hpp" />
-    <ClInclude Include="src\util.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="TODO.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -5,7 +5,7 @@
 #include "rom.hpp"
 #include "ppu.hpp"
 #include "emu.hpp"
-#include "util.hpp"
+#include "core/util.hpp"
 #include "controllers.hpp"
 
 namespace sm = StreamManipulators;

@@ -2,8 +2,7 @@
 
 #include "emu.hpp"
 #include "ppu.hpp"
-#include "gui.hpp"
-#include "gui/gui_window.hpp"
+#include "core/gui/manager.hpp"
 #include "IconsMaterialDesign.h"
 
 static void ImGui_AttachTooltip(const char* str) {
@@ -21,7 +20,7 @@ static void renderStateControl(const char* icon, const char* tooltip, std::funct
     ImGui_AttachTooltip(tooltip);
 }
 
-void render(Gui::Window window, Emu& emu) {
+void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
     if (emu.isInitialized() && *window.show()) {
         if (ImGui::Begin("Emu State", window.show())) {
             renderStateControl(ICON_MD_PLAY_ARROW, "Continue", [&emu] { emu.m_isStepping = false; });
@@ -34,7 +33,7 @@ void render(Gui::Window window, Emu& emu) {
             ImGui::SameLine();
             renderStateControl(ICON_MD_SKIP_NEXT, "Step Scanline", [&emu] { emu.stepScanline(); });
 
-            Gui::pushMonoFont();
+            window.manager.pushMonoFont();
             ImGui::Text("CPU Cycles: %d", emu.getCycleCount());
             ImGui::Text("PC: %04x  Carry:    %01x", emu.m_pc, emu.m_f_carry);
             ImGui::Text("SP: %02x    Zero:     %01x", emu.m_sp, emu.m_f_zero);
@@ -51,6 +50,6 @@ void render(Gui::Window window, Emu& emu) {
     }
 }
 
-void createEmuState() {
-    Gui::create<Gui::Window>("debugger-view-state", "Emu State", render);
+void createEmuState(Gui::Manager<Emu>& manager) {
+    manager.window("debugger-view-state", "Emu State", render);
 }
