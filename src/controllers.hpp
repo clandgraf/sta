@@ -12,7 +12,16 @@ const unsigned int BTN_RIGHT_0  = 2;
 const unsigned int BTN_DOWN_0   = 3;
 const unsigned int BTN_START_0  = 4;
 const unsigned int BTN_SELECT_0 = 5;
-
+const unsigned int BTN_A_0      = 6;
+const unsigned int BTN_B_0      = 7;
+const unsigned int BTN_LEFT_1   = 8;
+const unsigned int BTN_UP_1     = 9;
+const unsigned int BTN_RIGHT_1  = 10;
+const unsigned int BTN_DOWN_1   = 11;
+const unsigned int BTN_START_1  = 12;
+const unsigned int BTN_SELECT_1 = 13;
+const unsigned int BTN_A_1      = 14;
+const unsigned int BTN_B_1      = 15;
 
 class Port {
 public:
