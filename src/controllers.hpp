@@ -4,8 +4,6 @@
 
 #include "inputs.hpp"
 
-bool buttonState[16];
-
 const unsigned int BTN_LEFT_0   = 0;
 const unsigned int BTN_UP_0     = 1;
 const unsigned int BTN_RIGHT_0  = 2;

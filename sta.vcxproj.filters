@@ -140,6 +140,9 @@
     <ClCompile Include="src\nes\palette.cpp">
       <Filter>nes</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\gamepad.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt">
@@ -221,6 +224,9 @@
     </ClInclude>
     <ClInclude Include="src\nes\palette.hpp">
       <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\gamepad.hpp">
+      <Filter>core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

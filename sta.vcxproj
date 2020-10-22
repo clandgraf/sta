@@ -28,6 +28,7 @@
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp" />
     <ClCompile Include="contrib\miniz\miniz.c" />
     <ClCompile Include="src\controllers.cpp" />
+    <ClCompile Include="src\core\gamepad.cpp" />
     <ClCompile Include="src\core\gui\gui.cpp" />
     <ClCompile Include="src\core\gui\filebrowser.cpp" />
     <ClCompile Include="src\core\gui\opengl.cpp" />
@@ -60,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\controllers.hpp" />
+    <ClInclude Include="src\core\gamepad.hpp" />
     <ClInclude Include="src\core\gui\gui.hpp" />
     <ClInclude Include="src\core\gui\filebrowser.hpp" />
     <ClInclude Include="src\core\gui\opengl.hpp" />

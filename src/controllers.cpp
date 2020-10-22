@@ -1,5 +1,7 @@
 #include "controllers.hpp"
 
+bool buttonState[16];
+
 void Controller::update() {
     if (m_latched) {
         m_shiftButtons = 0;
