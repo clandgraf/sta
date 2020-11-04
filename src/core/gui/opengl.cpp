@@ -4,12 +4,16 @@
 #include <imgui_impl_opengl3.h>
 #include <sstream>
 
-#include "inputs.hpp"
+#include "core/gamepad.hpp"
 #include "core/util.hpp"
 #include "core/gui/opengl.hpp"
 #include "core/gui/notifications.hpp"
 
 static const char* glsl_version = "#version 130";
+
+namespace Gui {
+    bool m_isEscapePressed = false;
+}
 
 GLFWwindow* w(Gui::Window win) { return (GLFWwindow*) win._; }
 
@@ -24,7 +28,6 @@ bool Gui::isWindowClosing(Window window) {
 }
 
 void Gui::pollEvents() {
-    Input::resetMenuRequest();
     return glfwPollEvents();
 }
 
@@ -95,13 +98,23 @@ static void glfw_error_callback(int error, const char* description) {
     LOG_ERR << "Glfw Error " << error << ": " << description << "\n";
 }
 
+bool Gui::isEscapePressed() {
+    bool v = m_isEscapePressed;
+    m_isEscapePressed = false;
+    return v;
+}
+
 void updateInputs(GLFWwindow* window, int key, int scancode, int action, int mods) {
     switch (action) {
     case GLFW_PRESS:
-        Input::dispatchInput(key, true);
+        if (key == GLFW_KEY_ESCAPE) {
+            Gui::m_isEscapePressed = true;
+        }
+
+        Gamepad::onKeydown(key, true);
         break;
     case GLFW_RELEASE:
-        Input::dispatchInput(key, false);
+        Gamepad::onKeydown(key, false);
         break;
     }
 }
@@ -161,7 +174,6 @@ Gui::Window Gui::initWindow(const char* title, bool fullscreen) {
         return Window{nullptr};
     }
 
-    Input::setScancode(GLFW_KEY_ESCAPE, Input::Menu);
     glfwSetKeyCallback(win, updateInputs);
     glfwSetJoystickCallback(glfw_joystick_callback);
 

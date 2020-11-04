@@ -2,6 +2,26 @@
 
 #include <cstring>
 
+void TriStateBool::operator=(bool& v) {
+    m_value = v ? Value::True : Value::False;
+}
+
+void TriStateBool::reset() {
+    m_value = Value::Undefined;
+}
+
+bool TriStateBool::isUndefined() const {
+    return m_value == Value::Undefined;
+}
+
+TriStateBool::operator bool() const {
+    return m_value == Value::True;
+}
+
+void TriStateBool::set(bool value, bool defined) {
+    m_value = value ? Value::True : defined ? Value::False : Value::Undefined;
+}
+
 static int _cliIndex(int ac, char** av, const char* param) {
     for (int i = 1; i < ac; i++) {
         if (strcmp(av[i], param) == 0) {

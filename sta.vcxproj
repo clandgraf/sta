@@ -31,6 +31,7 @@
     <ClCompile Include="src\core\gamepad.cpp" />
     <ClCompile Include="src\core\gui\gui.cpp" />
     <ClCompile Include="src\core\gui\filebrowser.cpp" />
+    <ClCompile Include="src\core\gui\gui_gamepad.hpp" />
     <ClCompile Include="src\core\gui\opengl.cpp" />
     <ClCompile Include="src\core\gui\opengl_surface.cpp" />
     <ClCompile Include="src\core\gui\notifications.cpp" />

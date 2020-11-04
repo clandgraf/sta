@@ -42,6 +42,23 @@ uint8_t* readFile(const char* path);
 
 uint8_t* readFile(const std::filesystem::path& path);
 
+class TriStateBool {
+    enum class Value {
+        Undefined = -1,
+        False = false,
+        True = true
+    };
+
+    Value m_value = Value::Undefined;
+
+public:
+    void operator=(bool& v);
+    void reset();
+    bool isUndefined() const;
+    void set(bool value = true, bool defined = true);
+    operator bool() const;
+};
+
 namespace Settings {
     extern nlohmann::json object;
 

@@ -143,6 +143,9 @@
     <ClCompile Include="src\core\gamepad.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\gui\gui_gamepad.hpp">
+      <Filter>core\gui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt">

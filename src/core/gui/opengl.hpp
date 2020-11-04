@@ -12,6 +12,7 @@ namespace Gui {
     Window initWindow(const char* title, bool fullscreen);
     void setWindowClosing(Window window, bool closing);
     bool isWindowClosing(Window window);
+    bool isEscapePressed();
     void pollEvents();
     bool isFullscreen(Window window);
     void swapBuffers(Window window);

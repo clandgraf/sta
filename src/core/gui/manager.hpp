@@ -13,7 +13,7 @@
 #include "core/gui/notifications.hpp"
 #include "core/recents.hpp"
 #include "core/util.hpp"
-#include "inputs.hpp"
+#include "core/gamepad.hpp"
 #include "IconsMaterialDesign.h"
 
 #define ICON_FONT "assets/" ## FONT_ICON_FILE_NAME_FAR
@@ -249,7 +249,7 @@ namespace Gui {
                 }
             }
 
-            Input::loadSettings();
+            Gamepad::loadSettings();
             recentFiles = Util::loadRecentFiles("recentFiles");
 
             for (auto& dialog : dialogs) {
@@ -303,7 +303,7 @@ namespace Gui {
             }
 
             Util::writeRecentFiles(recentFiles, "recentFiles");
-            Input::writeSettings();
+            Gamepad::writeSettings();
 
             teardownImGui();
             screenSurface = nullptr;
@@ -490,8 +490,7 @@ namespace Gui {
         }
 
         void runFrame(EmuType& emu) {
-            const Input::State& inputs = Input::getState();
-            if (inputs.openMenu) {
+            if (Gui::isEscapePressed()) {
                 emu.m_isStepping = true;
             }
             else {
