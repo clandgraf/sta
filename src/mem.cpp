@@ -1,8 +1,7 @@
 #include <iostream>
 
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "mem.hpp"
-#include "rom.hpp"
 #include "ppu.hpp"
 #include "emu.hpp"
 #include "core/util.hpp"

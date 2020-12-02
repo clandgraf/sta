@@ -3,7 +3,7 @@
 #include "core/util.hpp"
 #include "emu.hpp"
 #include "ppu.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 
 /*
  * Notes:

@@ -7,8 +7,6 @@
 #include <functional>
 #include <fstream>
 
-#include "inputs.hpp"
-
 class Memory;
 class Cart;
 class PPU;

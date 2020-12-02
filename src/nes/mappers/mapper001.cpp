@@ -1,5 +1,5 @@
 #include "core/util.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "nes/mappers/mapper001.hpp"
 
 namespace sm = StreamManipulators;

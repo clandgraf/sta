@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "core/util.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "nes/mappers/mapper000.hpp"
 
 namespace fs = std::filesystem;

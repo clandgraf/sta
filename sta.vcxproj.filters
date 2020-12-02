@@ -77,9 +77,6 @@
     <ClCompile Include="src\emu.cpp">
       <Filter>nes</Filter>
     </ClCompile>
-    <ClCompile Include="src\inputs.cpp">
-      <Filter>nes</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>nes</Filter>
     </ClCompile>
@@ -88,12 +85,6 @@
     </ClCompile>
     <ClCompile Include="src\ppu.cpp">
       <Filter>nes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\rom.cpp">
-      <Filter>nes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\nes\gui\gui_controls.cpp">
-      <Filter>nes\gui</Filter>
     </ClCompile>
     <ClCompile Include="src\nes\gui\gui_disasm.cpp">
       <Filter>nes\gui</Filter>
@@ -111,9 +102,6 @@
       <Filter>nes\gui</Filter>
     </ClCompile>
     <ClCompile Include="src\nes\gui\gui_rominfo.cpp">
-      <Filter>nes\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\nes\gui\gui_setupcontrollers.cpp">
       <Filter>nes\gui</Filter>
     </ClCompile>
     <ClCompile Include="src\nes\mappers\mapper.cpp">
@@ -145,6 +133,9 @@
     </ClCompile>
     <ClCompile Include="src\core\gui\gui_gamepad.cpp">
       <Filter>core\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\rom.cpp">
+      <Filter>nes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -186,9 +177,6 @@
     <ClInclude Include="src\IconsMaterialDesign.h">
       <Filter>nes</Filter>
     </ClInclude>
-    <ClInclude Include="src\inputs.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
     <ClInclude Include="src\keynames.hpp">
       <Filter>nes</Filter>
     </ClInclude>
@@ -199,9 +187,6 @@
       <Filter>nes</Filter>
     </ClInclude>
     <ClInclude Include="src\ppu.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\rom.hpp">
       <Filter>nes</Filter>
     </ClInclude>
     <ClInclude Include="src\nes\mappers\mapper.hpp">
@@ -233,6 +218,9 @@
     </ClInclude>
     <ClInclude Include="src\core\gui\gui_gamepad.hpp">
       <Filter>core\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\rom.hpp">
+      <Filter>nes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

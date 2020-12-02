@@ -2,7 +2,7 @@
 
 #include "emu.hpp"
 #include "mem.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "ppu.hpp"
 #include "core/util.hpp"
 #include "cpu_opcodes.hpp"

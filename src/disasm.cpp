@@ -7,7 +7,7 @@
 #include "disasm.hpp"
 
 #include "emu.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "mem.hpp"
 #include "ppu.hpp"
 #include "cpu_opcodes.hpp"

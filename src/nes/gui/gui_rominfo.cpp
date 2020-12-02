@@ -1,7 +1,7 @@
 #include <imgui.h>
 
 #include "emu.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "mappers.hpp"
 #include "core/gui/manager.hpp"
 

@@ -6,7 +6,7 @@
 #include "core/gui/manager.hpp"
 #include "core/gui/gui_gamepad.hpp"
 #include "defs.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "mem.hpp"
 #include "emu.hpp"
 #include "disasm.hpp"
@@ -23,9 +23,7 @@ extern void createPatternTable(Gui::Manager<Emu>& manager);
 extern void createEmuState(Gui::Manager<Emu>& manager);
 extern void createMemoryViewer(Gui::Manager<Emu>& manager);
 extern void createOamViewer(Gui::Manager<Emu>& manager);
-//extern void createControls(Gui::Manager<Emu>& manager);
 extern void createRomInfo(Gui::Manager<Emu>& manager);
-extern void createSetupControllers(Gui::Manager<Emu>& manager);
 
 void registerGuiElements(Gui::Manager<Emu>& manager) {
     createDisassembly(manager);
@@ -35,7 +33,6 @@ void registerGuiElements(Gui::Manager<Emu>& manager) {
     createOamViewer(manager);
     createGamepad<Emu>(manager);
     createRomInfo(manager);
-    createSetupControllers(manager);
 
     manager.action("File", "Reset", 
                    [](Emu& emu) -> void  { emu.reset(); });

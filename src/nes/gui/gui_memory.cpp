@@ -4,7 +4,7 @@
 
 #include "emu.hpp"
 #include "mem.hpp"
-#include "rom.hpp"
+#include "nes/rom.hpp"
 #include "core/gui/gui.hpp"
 #include "core/gui/manager.hpp"
 
