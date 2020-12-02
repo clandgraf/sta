@@ -9,14 +9,14 @@ namespace Gamepad {
     using Scancode = int;
 
     extern const std::array<int, 5> GlfwGamepads;
-    
+
     extern const int ButtonTypeBegin;
     extern const int ButtonTypeEnd;
-    
+
     enum ButtonType {
         Up, Down, Left, Right, ButtonA, ButtonB, ButtonX, ButtonY, ButtonL1, ButtonR1, ButtonL2, ButtonR2, ButtonL3, ButtonR3, Start, Select,
     };
-    
+
     extern const std::map<ButtonType, std::string> buttonTypeToLabel;
 
     enum Button {
@@ -32,11 +32,10 @@ namespace Gamepad {
     extern void loadSettings();
     extern void writeSettings();
 
-    extern bool readGamepadState(Gamepad::Button btn);
     extern void invalidate();
     extern void invalidate(int gamepadId);
     extern bool isEmuButtonActive(int gamepadIndex, ButtonType);
-    extern bool isEmuButtonPressed(int gamepadIndex, ButtonType); 
+    extern bool isEmuButtonPressed(int gamepadIndex, ButtonType);
     extern void setEmuButton(int gamepadIndex, Gamepad::ButtonType btn, bool pressed, bool active);
     extern bool isPressed(Gamepad::Button btn);
     extern bool isEscapePressed();

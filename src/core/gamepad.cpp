@@ -1,6 +1,27 @@
 #include "core/gamepad.hpp"
 #include "core/util.hpp"
 
+/*
+ * The Gamepad namespace allows accessing 5 virtual gamepads connected to the system.
+ * The layout of these gamepads is the default xbox controller layout. The state of these
+ * gamepads is determined via the combination of three sources.
+ *
+ * (1) the first five physical gamepads that are available via GLFW.
+ *     The state of these buttons is determined for each gamepad the first time a
+       button is read after a call to invalidate.
+ * (2) keyboard keys that are explicitly mapped to these buttons.
+ *     This state is set via the respective callback of GLFW.
+ * (3) a set of emulated gamepads which may override buttons with a "sticky" value.
+ *     These may be set from the UI.
+ *
+ * An application should call Gamepad::invalidate at the start of each frame, so that the
+ * Gamepad module knows that the state of the physical gamepads needs refreshing.
+ *
+ * After that, the state of the physical gamepad buttons may be read with
+ * Gamepad::isPressed to query the state of an individual button.
+ *
+ */
+
 namespace Gamepad {
     const int ButtonTypeBegin = Up;
     const int ButtonTypeEnd = Select + 1;

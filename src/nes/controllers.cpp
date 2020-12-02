@@ -7,29 +7,29 @@ const std::map<Button, Gamepad::Button> controllerMapping = {
     { ButtonA_1, Gamepad::ButtonA_1 }, { ButtonB_1, Gamepad::ButtonX_1 }, { Start_1, Gamepad::Start_1 }, { Select_1, Gamepad::Select_1 },
 };
 
-static bool pressed(ButtonType btn, int off) {
+static bool isPressed(ButtonType btn, int off) {
     Button b = (Button)(btn + off);
-    return Gamepad::readGamepadState(controllerMapping.find(b)->second);
+    return Gamepad::isPressed(controllerMapping.find(b)->second);
 }
 
 void Controller::update() {
     if (m_latched) {
         int off = (8 * m_gamepadIndex);
-        
+
         m_shiftButtons = 0;
-        if (pressed(ButtonA, off)) { m_shiftButtons |= 0b00000001; }
-        if (pressed(ButtonB, off)) { m_shiftButtons |= 0b00000010; }
-        if (pressed(Select, off))  { m_shiftButtons |= 0b00000100; }
-        if (pressed(Start, off))   { m_shiftButtons |= 0b00001000; }
-        if (pressed(Up, off))      { m_shiftButtons |= 0b00010000; }
-        if (pressed(Down, off))    { m_shiftButtons |= 0b00100000; }
-        if (pressed(Left, off))    { m_shiftButtons |= 0b01000000; }
-        if (pressed(Right, off))   { m_shiftButtons |= 0b10000000; }
+        if (isPressed(ButtonA, off)) { m_shiftButtons |= 0b00000001; }
+        if (isPressed(ButtonB, off)) { m_shiftButtons |= 0b00000010; }
+        if (isPressed(Select, off))  { m_shiftButtons |= 0b00000100; }
+        if (isPressed(Start, off))   { m_shiftButtons |= 0b00001000; }
+        if (isPressed(Up, off))      { m_shiftButtons |= 0b00010000; }
+        if (isPressed(Down, off))    { m_shiftButtons |= 0b00100000; }
+        if (isPressed(Left, off))    { m_shiftButtons |= 0b01000000; }
+        if (isPressed(Right, off))   { m_shiftButtons |= 0b10000000; }
     }
 }
 
 void Controller::write(uint8_t value) {
-    m_latched = value & 0x01; 
+    m_latched = value & 0x01;
     update();
 }
 
