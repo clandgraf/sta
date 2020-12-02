@@ -1,4 +1,4 @@
-#include "controllers.hpp"
+#include "nes/controllers.hpp"
 
 const std::map<Button, Gamepad::Button> controllerMapping = {
     { Up_0, Gamepad::Up_0 }, { Down_0, Gamepad::Down_0 }, { Left_0, Gamepad::Left_0 }, { Right_0, Gamepad::Right_0 },

@@ -7,7 +7,6 @@
 #include "core/gui/gui_gamepad.hpp"
 #include "defs.hpp"
 #include "nes/rom.hpp"
-#include "mem.hpp"
 #include "emu.hpp"
 #include "disasm.hpp"
 

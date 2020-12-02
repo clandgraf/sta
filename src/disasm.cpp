@@ -8,10 +8,10 @@
 
 #include "emu.hpp"
 #include "nes/rom.hpp"
-#include "mem.hpp"
+#include "nes/mem.hpp"
 #include "ppu.hpp"
-#include "cpu_opcodes.hpp"
-#include "cpu_mnemonics.hpp"
+#include "nes/cpu_opcodes.hpp"
+#include "nes/cpu_mnemonics.hpp"
 
 
 using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;

@@ -1,13 +1,13 @@
 #include <iostream>
 
 #include "emu.hpp"
-#include "mem.hpp"
+#include "nes/mem.hpp"
 #include "nes/rom.hpp"
 #include "ppu.hpp"
 #include "core/util.hpp"
-#include "cpu_opcodes.hpp"
+#include "nes/cpu_opcodes.hpp"
 #include "disasm.hpp"
-#include "controllers.hpp"
+#include "nes/controllers.hpp"
 
 namespace sm = StreamManipulators;
 

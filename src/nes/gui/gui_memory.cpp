@@ -3,7 +3,7 @@
 #include <imgui_memory_editor.h>
 
 #include "emu.hpp"
-#include "mem.hpp"
+#include "nes/mem.hpp"
 #include "nes/rom.hpp"
 #include "core/gui/gui.hpp"
 #include "core/gui/manager.hpp"

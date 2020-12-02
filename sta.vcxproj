@@ -27,7 +27,6 @@
     <ClCompile Include="contrib\imgui-1.76\imgui_impl_opengl3.cpp" />
     <ClCompile Include="contrib\imgui-1.76\imgui_widgets.cpp" />
     <ClCompile Include="contrib\miniz\miniz.c" />
-    <ClCompile Include="src\controllers.cpp" />
     <ClCompile Include="src\core\gamepad.cpp" />
     <ClCompile Include="src\core\gui\gui.cpp" />
     <ClCompile Include="src\core\gui\filebrowser.cpp" />
@@ -40,7 +39,7 @@
     <ClCompile Include="src\disasm.cpp" />
     <ClCompile Include="src\emu.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\mem.cpp" />
+    <ClCompile Include="src\nes\controllers.cpp" />
     <ClCompile Include="src\nes\gui\gui_disasm.cpp" />
     <ClCompile Include="src\nes\gui\gui_emustate.cpp" />
     <ClCompile Include="src\nes\gui\gui_memory.cpp" />
@@ -50,6 +49,7 @@
     <ClCompile Include="src\nes\mappers\mapper.cpp" />
     <ClCompile Include="src\nes\mappers\mapper000.cpp" />
     <ClCompile Include="src\nes\mappers\mapper001.cpp" />
+    <ClCompile Include="src\nes\mem.cpp" />
     <ClCompile Include="src\nes\palette.cpp" />
     <ClCompile Include="src\nes\rom.cpp" />
     <ClCompile Include="src\ppu.cpp" />
@@ -58,7 +58,6 @@
     <Text Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\controllers.hpp" />
     <ClInclude Include="src\core\gamepad.hpp" />
     <ClInclude Include="src\core\gui\gui.hpp" />
     <ClInclude Include="src\core\gui\filebrowser.hpp" />
@@ -69,18 +68,19 @@
     <ClInclude Include="src\core\gui\notifications.hpp" />
     <ClInclude Include="src\core\recents.hpp" />
     <ClInclude Include="src\core\util.hpp" />
-    <ClInclude Include="src\cpu_mnemonics.hpp" />
-    <ClInclude Include="src\cpu_opcodes.hpp" />
     <ClInclude Include="src\defs.hpp" />
     <ClInclude Include="src\disasm.hpp" />
     <ClInclude Include="src\emu.hpp" />
     <ClInclude Include="src\IconsMaterialDesign.h" />
     <ClInclude Include="src\keynames.hpp" />
     <ClInclude Include="src\mappers.hpp" />
-    <ClInclude Include="src\mem.hpp" />
+    <ClInclude Include="src\nes\controllers.hpp" />
+    <ClInclude Include="src\nes\cpu_mnemonics.hpp" />
+    <ClInclude Include="src\nes\cpu_opcodes.hpp" />
     <ClInclude Include="src\nes\mappers\mapper.hpp" />
     <ClInclude Include="src\nes\mappers\mapper000.hpp" />
     <ClInclude Include="src\nes\mappers\mapper001.hpp" />
+    <ClInclude Include="src\nes\mem.hpp" />
     <ClInclude Include="src\nes\palette.hpp" />
     <ClInclude Include="src\nes\rom.hpp" />
     <ClInclude Include="src\ppu.hpp" />
