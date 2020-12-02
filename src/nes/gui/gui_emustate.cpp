@@ -13,8 +13,8 @@ static void ImGui_AttachTooltip(const char* str) {
     }
 }
 
-static void renderStateControl(const char* icon, const char* tooltip, std::function<void()> action) {
-    if (ImGui::Button(icon)) {
+static void renderStateControl(const char8_t* icon, const char* tooltip, std::function<void()> action) {
+    if (ImGui::Button(reinterpret_cast<const char*>(icon))) {
         action();
     }
     ImGui_AttachTooltip(tooltip);
