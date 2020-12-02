@@ -16,8 +16,8 @@ Emu::Emu() {
     m_logOut.open("cpu.log");
     m_disassembler = std::make_unique<Disassembler>(*this);
 
-    m_ports[0] = std::make_shared<Controller>(Input::getState().input0);
-    m_ports[1] = std::make_shared<Controller>(Input::getState().input1);
+    m_ports[0] = std::make_shared<Controller>(0);
+    m_ports[1] = std::make_shared<Controller>(1);
 }
 
 Emu::~Emu() {

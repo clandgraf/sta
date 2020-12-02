@@ -10,7 +10,7 @@
 
 static MemoryEditor mem_edit;
 
-static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
+static void render(Gui::Window<Emu>& window, Emu& emu) {
     if (emu.isInitialized() && *window.show()) {
         if (ImGui::Begin("Memory", window.show())) {
             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;

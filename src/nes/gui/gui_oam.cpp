@@ -24,7 +24,7 @@ static void renderOamEntry(unsigned int index, const PPU::OamEntry& entry) {
     ImGui::Separator();
 }
 
-static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
+static void render(Gui::Window<Emu>& window, Emu& emu) {
     if (emu.isInitialized() && *window.show()) {
         if (ImGui::Begin("OAM Viewer", window.show())) {
             const PPU::OamEntry* entries = emu.m_ppu->getSprites();

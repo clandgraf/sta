@@ -7,7 +7,7 @@
 static Input::Controller input0;
 static Input::Controller input1;
 
-static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
+static void render(Gui::Window<Emu>& window, Emu& emu) {
     if (*window.show()) {
         if (ImGui::Begin("Controls", window.show())) {
             ImGui::Text("Controller 1");

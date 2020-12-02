@@ -15,15 +15,15 @@ namespace Gui {
     bool m_isEscapePressed = false;
 }
 
-GLFWwindow* w(Gui::Window win) { return (GLFWwindow*) win._; }
+GLFWwindow* w(Gui::WindowHandle win) { return (GLFWwindow*) win._; }
 
-void Gui::setWindowClosing(Window window, bool closing) {
+void Gui::setWindowClosing(WindowHandle window, bool closing) {
     if (window._) {
         glfwSetWindowShouldClose(w(window), closing);
     }
 }
 
-bool Gui::isWindowClosing(Window window) {
+bool Gui::isWindowClosing(WindowHandle window) {
     return glfwWindowShouldClose(w(window));
 }
 
@@ -31,15 +31,15 @@ void Gui::pollEvents() {
     return glfwPollEvents();
 }
 
-bool Gui::isFullscreen(Window window) {
+bool Gui::isFullscreen(WindowHandle window) {
     return glfwGetWindowMonitor(w(window)) != nullptr;
 }
 
-void Gui::swapBuffers(Window window) {
+void Gui::swapBuffers(WindowHandle window) {
     glfwSwapBuffers(w(window));
 }
 
-void Gui::toggleFullscreen(Window window) {
+void Gui::toggleFullscreen(WindowHandle window) {
     GLFWwindow* win{w(window)};
     if (isFullscreen(window)) {
         glfwSetWindowMonitor(
@@ -68,7 +68,7 @@ void Gui::ImGui_Impl_RenderDrawData(ImDrawData* draw_data) {
     ImGui_ImplOpenGL3_RenderDrawData(draw_data);
 }
 
-void Gui::ImGui_Impl_Init(Gui::Window window) {
+void Gui::ImGui_Impl_Init(Gui::WindowHandle window) {
     ImGui_ImplGlfw_InitForOpenGL(w(window), true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
@@ -119,11 +119,11 @@ void updateInputs(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-Gui::Window Gui::initWindow(const char* title, bool fullscreen) {
+Gui::WindowHandle Gui::initWindow(const char* title, bool fullscreen) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {
-        return Window{nullptr};
+        return WindowHandle{nullptr};
     }
 
     // Set GL Version
@@ -162,7 +162,7 @@ Gui::Window Gui::initWindow(const char* title, bool fullscreen) {
         nullptr
     );
     if (win == nullptr) {
-        return Window{nullptr};
+        return WindowHandle{nullptr};
     }
     glfwMakeContextCurrent(win);
     glfwSwapInterval(1); // Enable vsync
@@ -171,20 +171,20 @@ Gui::Window Gui::initWindow(const char* title, bool fullscreen) {
     bool err = gladLoadGL() == 0;
     if (err) {
         std::cerr << "Failed to initialize OpenGL loader!\n";
-        return Window{nullptr};
+        return WindowHandle{nullptr};
     }
 
     glfwSetKeyCallback(win, updateInputs);
     glfwSetJoystickCallback(glfw_joystick_callback);
 
-    return Window{win};
+    return WindowHandle{win};
 }
 
-void Gui::setTitle(Window window, const char* title) {
+void Gui::setTitle(WindowHandle window, const char* title) {
     glfwSetWindowTitle(w(window), title);
 }
 
-void Gui::teardownWindow(Window window) {
+void Gui::teardownWindow(WindowHandle window) {
     int width, height;
     glfwGetWindowSize(w(window), &width, &height);
     Settings::set("window-width", width);

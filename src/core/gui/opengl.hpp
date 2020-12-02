@@ -1,7 +1,7 @@
 #pragma once
 
 namespace Gui {
-    struct Window { 
+    struct WindowHandle { 
         void* _;
 
         bool operator!() {
@@ -9,19 +9,19 @@ namespace Gui {
         }
     };
 
-    Window initWindow(const char* title, bool fullscreen);
-    void setWindowClosing(Window window, bool closing);
-    bool isWindowClosing(Window window);
+    WindowHandle initWindow(const char* title, bool fullscreen);
+    void setWindowClosing(WindowHandle window, bool closing);
+    bool isWindowClosing(WindowHandle window);
     bool isEscapePressed();
     void pollEvents();
-    bool isFullscreen(Window window);
-    void swapBuffers(Window window);
-    void toggleFullscreen(Window window);
-    void setTitle(Window window, const char* title);
-    void teardownWindow(Window window);
+    bool isFullscreen(WindowHandle window);
+    void swapBuffers(WindowHandle window);
+    void toggleFullscreen(WindowHandle window);
+    void setTitle(WindowHandle window, const char* title);
+    void teardownWindow(WindowHandle window);
 
     void ImGui_Impl_NewFrame();
     void ImGui_Impl_RenderDrawData(ImDrawData* draw_data);
-    void ImGui_Impl_Init(Window window);
+    void ImGui_Impl_Init(WindowHandle window);
     void ImGui_Impl_Shutdown();
 }

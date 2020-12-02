@@ -19,17 +19,152 @@
 #define ICON_FONT "assets/" ## FONT_ICON_FILE_NAME_FAR
 
 namespace Gui {
+    template<class EmuType>
+    class Manager;
+
+    template<class EmuType, class ElementType>
+    class WithLifecycle {
+    public:
+        using Manager = Gui::Manager<EmuType>;
+
+        Manager& manager;
+
+        WithLifecycle(
+            Manager& manager_,
+            ElementType& self,
+            const char* _key,
+            const char* _title,
+            std::function<void(ElementType&, EmuType&)> renderFn,
+            std::function<void(ElementType&, EmuType&)> initFn,
+            std::function<void(ElementType&, EmuType&)> teardownFn
+        ) : m_renderFn(renderFn)
+            , manager(manager_)
+            , m_self(self)
+            , m_initFn(initFn)
+            , m_teardownFn(teardownFn)
+            , key(_key)
+            , title(_title) {}
+
+        const char* key;
+        const char* title;
+
+        virtual void init(EmuType& emu) {
+            if (m_initFn)
+                m_initFn(m_self, emu);
+        }
+
+        virtual void render(EmuType& emu) {
+            m_renderFn(m_self, emu);
+        }
+
+        virtual void teardown(EmuType& emu) {
+            if (m_teardownFn)
+                m_teardownFn(m_self, emu);
+        }
+
+    protected:
+        std::function<void(ElementType&, EmuType&)> m_renderFn;
+        std::function<void(ElementType&, EmuType&)> m_initFn;
+        std::function<void(ElementType&, EmuType&)> m_teardownFn;
+
+        ElementType& m_self;
+    };
+
+    template<class EmuType>
+    class Window : public WithLifecycle<EmuType, Window<EmuType>> {
+    public:
+        void init(EmuType& emu) {
+            m_show = Settings::get(this->key, false);
+            WithLifecycle<EmuType, Window>::init(emu);
+        }
+
+        void teardown(EmuType& emu) {
+            Settings::set(this->key, m_show);
+            WithLifecycle<EmuType, Window>::teardown(emu);
+        }
+
+        bool* show() {
+            return &m_show;
+        }
+
+        Window(
+            Manager<EmuType>& pManager,
+            const char* key,
+            const char* title,
+            std::function<void(Window<EmuType>&, EmuType&)> renderFn,
+            std::function<void(Window<EmuType>&, EmuType&)> initFn = nullptr,
+            std::function<void(Window<EmuType>&, EmuType&)> teardownFn = nullptr
+        ) : WithLifecycle<EmuType, Window<EmuType>>(pManager, *this, key, title, renderFn, initFn, teardownFn) {}
+
+    private:
+        bool m_show = true;
+    };
+
+    template<class EmuType>
+    class Dialog : public WithLifecycle<EmuType, Dialog<EmuType>> {
+    public:
+        Dialog(
+            Manager<EmuType>& pManager,
+            const char* key,
+            const char* title,
+            std::function<void(Dialog<EmuType>&, EmuType&)> renderFn,
+            std::function<void(Dialog<EmuType>&, EmuType&)> initFn = nullptr,
+            std::function<void(Dialog<EmuType>&, EmuType&)> teardownFn = nullptr,
+            std::function<bool(Dialog<EmuType>&, EmuType&)> shouldCloseFn = nullptr,
+            std::function<void(Dialog<EmuType>&, EmuType&)> onClosedFn = nullptr
+        ) : WithLifecycle<EmuType, Dialog<EmuType>>(pManager, *this, key, title, renderFn, initFn, teardownFn)
+            , m_shouldCloseFn(shouldCloseFn)
+            , m_onClosedFn(onClosedFn) {}
+
+        std::function<bool(Dialog&, EmuType&)> m_shouldCloseFn;
+        std::function<void(Dialog&, EmuType&)> m_onClosedFn;
+
+        bool notifiedOpen = false;
+
+        bool shouldClose(EmuType& emu) { return m_shouldCloseFn && m_shouldCloseFn(*this, emu); }
+
+        void onClosed(EmuType& emu) { if (m_onClosedFn) { m_onClosedFn(*this, emu); } }
+
+        void open() {
+            ImGui::OpenPopup(this->title);
+        }
+
+        void notifyOpen() {
+            notifiedOpen = true;
+        }
+
+        void render(EmuType& emu) {
+            if (notifiedOpen) {
+                open();
+                notifiedOpen = false;
+            }
+
+            bool open = true;
+            if (ImGui::BeginPopupModal(this->title, &open, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+                WithLifecycle<EmuType, Dialog<EmuType>>::render(emu);
+
+                if (!open || shouldClose(emu)) {
+                    ImGui::CloseCurrentPopup();
+                    onClosed(emu);
+                }
+                ImGui::EndPopup();
+            }
+        }
+    };
 
     template<class EmuType>
     class Manager {
     public:
         std::list<std::filesystem::path> recentFiles;
 
-        Gui::Window handle{nullptr};
+        Gui::WindowHandle handle{nullptr};
 
         ImFont* defaultFont;
         ImFont* sansFont;
         ImFont* monoFont;
+
+        float fontSize;
 
         void pushMonoFont() {
             ImGui::PushFont(monoFont);
@@ -41,166 +176,39 @@ namespace Gui {
 
         std::shared_ptr<Gui::Surface> screenSurface;
 
-        template<class ElementType>
-        class WithLifecycle {
-        public:
-            Manager& manager;
+        std::map<std::string, std::shared_ptr<Window<EmuType>>> windows;
+        std::map<std::string, std::shared_ptr<Dialog<EmuType>>> dialogs;
 
-            WithLifecycle(
-                Manager& manager_,
-                ElementType& self,
-                const char* _key,
-                const char* _title,
-                std::function<void(ElementType&, EmuType&)> renderFn,
-                std::function<void(ElementType&, EmuType&)> initFn,
-                std::function<void(ElementType&, EmuType&)> teardownFn
-            ) : m_renderFn(renderFn)
-                , manager(manager_)
-                , m_self(self)
-                , m_initFn(initFn)
-                , m_teardownFn(teardownFn)
-                , key(_key)
-                , title(_title) {}
-
-            const char* key;
-            const char* title;
-
-            virtual void init(EmuType& emu) {
-                if (m_initFn)
-                    m_initFn(m_self, emu);
-            }
-
-            virtual void render(EmuType& emu) {
-                m_renderFn(m_self, emu);
-            }
-
-            virtual void teardown(EmuType& emu) {
-                if (m_teardownFn)
-                    m_teardownFn(m_self, emu);
-            }
-
-        protected:
-            std::function<void(ElementType&, EmuType&)> m_renderFn;
-            std::function<void(ElementType&, EmuType&)> m_initFn;
-            std::function<void(ElementType&, EmuType&)> m_teardownFn;
-
-            ElementType& m_self;
-        };
-
-        class Window : public WithLifecycle<Window> {
-        public:
-            void init(EmuType& emu) {
-                m_show = Settings::get(this->key, false);
-                WithLifecycle<Window>::init(emu);
-            }
-
-            void teardown(EmuType& emu) {
-                Settings::set(this->key, m_show);
-                WithLifecycle<Window>::teardown(emu);
-            }
-
-            bool* show() {
-                return &m_show;
-            }
-
-            Window(
-                Manager& pManager,
-                const char* key,
-                const char* title,
-                std::function<void(Window&, EmuType&)> renderFn,
-                std::function<void(Window&, EmuType&)> initFn = nullptr,
-                std::function<void(Window&, EmuType&)> teardownFn = nullptr
-            ) : WithLifecycle<Window>(pManager, *this, key, title, renderFn, initFn, teardownFn) {}
-
-        private:
-            bool m_show = true;
-        };
-
-        class Dialog : public WithLifecycle<Dialog> {
-        public:
-            Dialog(
-                Manager& pManager,
-                const char* key,
-                const char* title,
-                std::function<void(Dialog&, EmuType&)> renderFn,
-                std::function<void(Dialog&, EmuType&)> initFn = nullptr,
-                std::function<void(Dialog&, EmuType&)> teardownFn = nullptr,
-                std::function<bool(Dialog&, EmuType&)> shouldCloseFn = nullptr,
-                std::function<void(Dialog&, EmuType&)> onClosedFn = nullptr
-            ) : WithLifecycle<Dialog>(pManager, *this, key, title, renderFn, initFn, teardownFn)
-              , m_shouldCloseFn(shouldCloseFn)
-              , m_onClosedFn(onClosedFn) {}
-
-            std::function<bool(Dialog&, EmuType&)> m_shouldCloseFn;
-            std::function<void(Dialog&, EmuType&)> m_onClosedFn;
-
-            bool notifiedOpen = false;
-
-            bool shouldClose(EmuType& emu) { return m_shouldCloseFn && m_shouldCloseFn(*this, emu); }
-    
-            void onClosed(EmuType& emu) { if (m_onClosedFn) { m_onClosedFn(*this, emu); } }
-
-            void open() {
-                ImGui::OpenPopup(this->title);
-            }
-
-            void notifyOpen() {
-                notifiedOpen = true;
-            }
-
-            void render(EmuType& emu) {
-                if (notifiedOpen) {
-                    open();
-                    notifiedOpen = false;
-                }
-
-                bool open = true;
-                if (ImGui::BeginPopupModal(this->title, &open, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-                    WithLifecycle<Dialog>::render(emu);
-
-                    if (!open || shouldClose(emu)) {
-                        ImGui::CloseCurrentPopup();
-                        onClosed(emu);
-                    }
-                    ImGui::EndPopup();
-                }
-            }
-        };
-
-        std::map<std::string, std::shared_ptr<Window>> windows;
-        std::map<std::string, std::shared_ptr<Dialog>> dialogs;
-
-        std::shared_ptr<Window> window(
+        std::shared_ptr<Window<EmuType>> window(
             const char* key,
             const char* title,
-            std::function<void(Window&, EmuType&)> renderFn,
-            std::function<void(Window&, EmuType&)> initFn = nullptr,
-            std::function<void(Window&, EmuType&)> teardownFn = nullptr
+            std::function<void(Window<EmuType>&, EmuType&)> renderFn,
+            std::function<void(Window<EmuType>&, EmuType&)> initFn = nullptr,
+            std::function<void(Window<EmuType>&, EmuType&)> teardownFn = nullptr
         ) {
             if (windows.find(key) != windows.end()) {
                 return nullptr;
             }
 
-            auto w = std::make_shared<Window>(*this, key, title, renderFn, initFn, teardownFn);
+            auto w = std::make_shared<Window<EmuType>>(*this, key, title, renderFn, initFn, teardownFn);
             windows[key] = w;
             return w;
         }
 
-        std::shared_ptr<Dialog> dialog(
+        std::shared_ptr<Dialog<EmuType>> dialog(
             const char* key,
             const char* title,
-            std::function<void(Dialog&, EmuType&)> renderFn,
-            std::function<void(Dialog&, EmuType&)> initFn = nullptr,
-            std::function<void(Dialog&, EmuType&)> teardownFn = nullptr,
-            std::function<bool(Dialog&, EmuType&)> shouldCloseFn = nullptr,
-            std::function<void(Dialog&, EmuType&)> onClosedFn = nullptr
+            std::function<void(Dialog<EmuType>&, EmuType&)> renderFn,
+            std::function<void(Dialog<EmuType>&, EmuType&)> initFn = nullptr,
+            std::function<void(Dialog<EmuType>&, EmuType&)> teardownFn = nullptr,
+            std::function<bool(Dialog<EmuType>&, EmuType&)> shouldCloseFn = nullptr,
+            std::function<void(Dialog<EmuType>&, EmuType&)> onClosedFn = nullptr
         ) {
             if (dialogs.find(key) != dialogs.end()) {
                 return nullptr;
             }
 
-            auto w = std::make_shared<Dialog>(*this, key, title, renderFn, initFn, teardownFn, shouldCloseFn, onClosedFn);
+            auto w = std::make_shared<Dialog<EmuType>>(*this, key, title, renderFn, initFn, teardownFn, shouldCloseFn, onClosedFn);
             dialogs[key] = w;
             return w;
         }
@@ -277,12 +285,13 @@ namespace Gui {
             // Setup Platform/Renderer bindings
             ImGui_Impl_Init(handle);
 
-            sansFont = io.Fonts->AddFontFromFileTTF("assets/SourceSansPro-Regular.ttf", 24.0f);
+            fontSize = float(Settings::get("fontSize", 16));
+            sansFont = io.Fonts->AddFontFromFileTTF("assets/SourceSans3-Regular.ttf", fontSize);
             ImFontConfig config;
             config.MergeMode = true;
             static const ImWchar icon_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
-            io.Fonts->AddFontFromFileTTF("assets/MaterialIcons-Regular.ttf", 20.0f, &config, icon_ranges);
-            monoFont = io.Fonts->AddFontFromFileTTF("assets/SourceCodePro-Medium.ttf", 20.0f);
+            io.Fonts->AddFontFromFileTTF("assets/MaterialIcons-Regular.ttf", fontSize, &config, icon_ranges);
+            monoFont = io.Fonts->AddFontFromFileTTF("assets/SourceCodePro-Medium.ttf", fontSize);
             io.Fonts->Build();
 
             return true;
@@ -303,6 +312,7 @@ namespace Gui {
             }
 
             Util::writeRecentFiles(recentFiles, "recentFiles");
+            Settings::set("fontSize", int(fontSize));
             Gamepad::writeSettings();
 
             teardownImGui();

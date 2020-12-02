@@ -5,7 +5,7 @@
 #include "disasm.hpp"
 #include "emu.hpp"
 
-static void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
+static void render(Gui::Window<Emu>& window, Emu& emu) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;
 
     if (emu.getMode() != Emu::Mode::RESET && *window.show()) {

@@ -14,7 +14,7 @@ static Palette::Color colors[4] = {
     { 0x00, 0x00, 0x00 },
 };
 
-static void render(Gui::Manager<Emu>::Window& window, Emu&) {
+static void render(Gui::Window<Emu>& window, Emu&) {
     if (*window.show()) {
         if (ImGui::Begin("Pattern Table", window.show())) {
             ImGui::Image((void*)(intptr_t)patternTableSurface->getTexture(), ImVec2(512, 256));
@@ -45,7 +45,7 @@ static void refreshPatternTable(Emu& emu) {
     patternTableSurface->upload();
 }
 
-static void init(Gui::Manager<Emu>::Window& window, Emu&) {
+static void init(Gui::Window<Emu>& window, Emu&) {
     patternTableSurface = std::make_shared<Gui::Surface>(2 * 128, 128);
     for (int y = 0; y < 128; y++) {
         for (int x = 0; x < 2 * 128; x++) {
@@ -56,7 +56,7 @@ static void init(Gui::Manager<Emu>::Window& window, Emu&) {
     patternTableSurface->upload();
 }
 
-static void teardown(Gui::Manager<Emu>::Window& window, Emu&) {
+static void teardown(Gui::Window<Emu>& window, Emu&) {
     patternTableSurface = nullptr;
 }
 

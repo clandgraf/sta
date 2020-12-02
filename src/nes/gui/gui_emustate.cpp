@@ -20,7 +20,7 @@ static void renderStateControl(const char* icon, const char* tooltip, std::funct
     ImGui_AttachTooltip(tooltip);
 }
 
-void render(Gui::Manager<Emu>::Window& window, Emu& emu) {
+void render(Gui::Window<Emu>& window, Emu& emu) {
     if (emu.isInitialized() && *window.show()) {
         if (ImGui::Begin("Emu State", window.show())) {
             renderStateControl(ICON_MD_PLAY_ARROW, "Continue", [&emu] { emu.m_isStepping = false; });

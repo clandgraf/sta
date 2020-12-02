@@ -4,6 +4,7 @@
 
 #include "core/util.hpp"
 #include "core/gui/manager.hpp"
+#include "core/gui/gui_gamepad.hpp"
 #include "defs.hpp"
 #include "rom.hpp"
 #include "mem.hpp"
@@ -22,7 +23,7 @@ extern void createPatternTable(Gui::Manager<Emu>& manager);
 extern void createEmuState(Gui::Manager<Emu>& manager);
 extern void createMemoryViewer(Gui::Manager<Emu>& manager);
 extern void createOamViewer(Gui::Manager<Emu>& manager);
-extern void createControls(Gui::Manager<Emu>& manager);
+//extern void createControls(Gui::Manager<Emu>& manager);
 extern void createRomInfo(Gui::Manager<Emu>& manager);
 extern void createSetupControllers(Gui::Manager<Emu>& manager);
 
@@ -32,7 +33,7 @@ void registerGuiElements(Gui::Manager<Emu>& manager) {
     createEmuState(manager);
     createMemoryViewer(manager);
     createOamViewer(manager);
-    createControls(manager);
+    createGamepad<Emu>(manager);
     createRomInfo(manager);
     createSetupControllers(manager);
 
@@ -90,6 +91,7 @@ int main(int ac, char ** av) {
             previousTime = currentTime;
         }
         
+        Gamepad::invalidate();
         Gui::pollEvents();
 
         if (emu.m_isStepping || !emu.isInitialized()) {

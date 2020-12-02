@@ -53,21 +53,21 @@ static void renderControllerSetupPane(const std::vector<Input::ControllerDef>& c
     }
 }
 
-static bool shouldWaitingForInputClose(Gui::Manager<Emu>::Dialog&, Emu&) {
+static bool shouldWaitingForInputClose(Gui::Dialog<Emu>&, Emu&) {
     return Input::getWaitingForInput() == Input::None;
 }
 
-static void onWaitingForInputClosed(Gui::Manager<Emu>::Dialog&, Emu&) {
+static void onWaitingForInputClosed(Gui::Dialog<Emu>&, Emu&) {
     Input::waitForInput(Input::None);
 }
 
-static void renderWaitingForInput(Gui::Manager<Emu>::Dialog&, Emu&) {
+static void renderWaitingForInput(Gui::Dialog<Emu>&, Emu&) {
     ImGui::Text("Press a key");
 }
 
-static std::shared_ptr<Gui::Manager<Emu>::Dialog> waitingForInputDialog;
+static std::shared_ptr<Gui::Dialog<Emu>> waitingForInputDialog;
 
-static void render(Gui::Manager<Emu>::Dialog&, Emu& emu) {
+static void render(Gui::Dialog<Emu>&, Emu& emu) {
     renderControllerSetupPane(Input::inputsGeneral);
 
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
@@ -92,7 +92,7 @@ static void render(Gui::Manager<Emu>::Dialog&, Emu& emu) {
     waitingForInputDialog->render(emu);
 }
 
-static void init(Gui::Manager<Emu>::Dialog& dialog, Emu&) {
+static void init(Gui::Dialog<Emu>& dialog, Emu&) {
     static char widgetIdBuffer[256];
 
     for (const auto& label : Input::defToString) {
@@ -104,7 +104,7 @@ static void init(Gui::Manager<Emu>::Dialog& dialog, Emu&) {
         buttonWidgetIds[label.first] = { addLabel, clearLabel };
     }
 
-    waitingForInputDialog = std::make_shared<Gui::Manager<Emu>::Dialog>(
+    waitingForInputDialog = std::make_shared<Gui::Dialog<Emu>>(
         dialog.manager,
         "gui/waiting-for-input",
         "Waiting For Key",
@@ -116,7 +116,7 @@ static void init(Gui::Manager<Emu>::Dialog& dialog, Emu&) {
     );
 }
 
-static void teardown(Gui::Manager<Emu>::Dialog& dialog, Emu&) {
+static void teardown(Gui::Dialog<Emu>& dialog, Emu&) {
     waitingForInputDialog = nullptr;
 }
 
