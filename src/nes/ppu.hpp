@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <functional>
 
-#include "defs.hpp"
+#include "core/util.hpp"
 
 typedef void(*SetPixelFn)(unsigned int x, unsigned int y, unsigned int v);
 

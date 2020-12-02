@@ -68,18 +68,6 @@
     <ClCompile Include="src\core\recents.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="src\disasm.cpp">
-      <Filter>nes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\emu.cpp">
-      <Filter>nes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\main.cpp">
-      <Filter>nes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ppu.cpp">
-      <Filter>nes</Filter>
-    </ClCompile>
     <ClCompile Include="src\nes\gui\gui_disasm.cpp">
       <Filter>nes\gui</Filter>
     </ClCompile>
@@ -137,6 +125,18 @@
     <ClCompile Include="src\nes\mem.cpp">
       <Filter>nes</Filter>
     </ClCompile>
+    <ClCompile Include="src\nes\disasm.cpp">
+      <Filter>nes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\ppu.cpp">
+      <Filter>nes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\emu.cpp">
+      <Filter>nes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nes\main.cpp">
+      <Filter>nes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt">
@@ -156,25 +156,7 @@
     <ClInclude Include="src\core\recents.hpp">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="src\defs.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disasm.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\emu.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
     <ClInclude Include="src\IconsMaterialDesign.h">
-      <Filter>nes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\keynames.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mappers.hpp">
-      <Filter>nes</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ppu.hpp">
       <Filter>nes</Filter>
     </ClInclude>
     <ClInclude Include="src\nes\mappers\mapper.hpp">
@@ -220,6 +202,18 @@
       <Filter>nes</Filter>
     </ClInclude>
     <ClInclude Include="src\nes\mem.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\disasm.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\ppu.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\emu.hpp">
+      <Filter>nes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nes\mappers.hpp">
       <Filter>nes</Filter>
     </ClInclude>
   </ItemGroup>

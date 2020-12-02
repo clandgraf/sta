@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <imgui_memory_editor.h>
 
-#include "emu.hpp"
+#include "nes/emu.hpp"
 #include "nes/mem.hpp"
 #include "nes/rom.hpp"
 #include "core/gui/gui.hpp"

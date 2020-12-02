@@ -2,7 +2,7 @@
 
 #include "core/util.hpp"
 #include "emu.hpp"
-#include "ppu.hpp"
+#include "nes/ppu.hpp"
 #include "nes/rom.hpp"
 
 /*

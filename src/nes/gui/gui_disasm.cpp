@@ -2,8 +2,8 @@
 
 #include "core/gui/gui.hpp"
 #include "core/gui/manager.hpp"
-#include "disasm.hpp"
-#include "emu.hpp"
+#include "nes/disasm.hpp"
+#include "nes/emu.hpp"
 
 static void render(Gui::Window<Emu>& window, Emu& emu) {
     using DisasmSegmentSptr = std::shared_ptr<DisasmSegment>;

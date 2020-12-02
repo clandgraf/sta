@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 
-#include "disasm.hpp"
+#include "nes/disasm.hpp"
 
 #include "emu.hpp"
 #include "nes/rom.hpp"

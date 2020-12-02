@@ -1,5 +1,5 @@
-#include "mapper.hpp"
-#include "defs.hpp"
+#include "nes/mappers/mapper.hpp"
+#include "core/util.hpp"
 
 class Cart;
 

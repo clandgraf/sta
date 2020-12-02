@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <filesystem>
 
-#include "defs.hpp"
 #include "core/util.hpp"
 
 constexpr uint32_t HEADER_AS_UINT32(uint8_t* h) {

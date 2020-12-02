@@ -1,6 +1,6 @@
 #include <imgui.h>
 
-#include "emu.hpp"
+#include "nes/emu.hpp"
 #include "nes/rom.hpp"
 #include "core/gui/manager.hpp"
 #include "core/gui/opengl_surface.hpp"

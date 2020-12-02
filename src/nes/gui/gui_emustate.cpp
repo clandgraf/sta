@@ -1,7 +1,7 @@
 #include <imgui.h>
 
-#include "emu.hpp"
-#include "ppu.hpp"
+#include "nes/emu.hpp"
+#include "nes/ppu.hpp"
 #include "core/gui/manager.hpp"
 #include "IconsMaterialDesign.h"
 

@@ -5,10 +5,14 @@
 #include "core/util.hpp"
 #include "core/gui/manager.hpp"
 #include "core/gui/gui_gamepad.hpp"
-#include "defs.hpp"
 #include "nes/rom.hpp"
-#include "emu.hpp"
-#include "disasm.hpp"
+#include "nes/emu.hpp"
+#include "nes/disasm.hpp"
+
+#define APP_NAME "staNES"
+#define VERSION "0.1.0"
+
+#define WINDOW_TITLE (APP_NAME VERSION)
 
 namespace fs = std::filesystem;
 namespace cli = CliArguments;

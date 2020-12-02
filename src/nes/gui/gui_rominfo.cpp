@@ -1,8 +1,8 @@
 #include <imgui.h>
 
-#include "emu.hpp"
+#include "nes/emu.hpp"
 #include "nes/rom.hpp"
-#include "mappers.hpp"
+#include "nes/mappers.hpp"
 #include "core/gui/manager.hpp"
 
 static void render(Gui::Window<Emu>& window, Emu& emu) {
